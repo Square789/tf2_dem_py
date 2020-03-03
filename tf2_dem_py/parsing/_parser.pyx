@@ -8,11 +8,13 @@ cdef class DemoParser():
 	cdef dict out
 
 	def __init__(self, char *target_file):
+		print("Demo parser created")
 		self.finished = 0
 		self.stream = fopen(target_file, "r")
 		self.out = {}
 
 	def parse(self):
+		print("parse method called")
 		cdef dict h
 		h = header.parse(self.stream)
 		self.out["header"] = h
