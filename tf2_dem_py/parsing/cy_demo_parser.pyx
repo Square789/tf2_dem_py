@@ -1,11 +1,9 @@
 from libc.stdio cimport FILE, fopen, fread, fclose
-cimport header
-cimport packet
 
-cdef class DemoParser():
-	cdef public char finished
-	cdef FILE *stream
-	cdef dict out
+from header cimport parse as hp
+
+cdef class CyDemoParser():
+	# attrs in pxd
 
 	def __init__(self, char *target_file):
 		print("Demo parser created")
@@ -13,10 +11,10 @@ cdef class DemoParser():
 		self.stream = fopen(target_file, "r")
 		self.out = {}
 
-	def parse(self):
+	cpdef parse(self):
 		print("parse method called")
 		cdef dict h
-		h = header.parse(self.stream)
+		h = hp(self.stream)
 		self.out["header"] = h
 		__import__("pprint").pprint(self.out)
 		while not self.finished:

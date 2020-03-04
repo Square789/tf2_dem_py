@@ -8,14 +8,14 @@ cdef class CharArrayWrapper:
 	Class to read a block of data out of a file and offer functions
 	to manipulate and further read it.
 	"""
-	cdef unsigned char *mem_ptr
-	cdef uint32_t mem_len
-	cdef uint8_t bitbuf
-	cdef uint8_t bitbuf_len
-	cdef uint32_t pos
+	# attrs in pxd
 
 	def __cinit__(self):
-		pass
+		self.mem_ptr = NULL
+		self.mem_len = 0
+		self.bitbuf = 0
+		self.bitbuf_len = 0
+		self.pos = 0
 
 	def __dealloc__(self):
 		free(self.mem_ptr)
@@ -30,7 +30,7 @@ cdef class CharArrayWrapper:
 			extension_types.html#instantiation-from-existing-c-c-pointers
 		"""
 		print("create_new called")
-		cdef CharArrayWrapper caw = CharArrayWrapper()
+		cdef CharArrayWrapper caw = CharArrayWrapper.__new__(CharArrayWrapper)
 		caw.mem_ptr = <uint8_t *>malloc(read_len)
 		caw.mem_len = read_len
 		caw.bitbuf = 0x00
@@ -43,7 +43,7 @@ cdef class CharArrayWrapper:
 			raise IOError("File read operation failed or EOF was hit.")
 		return caw
 
-	cdef inline uint32_t get_next_str_size(self):
+	cdef uint32_t get_next_str_size(self):
 		"""
 		Returns the amount of chars until the next null character is hit.
 		(Excluding the null character)
@@ -57,7 +57,7 @@ cdef class CharArrayWrapper:
 			i += 1
 		return i
 
-	cdef inline str read_next_utf8_str(self):
+	cdef str read_next_utf8_str(self):
 		"""
 		Returns a python string with all chars up until the next null char
 		converted to utf-8. 
@@ -70,7 +70,7 @@ cdef class CharArrayWrapper:
 		free(tmp)
 		return tmp_str
 
-	cdef inline str read_utf8_str(self, uint32_t req_len):
+	cdef str read_utf8_str(self, uint32_t req_len):
 		"""
 		Returns a python string with length req_len.
 
@@ -82,7 +82,7 @@ cdef class CharArrayWrapper:
 		free(tmp)
 		return tmp_str
 
-	cdef inline uint8_t *read_raw(self, uint32_t req_len):
+	cdef uint8_t *read_raw(self, uint32_t req_len):
 		"""
 		Returns a pointer to an array of unsigned chars
 		corresponding to all chars from self.pos to self.pos + req_len.
@@ -93,6 +93,6 @@ cdef class CharArrayWrapper:
 		if tmp == NULL:
 			raise MemoryError("Failed to allocate memory for return array "
 				"of size {}.".format(<int>req_len))
-		memcpy(<void *>tmp, <void*>(self.mem_ptr + self.pos), req_len)
+		memcpy(<void *>tmp, <void *>(self.mem_ptr + self.pos), req_len)
 		self.pos += req_len
 		return tmp

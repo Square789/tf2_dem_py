@@ -1,14 +1,14 @@
 """
 Main parser class
 """
-from tf2_dem_py.parsing import _parser
+from tf2_dem_py.parsing.cy_demo_parser import CyDemoParser
 
-class DemoParser():
+class PyDemoParser():
 	def __init__(self, target):
 		"""
 		target: Path to target demo
 		"""
-		self.parser = _parser.DemoParser(
+		self.parser = CyDemoParser(
 			bytes(target, encoding = "utf-8"),
 		)
 
