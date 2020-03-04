@@ -1,6 +1,6 @@
 from libc.stdio cimport FILE, fopen, fread, fclose
 
-from header cimport parse as hp
+from tf2_dem_py.parsing.header cimport parse as hp
 
 cdef class CyDemoParser():
 	# attrs in pxd

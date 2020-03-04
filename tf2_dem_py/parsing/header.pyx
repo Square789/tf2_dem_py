@@ -1,10 +1,11 @@
 from libc.stdio cimport FILE
 from libc.stdint cimport uint32_t
 
-from chararray_wrapper cimport CharArrayWrapper
+from tf2_dem_py.parsing.chararray_wrapper cimport CharArrayWrapper
 
 cdef dict parse(FILE *stream):
 	c = CharArrayWrapper.create_new(stream, 1260)
+	print("check 3")
 	return {}
 
 # cdef dict parse(FILE* stream):

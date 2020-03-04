@@ -1,5 +1,5 @@
 from libc.stdio cimport FILE
 
-from chararray_wrapper import CharArrayWrapper
+from tf2_dem_py.parsing.chararray_wrapper import CharArrayWrapper
 
 cdef dict parse(FILE *stream)

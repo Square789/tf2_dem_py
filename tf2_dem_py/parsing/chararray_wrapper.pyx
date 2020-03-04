@@ -31,6 +31,7 @@ cdef class CharArrayWrapper:
 		"""
 		print("create_new called")
 		cdef CharArrayWrapper caw = CharArrayWrapper.__new__(CharArrayWrapper)
+		print("check")
 		caw.mem_ptr = <uint8_t *>malloc(read_len)
 		caw.mem_len = read_len
 		caw.bitbuf = 0x00
@@ -41,6 +42,7 @@ cdef class CharArrayWrapper:
 				"of size {}.".format(<int>read_len))
 		if fread(&caw.mem_ptr, read_len, 1, file_ptr) == 0:
 			raise IOError("File read operation failed or EOF was hit.")
+		print("check 2")
 		return caw
 
 	cdef uint32_t get_next_str_size(self):

@@ -6,15 +6,15 @@ __version__ = "0.0.1dev-0"
 
 extensions = (
 	Extension(
-        "chararray_wrapper",
+        "tf2_dem_py.parsing.chararray_wrapper",
         sources = ["tf2_dem_py/parsing/chararray_wrapper.pyx",],
 	),
 	Extension(
-        "header",
+        "tf2_dem_py.parsing.header",
         sources = ["tf2_dem_py/parsing/header.pyx",],
 	),
 	Extension(
-        "cy_demo_parser",
+        "tf2_dem_py.parsing.cy_demo_parser",
         sources = [
 			"tf2_dem_py/parsing/cy_demo_parser.pyx",
 		],
@@ -57,5 +57,5 @@ setup(
 	# 	language_level = 3,
 	# 	include_path = ["."], # Not .h files, but pxd
 	# 	verbose = 1,
-	# )
+	# ),
 )
