@@ -10,9 +10,9 @@ cdef class CharArrayWrapper:
 		uint32_t pos
 
 	@staticmethod
-	cdef inline CharArrayWrapper create_new(FILE *file_ptr, uint32_t read_len)
+	cdef CharArrayWrapper create_new(FILE *file_ptr, size_t read_len)
 
 	cdef uint32_t get_next_str_size(self)
-	cdef str read_next_utf8_str(self)
-	cdef str read_utf8_str(self, uint32_t req_len)
-	cdef uint8_t *read_raw(self, uint32_t req_len)
+	cdef str get_next_utf8_str(self)
+	cdef str get_utf8_str(self, size_t req_len)
+	cdef uint8_t *get_raw(self, size_t req_len)

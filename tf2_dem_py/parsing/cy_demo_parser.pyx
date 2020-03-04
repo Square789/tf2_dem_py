@@ -5,21 +5,21 @@ from tf2_dem_py.parsing.header cimport parse as hp
 cdef class CyDemoParser():
 	# attrs in pxd
 
-	def __init__(self, char *target_file):
-		print("Demo parser created")
-		self.finished = 0
+	def __cinit__(self, char *target_file):
 		self.stream = fopen(target_file, "r")
+
+	def __dealloc__(self):
+		fclose(self.stream)
+
+	def __init__(self, *_):
+		self.finished = 0
 		self.out = {}
 
-	cpdef parse(self):
-		print("parse method called")
+	cpdef dict parse(self):
 		cdef dict h
 		h = hp(self.stream)
-		print("check 4")
 		self.out["header"] = h
-		print("check 5")
 		__import__("pprint").pprint(self.out)
-		print("check 6")
 		while not self.finished:
-			print("blblblbl")
 			self.finished = 1
+		return self.out

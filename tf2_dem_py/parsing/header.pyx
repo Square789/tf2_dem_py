@@ -3,10 +3,13 @@ from libc.stdio cimport FILE
 from tf2_dem_py.parsing.chararray_wrapper cimport CharArrayWrapper
 
 cdef dict parse(FILE *stream):
-	cdef CharArrayWrapper c = CharArrayWrapper.create_new(stream, 1260)
-	print("check 3")
-	cdef dict tmp = {}
-	return tmp
+	cdef dict hdict = {}
+	cdef CharArrayWrapper header_stream = \
+		CharArrayWrapper.create_new(stream, 1260)
+
+	hdict["ident"] = header_stream.get_utf8_str(8)
+
+	return hdict
 
 # cdef dict parse(FILE* stream):
 # 	# print("header parser meth called")
@@ -20,10 +23,6 @@ cdef dict parse(FILE *stream):
 # 	# fread((&h.client_id), 260, 1, stream)
 # 	# fread((&h.map_name), 260, 1, stream)
 # 	# fread((&h.game_dir), 260, 1, stream)
-
-# 	cdef dict hd = {}
-
-# 	#hd["ident"] = header_stream.get_next_utf8_str(8)
 
 # 	# hd["dem_prot"] = int(<unsigned int> h.dem_prot)
 # 	# hd["net_prot"] = int(<unsigned int> h.net_prot)

@@ -6,4 +6,4 @@ cdef class CyDemoParser():
 		FILE *stream
 		dict out
 
-	cpdef parse(self)
+	cpdef dict parse(self)

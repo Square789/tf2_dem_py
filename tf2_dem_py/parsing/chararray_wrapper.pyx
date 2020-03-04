@@ -1,6 +1,6 @@
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint32_t, uint8_t
-from libc.stdio cimport FILE, fread
+from libc.stdio cimport FILE, fread, printf
 from libc.string cimport memcpy
 
 cdef class CharArrayWrapper:
@@ -10,18 +10,13 @@ cdef class CharArrayWrapper:
 	"""
 	# attrs in pxd
 
-	def __cinit__(self):
-		self.mem_ptr = NULL
-		self.mem_len = 0
-		self.bitbuf = 0
-		self.bitbuf_len = 0
-		self.pos = 0
-
 	def __dealloc__(self):
+		printf("ight imma dealloc: %x\n", self.mem_ptr)
 		free(self.mem_ptr)
+		self.mem_ptr = NULL
 
 	@staticmethod
-	cdef inline CharArrayWrapper create_new(FILE *file_ptr, uint32_t read_len):
+	cdef CharArrayWrapper create_new(FILE *file_ptr, size_t read_len):
 		"""
 		Create a new CharArrayWrapper and return it. This has to be done
 		here as cinit only takes python arguments.
@@ -29,9 +24,7 @@ cdef class CharArrayWrapper:
 		See https://cython.readthedocs.io/en/latest/src/userguide/
 			extension_types.html#instantiation-from-existing-c-c-pointers
 		"""
-		print("create_new called")
 		cdef CharArrayWrapper caw = CharArrayWrapper.__new__(CharArrayWrapper)
-		print("check")
 		caw.mem_ptr = <uint8_t *>malloc(read_len)
 		caw.mem_len = read_len
 		caw.bitbuf = 0x00
@@ -40,9 +33,8 @@ cdef class CharArrayWrapper:
 		if caw.mem_ptr == NULL:
 			raise MemoryError("Failed to allocate memory for demo datachunk "
 				"of size {}.".format(<int>read_len))
-		if fread(&caw.mem_ptr, read_len, 1, file_ptr) == 0:
+		if fread(caw.mem_ptr, read_len, 1, file_ptr) == 0:
 			raise IOError("File read operation failed or EOF was hit.")
-		print("check 2")
 		return caw
 
 	cdef uint32_t get_next_str_size(self):
@@ -59,7 +51,7 @@ cdef class CharArrayWrapper:
 			i += 1
 		return i
 
-	cdef str read_next_utf8_str(self):
+	cdef str get_next_utf8_str(self):
 		"""
 		Returns a python string with all chars up until the next null char
 		converted to utf-8. 
@@ -67,24 +59,24 @@ cdef class CharArrayWrapper:
 		May raise: MemoryError
 		"""
 		cdef uint8_t *tmp
-		tmp = self.read_raw(self.get_next_str_size())
+		tmp = self.get_raw(self.get_next_str_size())
 		cdef str tmp_str = (tmp).decode("utf-8")
 		free(tmp)
 		return tmp_str
 
-	cdef str read_utf8_str(self, uint32_t req_len):
+	cdef str get_utf8_str(self, size_t req_len):
 		"""
 		Returns a python string with length req_len.
 
 		May raise: MemoryError
 		"""
 		cdef uint8_t *tmp
-		tmp = self.read_raw(req_len)
+		tmp = self.get_raw(req_len)
 		cdef str tmp_str = (tmp).decode("utf-8")
 		free(tmp)
 		return tmp_str
 
-	cdef uint8_t *read_raw(self, uint32_t req_len):
+	cdef uint8_t *get_raw(self, size_t req_len):
 		"""
 		Returns a pointer to an array of unsigned chars
 		corresponding to all chars from self.pos to self.pos + req_len.
@@ -95,6 +87,6 @@ cdef class CharArrayWrapper:
 		if tmp == NULL:
 			raise MemoryError("Failed to allocate memory for return array "
 				"of size {}.".format(<int>req_len))
-		memcpy(<void *>tmp, <void *>(self.mem_ptr + self.pos), req_len)
+		memcpy(tmp, (self.mem_ptr + self.pos), req_len)
 		self.pos += req_len
 		return tmp

@@ -23,10 +23,6 @@ extensions = (
 
 for i in extensions:
 	i.extra_compile_args = ["-DMS_WIN64"]
-# 	i.include_dirs = [
-#             "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0"
-#             "/mingw64/x86_64-w64-mingw32/include",
-# 		]
 
 setup(
 	name = "tf2_dem_py",
@@ -43,16 +39,6 @@ setup(
 		include_path = ["."], # Not .h files, but pxd
 		verbose = 1,
 	),
-	# ext_modules = cythonize(
-	# 	Extension(
-	# 		"",
-	# 		["tf2_dem_py/**/*.pyx"],
-	# 		extra_compile_args = ["-DMS_WIN64"]
-	# 	),
-	# 	language_level = 3,
-	# 	include_path = ["."], # Not .h files, but pxd
-	# 	verbose = 1,
-	# )
 	# ext_modules = cythonize(["tf2_dem_py/**/*.pyx"],
 	# 	language_level = 3,
 	# 	include_path = ["."], # Not .h files, but pxd
