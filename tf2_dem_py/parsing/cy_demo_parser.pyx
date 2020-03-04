@@ -15,8 +15,11 @@ cdef class CyDemoParser():
 		print("parse method called")
 		cdef dict h
 		h = hp(self.stream)
+		print("check 4")
 		self.out["header"] = h
+		print("check 5")
 		__import__("pprint").pprint(self.out)
+		print("check 6")
 		while not self.finished:
 			print("blblblbl")
 			self.finished = 1

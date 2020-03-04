@@ -14,6 +14,6 @@ class PyDemoParser():
 
 	def parse(self):
 		"""
-		Parse the demo, returning some dict that i have no idea what is gonna be in there lol
+		Parse the demo, returning some dict. i have no idea what is gonna be in there lol
 		"""
 		return self.parser.parse()
