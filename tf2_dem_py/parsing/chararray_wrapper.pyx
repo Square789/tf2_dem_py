@@ -46,7 +46,7 @@ cdef class CharArrayWrapper:
 		while True:
 			if self.mem_ptr[i + self.pos] == 0x00:
 				break
-			if self.pos + i == self.buf_len:
+			if self.pos + i == self.bitbuf_len:
 				break
 			i += 1
 		return i
