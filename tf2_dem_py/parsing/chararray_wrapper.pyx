@@ -21,6 +21,9 @@ cdef class CharArrayWrapper:
 		Create a new CharArrayWrapper and return it. This has to be done
 		here as cinit only takes python arguments.
 
+		*file_ptr: Pointer to a stdio.FILE struct.
+		read_len: Bytes to be read from the supplied FILE.
+
 		See https://cython.readthedocs.io/en/latest/src/userguide/
 			extension_types.html#instantiation-from-existing-c-c-pointers
 		"""
@@ -36,6 +39,35 @@ cdef class CharArrayWrapper:
 		if fread(caw.mem_ptr, read_len, 1, file_ptr) == 0:
 			raise IOError("File read operation failed or EOF was hit.")
 		return caw
+
+	cdef uint8_t *get_raw(self, size_t req_len):
+		"""
+		Returns a pointer to an array of unsigned chars
+		corresponding to all chars from self.pos to self.pos + req_len.
+		Pointer has to be freed.
+
+		May raise:
+			MemoryError
+			BufferError
+		"""
+		self._check_for_space(req_len)
+		cdef uint8_t *raw_ptr
+		raw_ptr = <uint8_t *>malloc(req_len)
+		if raw_ptr == NULL:
+			raise MemoryError("Failed to allocate memory for return array "
+				"of size {}.".format(<int>req_len))
+		memcpy(raw_ptr, (self.mem_ptr + self.pos), req_len)
+		self.pos += req_len
+		return raw_ptr
+
+	cdef void _check_for_space(self, uint32_t req_len):
+		"""
+		Raises BufferError if req_len can not be delivered from
+		buffer anymore.
+		"""
+			if (self.bitbuf_len - self.pos) < req_len:
+				raise BufferError("Can not return {} chars from buffer "
+					"anymore.".format(<int>req_len))
 
 	cdef uint32_t get_next_str_size(self):
 		"""
@@ -76,17 +108,11 @@ cdef class CharArrayWrapper:
 		free(tmp)
 		return tmp_str
 
-	cdef uint8_t *get_raw(self, size_t req_len):
+	cdef uint32_t get_uint32(self):
 		"""
-		Returns a pointer to an array of unsigned chars
-		corresponding to all chars from self.pos to self.pos + req_len.
-		Array has to be freed.
+		Returns the next 32 bits interpreted as an unsigned integer
 		"""
-		cdef uint8_t *tmp
-		tmp = <uint8_t *>malloc(req_len)
-		if tmp == NULL:
-			raise MemoryError("Failed to allocate memory for return array "
-				"of size {}.".format(<int>req_len))
-		memcpy(tmp, (self.mem_ptr + self.pos), req_len)
-		self.pos += req_len
-		return tmp
+		cdef uint32_t i
+		memcpy(&i, (self.mem_ptr + self.pos), 4)
+		self.pos += 4
+		return i

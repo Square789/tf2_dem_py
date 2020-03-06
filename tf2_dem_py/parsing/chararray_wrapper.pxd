@@ -12,7 +12,9 @@ cdef class CharArrayWrapper:
 	@staticmethod
 	cdef CharArrayWrapper create_new(FILE *file_ptr, size_t read_len)
 
+	cdef void _check_for_space(self)
+	cdef uint8_t *get_raw(self, size_t req_len)
 	cdef uint32_t get_next_str_size(self)
 	cdef str get_next_utf8_str(self)
 	cdef str get_utf8_str(self, size_t req_len)
-	cdef uint8_t *get_raw(self, size_t req_len)
+	cdef uint32_t get_uint32(self)

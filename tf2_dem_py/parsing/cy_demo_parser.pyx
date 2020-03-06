@@ -19,7 +19,6 @@ cdef class CyDemoParser():
 		cdef dict h
 		h = hp(self.stream)
 		self.out["header"] = h
-		__import__("pprint").pprint(self.out)
 		while not self.finished:
 			self.finished = 1
 		return self.out

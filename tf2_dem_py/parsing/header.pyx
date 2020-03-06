@@ -8,6 +8,7 @@ cdef dict parse(FILE *stream):
 		CharArrayWrapper.create_new(stream, 1260)
 
 	hdict["ident"] = header_stream.get_utf8_str(8)
+	hdict["net_prot"] = header_stream.get_uint32()
 
 	return hdict
 
