@@ -1,3 +1,5 @@
 from libc.stdio cimport FILE
 
-cdef dict parse_any(FILE *stream, char *finish_flag)
+from tf2_dem_py.parsing.parser_state cimport ParserState
+
+cdef dict parse_any(FILE *stream, ParserState *p_state)

@@ -1,12 +1,21 @@
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint8_t, uint32_t, uint64_t
-from libc.stdio cimport FILE, fread, ferror
+from libc.stdio cimport FILE, fread, ferror, printf
 from libc.string cimport memcpy, memset
 
 cdef class CharArrayWrapper:
 	"""
-	Class to read a block of data out of a file and offer functions
-	to manipulate and further read it.
+	Class to read a block of bytes out of a file and offer convenient
+	methods to read it as if it were a continuous string of bits.
+
+	Call create_new to instantiate a new CharArrayWrapper.
+
+	ERRORLEVEL should be checked for deviation from 0 before processing
+		retrieved data:
+	0b 0 0 0 0 0 0 0 0
+	   | | | | | | | \\Buffer too short to perform requested read operation
+	   | | | | | | \\Memory allocation failure
+	   ----None---
 	"""
 	# attrs in pxd
 
@@ -33,6 +42,7 @@ cdef class CharArrayWrapper:
 		caw.bitbuf = 0x00
 		caw.bitbuf_len = 0
 		caw.pos = 0
+		caw.ERRORLEVEL = 0
 		if caw.mem_ptr == NULL:
 			raise MemoryError("Failed to allocate memory for demo datachunk "
 				"of size {}.".format(<int>read_len))
@@ -67,14 +77,16 @@ cdef class CharArrayWrapper:
 		"""
 		Copies Requested amount of bits and bytes to the supplied
 		pointer. It is the caller's responsibility the pointer points to a
-		block of memory large enough, else a BufferError will be raised, to then
-		get ignored by cython.
+		block of memory large enough.
+		If more data was requested than the buffer could handle, ERRORLEVEL's first
+		bit will be set to 1 and no data will be written to the pointer.
 		"""
 		cdef uint8_t carry # temporary bit level storage
 		cdef size_t i # Loop variable
 		cdef void *tmp_ptr = target_ptr
 		if self._ver_buf_health(req_bytes, req_bits) != 0:
-			raise BufferError("Buffer too short to return data")
+			self.ERRORLEVEL |= 0b00000001
+			return
 		if self.bitbuf_len == 0:
 			memcpy(target_ptr, <void *>(self.mem_ptr + self.pos), req_bytes)
 			self.pos += req_bytes
@@ -129,7 +141,8 @@ cdef class CharArrayWrapper:
 		that is the distance that - if it were added to self.pos would
 		lead to a state where the previously read byte would be null.
 		(>= 1)
-		If EOB is hit, will cut off accordingly. MAY be 0 in only this case
+		If EOB is hit, will cut off accordingly. MAY be 0 in only this case,
+		also sets first bit of ERRORLEVEL to 1 then. 
 		"""
 		cdef uint32_t c_ln = 0
 		cdef uint8_t cur_byte
@@ -140,6 +153,8 @@ cdef class CharArrayWrapper:
 				c_ln += 1
 				if cur_byte == 0x00:
 					break
+			else:
+				self.ERRORLEVEL |= 0b00000001
 		else:
 			for _ in range(self.mem_len - self.pos):
 				cur_byte = carry | (self.mem_ptr[self.pos + c_ln] << self.bitbuf_len)
@@ -147,6 +162,8 @@ cdef class CharArrayWrapper:
 				if cur_byte == 0x00:
 					break
 				carry = (self.mem_ptr[self.pos + c_ln] >> (8 - self.bitbuf_len))
+			else:
+				self.ERRORLEVEL |= 0b00000001
 		return c_ln
 
 	cdef str get_next_utf8_str(self):
@@ -154,12 +171,14 @@ cdef class CharArrayWrapper:
 		Returns a python string with all chars up until the next null char
 		converted to utf-8.
 		May return an empty string on memory allocation failure or EOB.
+		Will set second bit of ERRORLEVEL to 1 on alloc error.
 		"""
 		cdef uint32_t needed_len = self.dist_until_null()
 		if needed_len == 0: #EOF
 			return ""
 		cdef uint8_t *tmp = <uint8_t *>malloc(needed_len)
 		if tmp == NULL:
+			self.ERRORLEVEL |= 0b00000010
 			return ""
 		self._read_raw(tmp, needed_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")
@@ -170,9 +189,11 @@ cdef class CharArrayWrapper:
 		"""
 		Returns a python string with length req_len, decoded to utf-8.
 		May return empty string on memory allocation failure.
+		Will set second bit of ERRORLEVEL to 1 on alloc error.
 		"""
 		cdef uint8_t *tmp = <uint8_t *>malloc(req_len)
 		if tmp == NULL:
+			self.ERRORLEVEL |= 0b00000010
 			return ""
 		self._read_raw(tmp, req_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")
@@ -182,11 +203,11 @@ cdef class CharArrayWrapper:
 	cdef uint64_t get_int(self, uint8_t req_bits):
 		"""
 		Returns requested amount of bits (0..64) as a 64 bit integer.
-		Relatively unstable due to endian-ness, safer to be typecast.
+		Relatively unstable due to endian-ness, should be typecast.
+		Returns 0 if more than 64 bits are requested.
 		"""
 		if req_bits > 64:
-			raise ValueError("Max allowed integer size is 64b. That should "
-				"really be enough.")
+			return 0
 		cdef uint64_t res = 0
 		self._read_raw(&res, req_bits // 8, req_bits % 8)
 		return res

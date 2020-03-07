@@ -1,8 +1,9 @@
 from libc.stdio cimport FILE
+from tf2_dem_py.parsing.parser_state cimport ParserState
 
 cdef class CyDemoParser():
 	cdef:
-		public char finished
+		ParserState *state
 		FILE *stream
 		dict out
 

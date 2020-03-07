@@ -8,6 +8,7 @@ cdef class CharArrayWrapper:
 		uint8_t bitbuf
 		uint8_t bitbuf_len
 		uint32_t pos
+		uint8_t ERRORLEVEL
 
 	@staticmethod
 	cdef CharArrayWrapper create_new(FILE *, size_t)

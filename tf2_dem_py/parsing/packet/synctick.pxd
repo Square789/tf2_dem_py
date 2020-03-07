@@ -1,3 +1,5 @@
 from libc.stdio cimport FILE
 
-cdef void parse(FILE *stream)
+from tf2_dem_py.parsing.parser_state cimport ParserState
+
+cdef void parse(FILE *stream, ParserState *p_state)

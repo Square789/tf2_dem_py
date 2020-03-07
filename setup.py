@@ -1,4 +1,6 @@
 import ast
+import glob
+import os
 from setuptools import setup, Extension
 from Cython.Build.Cythonize import cythonize
 
@@ -14,51 +16,16 @@ with open("tf2_dem_py/demo_parser.py") as h:
 if __version__ == None:
 	raise SyntaxError("Version not found.")
 
-extensions = (
-	Extension(
-        "tf2_dem_py.parsing.chararray_wrapper",
-        sources = ["tf2_dem_py/parsing/chararray_wrapper.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.header",
-        sources = ["tf2_dem_py/parsing/header.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.cy_demo_parser",
-        sources = ["tf2_dem_py/parsing/cy_demo_parser.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.parse_any",
-        sources = ["tf2_dem_py/parsing/packet/parse_any.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.message",
-        sources = ["tf2_dem_py/parsing/packet/message.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.datatables",
-        sources = ["tf2_dem_py/parsing/packet/datatables.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.stringtables",
-        sources = ["tf2_dem_py/parsing/packet/stringtables.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.synctick",
-        sources = ["tf2_dem_py/parsing/packet/synctick.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.consolecmd",
-        sources = ["tf2_dem_py/parsing/packet/consolecmd.pyx"],
-	),
-	Extension(
-        "tf2_dem_py.parsing.packet.usercmd",
-        sources = ["tf2_dem_py/parsing/packet/usercmd.pyx"],
-	),
-)
+extensions = []
 
-for i in extensions:
-	i.extra_compile_args = ["-DMS_WIN64"]
+for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
+	if os.path.split(i)[1] == "__init__.pyx":
+		continue
+	extensions.append(Extension(
+		os.path.splitext(i)[0].replace(os.path.sep, "."),
+		sources = [i],
+		extra_compile_args = ["-DMS_WIN64"],
+	))
 
 setup(
 	name = "tf2_dem_py",
@@ -74,10 +41,5 @@ setup(
 		language_level = 3,
 		include_path = ["."], # Not .h files, but pxd
 		verbose = 1,
-	),
-	# ext_modules = cythonize(["tf2_dem_py/**/*.pyx"],
-	# 	language_level = 3,
-	# 	include_path = ["."], # Not .h files, but pxd
-	# 	verbose = 1,
-	# ),
+	)
 )

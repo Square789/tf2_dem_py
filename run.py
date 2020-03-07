@@ -1,8 +1,9 @@
 import os
+from pprint import pprint
 
-from tf2_dem_py.demo_parser import PyDemoParser
+from tf2_dem_py.demo_parser import DemoParser
 
-p = os.path.join(os.environ["USERPROFILE"], "Desktop", "demotesting", "small.dem")
+p = os.path.join(os.environ["USERPROFILE"], "Desktop", "demotesting", "testdemo.dem")
 
-dp = PyDemoParser(p)
-print(dp.parse())
+dp = DemoParser(p)
+pprint(dp.parse())
