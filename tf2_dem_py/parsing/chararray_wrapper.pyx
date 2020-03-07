@@ -193,9 +193,24 @@ cdef class CharArrayWrapper:
 
 	cdef uint32_t get_uint32(self):
 		"""
-		Returns the next 32 bits interpreted as an unsigned integer
+		Returns the next 32 bits interpreted as an unsigned integer.
 		"""
 		cdef uint32_t i
-		memcpy(&i, (self.mem_ptr + self.pos), 4)
-		self.pos += 4
+		self._read_raw(&i, 4, 0)
 		return i
+
+	cdef float get_flt16(self):
+		"""
+		Returns the next 16 bits interpreted as a floating point number.
+		"""
+		cdef float f
+		self._read_raw(&f, 2, 0)
+		return f
+
+	cdef double get_dbl32(self):
+		"""
+		Returns the next 32 bits interpreted as a floating point double.
+		"""
+		cdef double d
+		self._read_raw(&d, 4, 0)
+		return d

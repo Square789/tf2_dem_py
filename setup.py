@@ -17,17 +17,39 @@ if __version__ == None:
 extensions = (
 	Extension(
         "tf2_dem_py.parsing.chararray_wrapper",
-        sources = ["tf2_dem_py/parsing/chararray_wrapper.pyx",],
+        sources = ["tf2_dem_py/parsing/chararray_wrapper.pyx"],
 	),
 	Extension(
         "tf2_dem_py.parsing.header",
-        sources = ["tf2_dem_py/parsing/header.pyx",],
+        sources = ["tf2_dem_py/parsing/header.pyx"],
 	),
 	Extension(
         "tf2_dem_py.parsing.cy_demo_parser",
-        sources = [
-			"tf2_dem_py/parsing/cy_demo_parser.pyx",
-		],
+        sources = ["tf2_dem_py/parsing/cy_demo_parser.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.parse_any",
+        sources = ["tf2_dem_py/parsing/packet/parse_any.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.message",
+        sources = ["tf2_dem_py/parsing/packet/message.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.datatables",
+        sources = ["tf2_dem_py/parsing/packet/datatables.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.stringtables",
+        sources = ["tf2_dem_py/parsing/packet/stringtables.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.synctick",
+        sources = ["tf2_dem_py/parsing/packet/synctick.pyx"],
+	),
+	Extension(
+        "tf2_dem_py.parsing.packet.consolecmd",
+        sources = ["tf2_dem_py/parsing/packet/consolecmd.pyx"],
 	),
 )
 

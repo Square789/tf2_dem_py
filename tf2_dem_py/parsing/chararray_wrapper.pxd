@@ -21,3 +21,6 @@ cdef class CharArrayWrapper:
 
 	cdef uint64_t get_int(self, uint8_t)
 	cdef uint32_t get_uint32(self)
+
+	cdef float get_flt16(self)
+	cdef double get_dbl32(self)
