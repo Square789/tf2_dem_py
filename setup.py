@@ -51,6 +51,10 @@ extensions = (
         "tf2_dem_py.parsing.packet.consolecmd",
         sources = ["tf2_dem_py/parsing/packet/consolecmd.pyx"],
 	),
+	Extension(
+        "tf2_dem_py.parsing.packet.usercmd",
+        sources = ["tf2_dem_py/parsing/packet/usercmd.pyx"],
+	),
 )
 
 for i in extensions:

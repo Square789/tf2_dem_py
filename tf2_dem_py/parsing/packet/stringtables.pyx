@@ -6,10 +6,10 @@ cdef void parse(FILE *stream):
 	cdef uint32_t pkt_len
 
 	# Read tick of packet data
-	fread(&tick, sizeof(uint32_t), 1, stream)
+	fread(&tick, sizeof(tick), 1, stream)
 
 	# Read length of packet data
-	fread(&pkt_len, sizeof(uint32_t), 1, stream)
+	fread(&pkt_len, sizeof(pkt_len), 1, stream)
 
 	# Skip the thing lol
 	fseek(stream, pkt_len, SEEK_CUR)

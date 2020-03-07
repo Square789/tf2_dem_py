@@ -7,7 +7,7 @@ cdef class CyDemoParser():
 	# attrs in pxd
 
 	def __cinit__(self, char *target_file):
-		self.stream = fopen(target_file, "r")
+		self.stream = fopen(target_file, "rb")
 		self.finished = 0
 
 	def __dealloc__(self):

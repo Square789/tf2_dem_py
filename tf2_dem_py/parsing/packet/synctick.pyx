@@ -5,4 +5,4 @@ cdef void parse(FILE *stream):
 	cdef uint32_t tick
 
 	# That is all
-	fread(&tick, sizeof(uint32_t), 1, stream)
+	fread(&tick, sizeof(tick), 1, stream)
