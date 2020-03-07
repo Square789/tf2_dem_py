@@ -1,7 +1,7 @@
 from libc.stdlib cimport malloc, free
-from libc.stdint cimport uint32_t, uint8_t
-from libc.stdio cimport FILE, fread, printf
-from libc.string cimport memcpy
+from libc.stdint cimport uint8_t, uint32_t, uint64_t
+from libc.stdio cimport FILE, fread, ferror
+from libc.string cimport memcpy, memset
 
 cdef class CharArrayWrapper:
 	"""
@@ -11,7 +11,6 @@ cdef class CharArrayWrapper:
 	# attrs in pxd
 
 	def __dealloc__(self):
-		printf("ight imma dealloc: %x\n", self.mem_ptr)
 		free(self.mem_ptr)
 		self.mem_ptr = NULL
 
@@ -28,6 +27,7 @@ cdef class CharArrayWrapper:
 			extension_types.html#instantiation-from-existing-c-c-pointers
 		"""
 		cdef CharArrayWrapper caw = CharArrayWrapper.__new__(CharArrayWrapper)
+		cdef size_t fread_res
 		caw.mem_ptr = <uint8_t *>malloc(read_len)
 		caw.mem_len = read_len
 		caw.bitbuf = 0x00
@@ -36,77 +36,160 @@ cdef class CharArrayWrapper:
 		if caw.mem_ptr == NULL:
 			raise MemoryError("Failed to allocate memory for demo datachunk "
 				"of size {}.".format(<int>read_len))
-		if fread(caw.mem_ptr, read_len, 1, file_ptr) == 0:
-			raise IOError("File read operation failed or EOF was hit.")
+		fread_res = fread(caw.mem_ptr, sizeof(uint8_t), read_len, file_ptr)
+		if fread_res != read_len:
+			if ferror(file_ptr):
+				raise IOError("File read operation failed.")
+			else:
+				raise IOError("Returned only {} bytes, file EOF was "
+					"likely hit.".format(<int>fread_res))
 		return caw
 
-	cdef uint8_t *get_raw(self, size_t req_len):
+	cdef uint8_t _ver_buf_health(self, size_t req_bytes, uint8_t req_bits):
 		"""
-		Returns a pointer to an array of unsigned chars
-		corresponding to all chars from self.pos to self.pos + req_len.
-		Pointer has to be freed.
+		Verify enough data is left that can still be read, counting from
+			current bitbuffer length and position in char array
+		Returns:
+		0 if buffer is still large enough.
+		1 if the buffer is too short.
+		2 if more than 7 bits were requested.
+		"""
+		if req_bits > 7:
+			return 2
+		# Temp var in case bitbuf overflows
+		cdef uint8_t tmp
+		tmp = 1 if req_bits > self.bitbuf_len else 0
+		if (self.mem_len - self.pos) < (req_bytes + tmp):
+			return 1
+		return 0
 
-		May raise:
-			MemoryError
-			BufferError
+	cdef void _read_raw(self, void *target_ptr, size_t req_bytes, uint8_t req_bits):
 		"""
-		self._check_for_space(req_len)
-		cdef uint8_t *raw_ptr
-		raw_ptr = <uint8_t *>malloc(req_len)
-		if raw_ptr == NULL:
-			raise MemoryError("Failed to allocate memory for return array "
-				"of size {}.".format(<int>req_len))
-		memcpy(raw_ptr, (self.mem_ptr + self.pos), req_len)
-		self.pos += req_len
-		return raw_ptr
+		Copies Requested amount of bits and bytes to the supplied
+		pointer. It is the caller's responsibility the pointer points to a
+		block of memory large enough, else a BufferError will be raised, to then
+		get ignored by cython.
+		"""
+		cdef uint8_t carry # temporary bit level storage
+		cdef size_t i # Loop variable
+		cdef void *tmp_ptr = target_ptr
+		if self._ver_buf_health(req_bytes, req_bits) != 0:
+			raise BufferError("Buffer too short to return data")
+		if self.bitbuf_len == 0:
+			memcpy(target_ptr, <void *>(self.mem_ptr + self.pos), req_bytes)
+			self.pos += req_bytes
+			if req_bits != 0:
+				memset(
+					target_ptr + req_bytes,
+					self.mem_ptr[self.pos] & ((2**req_bits) - 1),
+					1
+				)
+				self.bitbuf = self.mem_ptr[self.pos] >> req_bits
+				self.bitbuf_len = (8 - req_bits)
+				self.pos += 1
+		else:
+			carry = self.bitbuf
+			for i in range(req_bytes):
+				memset(
+					tmp_ptr,
+					carry | (self.mem_ptr[self.pos + i] << self.bitbuf_len),
+					1
+				)
+				tmp_ptr = target_ptr + 1
+				carry = self.mem_ptr[self.pos + i] >> (8 - self.bitbuf_len)
+			self.pos += req_bytes
+			if req_bits == 0:
+				self.bitbuf = carry
+				# No other changes on bit level
+			else:
+				#Throw extra char at tmp_ptr, change bitbuf_len, update bitbuf
+				if req_bits <= self.bitbuf_len:
+					memset(tmp_ptr, self.bitbuf & ((2**req_bits) - 1), 1) # AND potentially unnecessary
+					self.bitbuf >>= req_bits
+					self.bitbuf_len -= req_bits
+				else:
+					# i. e. [0b[00000]100, 3], but i want 4 bits
+					# so read the next byte into carry: i.e. 10010001
+					# using fancy ops 2 lines below: [0000]1100
+					# then save [0b[0]1001000, 7] as new bitbuf
+					carry = self.mem_ptr[self.pos]
+					memset(
+						tmp_ptr, 
+						self.bitbuf | ((carry << self.bitbuf_len) & ((2**req_bits) - 1)),
+						1
+					)
+					# Ok because req_bits > bitbuf_len in this else block
+					self.bitbuf = carry >> (req_bits - self.bitbuf_len)
+					self.bitbuf_len = (8 - (req_bits - self.bitbuf_len))
+					self.pos += 1
 
-	cdef void _check_for_space(self, uint32_t req_len):
+	cdef uint32_t dist_until_null(self):
 		"""
-		Raises BufferError if req_len can not be delivered from
-		buffer anymore.
+		Returns the distance until the next nullbyte is encountered,
+		that is the distance that - if it were added to self.pos would
+		lead to a state where the previously read byte would be null.
+		(>= 1)
+		If EOB is hit, will cut off accordingly. MAY be 0 in only this case
 		"""
-			if (self.bitbuf_len - self.pos) < req_len:
-				raise BufferError("Can not return {} chars from buffer "
-					"anymore.".format(<int>req_len))
-
-	cdef uint32_t get_next_str_size(self):
-		"""
-		Returns the amount of chars until the next null character is hit.
-		(Excluding the null character)
-		"""
-		cdef uint32_t i = 0
-		while True:
-			if self.mem_ptr[i + self.pos] == 0x00:
-				break
-			if self.pos + i == self.bitbuf_len:
-				break
-			i += 1
-		return i
+		cdef uint32_t c_ln = 0
+		cdef uint8_t cur_byte
+		cdef uint8_t carry = self.bitbuf
+		if self.bitbuf_len == 0:
+			for _ in range(self.mem_len - self.pos):
+				cur_byte = self.mem_ptr[self.pos + c_ln]
+				c_ln += 1
+				if cur_byte == 0x00:
+					break
+		else:
+			for _ in range(self.mem_len - self.pos):
+				cur_byte = carry | (self.mem_ptr[self.pos + c_ln] << self.bitbuf_len)
+				c_ln += 1
+				if cur_byte == 0x00:
+					break
+				carry = (self.mem_ptr[self.pos + c_ln] >> (8 - self.bitbuf_len))
+		return c_ln
 
 	cdef str get_next_utf8_str(self):
 		"""
 		Returns a python string with all chars up until the next null char
-		converted to utf-8. 
-
-		May raise: MemoryError
+		converted to utf-8.
+		May return an empty string on memory allocation failure or EOB.
 		"""
-		cdef uint8_t *tmp
-		tmp = self.get_raw(self.get_next_str_size())
+		cdef uint32_t needed_len = self.dist_until_null()
+		if needed_len == 0: #EOF
+			return ""
+		cdef uint8_t *tmp = <uint8_t *>malloc(needed_len)
+		if tmp == NULL:
+			return ""
+		self._read_raw(tmp, needed_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")
-		free(tmp)
+		free(tmp); tmp = NULL
 		return tmp_str
 
 	cdef str get_utf8_str(self, size_t req_len):
 		"""
-		Returns a python string with length req_len.
-
-		May raise: MemoryError
+		Returns a python string with length req_len, decoded to utf-8.
+		May return empty string on memory allocation failure.
 		"""
-		cdef uint8_t *tmp
-		tmp = self.get_raw(req_len)
+		cdef uint8_t *tmp = <uint8_t *>malloc(req_len)
+		if tmp == NULL:
+			return ""
+		self._read_raw(tmp, req_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")
-		free(tmp)
+		free(tmp); tmp = NULL
 		return tmp_str
+
+	cdef uint64_t get_int(self, uint8_t req_bits):
+		"""
+		Returns requested amount of bits (0..64) as a 64 bit integer.
+		Relatively unstable due to endian-ness, safer to be typecast.
+		"""
+		if req_bits > 64:
+			raise ValueError("Max allowed integer size is 64b. That should "
+				"really be enough.")
+		cdef uint64_t res = 0
+		self._read_raw(&res, req_bits // 8, req_bits % 8)
+		return res
 
 	cdef uint32_t get_uint32(self):
 		"""

@@ -1,8 +1,18 @@
+import ast
 from setuptools import setup, Extension
 from Cython.Build.Cythonize import cythonize
 
+# Thanks: https://stackoverflow.com/questions/2058802/
+# 	how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
+__version__ = None
+with open("tf2_dem_py/demo_parser.py") as h:
+	for line in h.readlines():
+		if line.startswith("__version__"):
+			__version__ = ast.parse(line).body[0].value.s
+			break
 
-__version__ = "0.0.1dev-0"
+if __version__ == None:
+	raise SyntaxError("Version not found.")
 
 extensions = (
 	Extension(
