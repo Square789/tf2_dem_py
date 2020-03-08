@@ -21,7 +21,7 @@ cdef dict parse(FILE *stream, ParserState* p_state):
 	hdict["sigon"] = header_stream.get_uint32()
 
 	if header_stream.ERRORLEVEL != 0:
-		p_state.FAILURE = 1
+		p_state.FAILURE |= 0b1
 		p_state.RELAYED_CAW_ERR = header_stream.ERRORLEVEL
 		return {}
 

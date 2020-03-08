@@ -1,4 +1,4 @@
-from libc.stdio cimport FILE, fread, fseek, SEEK_CUR
+from libc.stdio cimport FILE, fread, fseek, ferror, feof, SEEK_CUR
 from libc.stdint cimport uint8_t, uint32_t
 
 from tf2_dem_py.parsing.parser_state cimport ParserState

@@ -13,9 +13,11 @@ cdef class CharArrayWrapper:
 	ERRORLEVEL should be checked for deviation from 0 before processing
 		retrieved data:
 	0b 0 0 0 0 0 0 0 0
-	   | | | | | | | \\Buffer too short to perform requested read operation
-	   | | | | | | \\Memory allocation failure
-	   ----None---
+	         | | | | \\ Buffer too short to perform requested read operation.
+	         | | | \\ Memory allocation failure.
+	         | | \\ Instantiation failure, read error.
+			 | \\ Instantiation failure, malloc error.
+			 \\ Instantiation failure, amount of bytes read differs from requested amount.
 	"""
 	# attrs in pxd
 
@@ -32,6 +34,8 @@ cdef class CharArrayWrapper:
 		*file_ptr: Pointer to a stdio.FILE struct.
 		read_len: Bytes to be read from the supplied FILE.
 
+		WARNING: Instantiated CharArrayWrapper may already be faulty
+
 		See https://cython.readthedocs.io/en/latest/src/userguide/
 			extension_types.html#instantiation-from-existing-c-c-pointers
 		"""
@@ -44,15 +48,12 @@ cdef class CharArrayWrapper:
 		caw.pos = 0
 		caw.ERRORLEVEL = 0
 		if caw.mem_ptr == NULL:
-			raise MemoryError("Failed to allocate memory for demo datachunk "
-				"of size {}.".format(<int>read_len))
+			caw.ERRORLEVEL |= 0b1000
 		fread_res = fread(caw.mem_ptr, sizeof(uint8_t), read_len, file_ptr)
+		if ferror(file_ptr):
+			caw.ERRORLEVEL |= 0b100
 		if fread_res != read_len:
-			if ferror(file_ptr):
-				raise IOError("File read operation failed.")
-			else:
-				raise IOError("Returned only {} bytes, file EOF was "
-					"likely hit.".format(<int>fread_res))
+			caw.ERRORLEVEL |= 0b10000
 		return caw
 
 	cdef uint8_t _ver_buf_health(self, size_t req_bytes, uint8_t req_bits):
@@ -85,7 +86,7 @@ cdef class CharArrayWrapper:
 		cdef size_t i # Loop variable
 		cdef void *tmp_ptr = target_ptr
 		if self._ver_buf_health(req_bytes, req_bits) != 0:
-			self.ERRORLEVEL |= 0b00000001
+			self.ERRORLEVEL |= 0b1
 			return
 		if self.bitbuf_len == 0:
 			memcpy(target_ptr, <void *>(self.mem_ptr + self.pos), req_bytes)
@@ -154,7 +155,7 @@ cdef class CharArrayWrapper:
 				if cur_byte == 0x00:
 					break
 			else:
-				self.ERRORLEVEL |= 0b00000001
+				self.ERRORLEVEL |= 0b1
 		else:
 			for _ in range(self.mem_len - self.pos):
 				cur_byte = carry | (self.mem_ptr[self.pos + c_ln] << self.bitbuf_len)
@@ -163,7 +164,7 @@ cdef class CharArrayWrapper:
 					break
 				carry = (self.mem_ptr[self.pos + c_ln] >> (8 - self.bitbuf_len))
 			else:
-				self.ERRORLEVEL |= 0b00000001
+				self.ERRORLEVEL |= 0b1
 		return c_ln
 
 	cdef str get_next_utf8_str(self):
@@ -178,7 +179,7 @@ cdef class CharArrayWrapper:
 			return ""
 		cdef uint8_t *tmp = <uint8_t *>malloc(needed_len)
 		if tmp == NULL:
-			self.ERRORLEVEL |= 0b00000010
+			self.ERRORLEVEL |= 0b10
 			return ""
 		self._read_raw(tmp, needed_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")
@@ -193,7 +194,7 @@ cdef class CharArrayWrapper:
 		"""
 		cdef uint8_t *tmp = <uint8_t *>malloc(req_len)
 		if tmp == NULL:
-			self.ERRORLEVEL |= 0b00000010
+			self.ERRORLEVEL |= 0b10
 			return ""
 		self._read_raw(tmp, req_len, 0)
 		cdef str tmp_str = (tmp).decode("utf-8")

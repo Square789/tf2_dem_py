@@ -35,6 +35,6 @@ cdef dict parse_any(FILE *stream, ParserState *parser_state):
 		stringtables.parse(stream, parser_state)
 	else:
 		parser_state.finished = 1
-		parser_state.FAILURE = 2
+		parser_state.FAILURE |= 0b10
 
 	return {}
