@@ -3,7 +3,7 @@ from libc.stdio cimport FILE
 from tf2_dem_py.parsing.chararray_wrapper cimport CharArrayWrapper
 from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON, cJSON_CreateObject,
-	cJSON_AddNumberToObject, cJSON_AddStringToObject, cJSON_AddObjectToObject)
+	cJSON_AddNumberToObject, cJSON_AddVolatileStringRefToObject, cJSON_AddObjectToObject)
 
 cdef void parse(FILE *stream, ParserState* p_state, cJSON *root_json):
 	"""
@@ -16,13 +16,13 @@ cdef void parse(FILE *stream, ParserState* p_state, cJSON *root_json):
 	cdef cJSON *header = cJSON_AddObjectToObject(root_json, "header")
 
 	# Implicit type casts to double in AddNumber
-	if cJSON_AddStringToObject(header, "ident", <const char *>header_stream.get_chars(8)) == NULL: json_err = 1
+	if cJSON_AddVolatileStringRefToObject(header, "ident", <const char *>header_stream.get_chars(8)) == NULL: json_err = 1
 	if cJSON_AddNumberToObject(header, "net_prot", header_stream.get_uint32()) == NULL: json_err = 1
 	if cJSON_AddNumberToObject(header, "dem_prot", header_stream.get_uint32()) == NULL: json_err = 1
-	if cJSON_AddStringToObject(header, "host_addr", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
-	if cJSON_AddStringToObject(header, "client_id", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
-	if cJSON_AddStringToObject(header, "map_name", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
-	if cJSON_AddStringToObject(header, "game_dir", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
+	if cJSON_AddVolatileStringRefToObject(header, "host_addr", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
+	if cJSON_AddVolatileStringRefToObject(header, "client_id", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
+	if cJSON_AddVolatileStringRefToObject(header, "map_name", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
+	if cJSON_AddVolatileStringRefToObject(header, "game_dir", <const char *>header_stream.get_chars(260)) == NULL: json_err = 1
 	if cJSON_AddNumberToObject(header, "play_time", header_stream.get_flt32()) == NULL: json_err = 1
 	if cJSON_AddNumberToObject(header, "tick_count", header_stream.get_uint32()) == NULL: json_err = 1
 	if cJSON_AddNumberToObject(header, "frame_count", header_stream.get_uint32()) == NULL: json_err = 1

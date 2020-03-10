@@ -11,6 +11,13 @@ from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.cJSON.cJSON_wrapper cimport cJSON
 
 cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
+	"""
+	Read the next byte from stream and determine what packet to read from this id.
+
+	FILE *stream : Pointer to a FILE object, next byte must be valid packet id
+	ParserState *parser_state : Pointer to a ParserState, may be modified by this function.
+	cJSON *root_json : Pointer to a cJSON object, packet parser result will be written there.
+	"""
 	cdef uint8_t packet_type
 	fread(&packet_type, sizeof(packet_type), 1, stream)
 

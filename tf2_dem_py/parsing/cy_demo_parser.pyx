@@ -53,6 +53,7 @@ cdef class CyDemoParser():
 
 	def __cinit__(self, char *target_file):
 		self.stream = fopen(target_file, "rb")
+
 		self.state = <ParserState *>malloc(sizeof(ParserState))
 		if self.state == NULL:
 			raise MemoryError("Failed to alloc memory for ParserState")

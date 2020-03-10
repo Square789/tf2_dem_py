@@ -74,7 +74,7 @@ cdef class CharArrayWrapper:
 			return 1
 		return 0
 
-	cdef void _read_raw(self, void *target_ptr, size_t req_bytes, uint8_t req_bits):
+	cdef void _read_raw(self, const void *target_ptr, size_t req_bytes, uint8_t req_bits):
 		"""
 		Copies Requested amount of bits and bytes to the supplied
 		pointer. It is the caller's responsibility the pointer points to a

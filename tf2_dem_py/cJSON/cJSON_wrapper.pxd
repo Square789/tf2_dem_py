@@ -19,6 +19,7 @@ cdef extern from "cJSON.h":
 	cJSON *cJSON_AddBoolToObject(cJSON * const json_object, const char * const name, const cJSON_bool boolean)
 	cJSON *cJSON_AddNumberToObject(cJSON * const json_object, const char * const name, const double number)
 	cJSON *cJSON_AddStringToObject(cJSON * const json_object, const char * const name, const char * const string)
+	cJSON *cJSON_AddVolatileStringRefToObject(cJSON * const json_object, const char * const name, const char * const string)
 	cJSON *cJSON_AddRawToObject(cJSON * const json_object, const char * const name, const char * const raw)
 	cJSON *cJSON_AddObjectToObject(cJSON * const json_object, const char * const name)
 	cJSON *cJSON_AddArrayToObject(cJSON * const json_object, const char * const name)

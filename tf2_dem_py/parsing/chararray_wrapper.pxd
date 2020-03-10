@@ -13,7 +13,7 @@ cdef class CharArrayWrapper:
 	@staticmethod
 	cdef CharArrayWrapper create_new(FILE *, size_t)
 
-	cdef void _read_raw(self, void *file_ptr, size_t, uint8_t read_len)
+	cdef void _read_raw(self, const void *file_ptr, size_t, uint8_t read_len)
 	cdef uint8_t _ver_buf_health(self, size_t req_bytes, uint8_t req_bits)
 	cdef uint32_t dist_until_null(self)
 

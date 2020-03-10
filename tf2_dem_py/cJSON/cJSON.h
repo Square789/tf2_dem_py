@@ -208,6 +208,9 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateObject(void);
 /* Create a string where valuestring references a string so
  * it will not be freed by cJSON_Delete */
 CJSON_PUBLIC(cJSON *) cJSON_CreateStringReference(const char *string);
+/* Create a string where valuestring references a string, yet still
+ * frees it when cJSON_Delete is run over a parent element. */
+CJSON_PUBLIC(cJSON *) cJSON_CreateVolatileStringReference(const char* string); // Original modification
 /* Create an object/array that only references it's elements so
  * they will not be freed by cJSON_Delete */
 CJSON_PUBLIC(cJSON *) cJSON_CreateObjectReference(const cJSON *child);
@@ -269,6 +272,7 @@ CJSON_PUBLIC(cJSON*) cJSON_AddFalseToObject(cJSON * const object, const char * c
 CJSON_PUBLIC(cJSON*) cJSON_AddBoolToObject(cJSON * const object, const char * const name, const cJSON_bool boolean);
 CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const double number);
 CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * const name, const char * const string);
+CJSON_PUBLIC(cJSON*) cJSON_AddVolatileStringRefToObject(cJSON * const object, const char * const name, const char * const string); // Modufication
 CJSON_PUBLIC(cJSON*) cJSON_AddRawToObject(cJSON * const object, const char * const name, const char * const raw);
 CJSON_PUBLIC(cJSON*) cJSON_AddObjectToObject(cJSON * const object, const char * const name);
 CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * const name);

@@ -2064,6 +2064,20 @@ CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * 
     return NULL;
 }
 
+// Code modification
+CJSON_PUBLIC(cJSON *) cJSON_AddVolatileStringRefToObject(cJSON * const object, const char * const name, const char * const string)
+{
+	cJSON *vo_string_item = cJSON_CreateVolatileStringReference(string);
+	if (add_item_to_object(object, name, vo_string_item, &global_hooks, false))
+	{
+		return vo_string_item;
+	}
+
+	cJSON_Delete(vo_string_item);
+	return NULL;
+}
+// Modification end
+
 CJSON_PUBLIC(cJSON*) cJSON_AddRawToObject(cJSON * const object, const char * const name, const char * const raw)
 {
     cJSON *raw_item = cJSON_CreateRaw(raw);
@@ -2380,6 +2394,20 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateStringReference(const char *string)
 
     return item;
 }
+
+// Code modification
+CJSON_PUBLIC(cJSON *) cJSON_CreateVolatileStringReference(const char* string)
+{
+	cJSON *item = cJSON_New_Item(&global_hooks);
+	if (item != NULL)
+	{
+		item->type = cJSON_String;
+		item->valuestring = (char*)cast_away_const(string);
+	}
+
+	return item;
+}
+// Modification end
 
 CJSON_PUBLIC(cJSON *) cJSON_CreateObjectReference(const cJSON *child)
 {
