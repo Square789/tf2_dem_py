@@ -186,6 +186,20 @@ cdef class CharArrayWrapper:
 		free(tmp); tmp = NULL
 		return tmp_str
 
+	cdef uint8_t *get_chars(self, size_t req_len):
+		"""
+		Returns a pointer to an array of req_len chars.
+		Pointer has to be freed.
+		Will return Nullpointer and set second bit of ERRORLEVEL
+		to 1 on alloc error.
+		"""
+		cdef uint8_t *ptr = <uint8_t *>malloc(req_len)
+		if ptr == NULL:
+			self.ERRORLEVEL |= 0b10
+			return ptr
+		self._read_raw(ptr, req_len, 0)
+		return ptr
+
 	cdef str get_utf8_str(self, size_t req_len):
 		"""
 		Returns a python string with length req_len, decoded to utf-8.
@@ -221,18 +235,18 @@ cdef class CharArrayWrapper:
 		self._read_raw(&i, 4, 0)
 		return i
 
-	cdef float get_flt16(self):
+	cdef float get_flt32(self):
 		"""
-		Returns the next 16 bits interpreted as a floating point number.
+		Returns the next 32 bits interpreted as a floating point number.
 		"""
 		cdef float f
-		self._read_raw(&f, 2, 0)
+		self._read_raw(&f, 4, 0)
 		return f
 
-	cdef double get_dbl32(self):
+	cdef double get_dbl64(self):
 		"""
-		Returns the next 32 bits interpreted as a floating point double.
+		Returns the next 64 bits interpreted as a floating point double.
 		"""
 		cdef double d
-		self._read_raw(&d, 4, 0)
+		self._read_raw(&d, 8, 0)
 		return d

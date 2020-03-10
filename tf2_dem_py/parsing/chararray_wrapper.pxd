@@ -13,15 +13,16 @@ cdef class CharArrayWrapper:
 	@staticmethod
 	cdef CharArrayWrapper create_new(FILE *, size_t)
 
-	cdef void _read_raw(self, void *, size_t, uint8_t)
-	cdef uint8_t _ver_buf_health(self, size_t, uint8_t)
+	cdef void _read_raw(self, void *file_ptr, size_t, uint8_t read_len)
+	cdef uint8_t _ver_buf_health(self, size_t req_bytes, uint8_t req_bits)
 	cdef uint32_t dist_until_null(self)
 
+	cdef uint8_t *get_chars(self, size_t req_len)
 	cdef str get_next_utf8_str(self)
-	cdef str get_utf8_str(self, size_t)
+	cdef str get_utf8_str(self, size_t req_len)
 
-	cdef uint64_t get_int(self, uint8_t)
+	cdef uint64_t get_int(self, uint8_t req_bits)
 	cdef uint32_t get_uint32(self)
 
-	cdef float get_flt16(self)
-	cdef double get_dbl32(self)
+	cdef float get_flt32(self)
+	cdef double get_dbl64(self)

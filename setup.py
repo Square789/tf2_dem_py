@@ -23,7 +23,10 @@ for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
 		continue
 	extensions.append(Extension(
 		os.path.splitext(i)[0].replace(os.path.sep, "."),
-		sources = [i],
+		sources = [
+			i,
+			"tf2_dem_py/cJSON/cJSON.c", # Apparently required, idk in what way
+		],
 		extra_compile_args = ["-DMS_WIN64"],
 	))
 
@@ -35,6 +38,7 @@ setup(
 	include_dirs = [
             "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0"
             "/mingw64/x86_64-w64-mingw32/include",
+			"tf2_dem_py/cJSON", # Required for "extern from" stmt in cJSON_wrapper.pxd
 		],
 	ext_modules = cythonize(
 		extensions,

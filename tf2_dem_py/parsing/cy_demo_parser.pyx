@@ -6,12 +6,17 @@ from tf2_dem_py.parsing cimport header
 from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
+from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON_CreateObject, cJSON_Version,
+	cJSON_Print, cJSON_Delete)
+
+import json
+
 ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",
 	"Unkown packet id encountered.",
 	"File I/O error.",
 	"Unexpected EOF."
-	#"Data read from file was of unexpected length.",
+	"cJSON error.",
 )
 
 ERR_STRINGS_CAW = (
@@ -42,6 +47,7 @@ cdef class CyDemoParser():
 	Demo parser class.
 
 	Has a pointer to a ParserState struct `state`.
+	Possesses cJSON object where demo data should be written to.
 	"""
 	# attrs in pxd
 
@@ -54,29 +60,33 @@ cdef class CyDemoParser():
 		self.state.FAILURE = 0
 		self.state.RELAYED_CAW_ERR = 0
 
+		self.json_obj = cJSON_CreateObject()
+		print((cJSON_Version()).decode("utf-8"))
+
 	def __dealloc__(self):
 		fclose(self.stream)
 		free(self.state)
 		self.state = NULL
 
-	def __init__(self, *_):
-		self.out = {}
-
 	cpdef dict parse(self):
+		cdef char *res_str 
 
-		cdef dict h
-		h = header.parse(self.stream, self.state)
-		self.out["header"] = h
+		header.parse(self.stream, self.state, self.json_obj)
 		if self.state.FAILURE != 0:
+			print(self.state.FAILURE, self.state.RELAYED_CAW_ERR)
 			raise ParserError("Failed to read header, additional "
 				"info: {}".format(format_parser_error(
 					self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
 		while not self.state.finished: # Main parser loop
-			parse_any(self.stream, self.state)
+			parse_any(self.stream, self.state, self.json_obj)
 			if self.state.FAILURE != 0:
 				raise ParserError("Demo parser failed @ byte {}; {}".format(
 					<int>ftell(self.stream), format_parser_error(
 						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
-		return self.out
+		res_str = cJSON_Print(self.json_obj)
+		cJSON_Delete(self.json_obj)
+		if res_str == NULL:
+			raise ParserError("JSON library failed turning json to string.")
+		return json.loads(res_str.decode("utf_8"))

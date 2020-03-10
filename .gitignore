@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 *.c
+!tf2_dem_py/cJSON/*.c
 
 # Distribution / packaging
 .Python
@@ -124,3 +125,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Thank you Windows 10
+Thumbs.db
+
+# Feels unneeded
+.vscode/
