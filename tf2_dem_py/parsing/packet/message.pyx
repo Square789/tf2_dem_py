@@ -2,8 +2,8 @@ from libc.stdio cimport FILE, fread, fseek, ftell, ferror, feof, SEEK_CUR
 from libc.stdint cimport uint8_t, uint32_t
 
 from tf2_dem_py.parsing.parser_state cimport ParserState
-from tf2_dem_py.parsing.chararray_wrapper import CharArrayWrapper
-#from tf2_dem_py.parsing.message.parse_any cimport parse_any
+from tf2_dem_py.char_array_wrapper.char_array_wrapper cimport *
+#from tf2_dem_py.parsing.message.parse_any cimport parse_any as message_parse_any
 from tf2_dem_py.cJSON.cJSON_wrapper cimport cJSON
 
 cdef void parse(FILE *stream, ParserState *p_state, cJSON *root_json):
@@ -35,5 +35,5 @@ cdef void parse(FILE *stream, ParserState *p_state, cJSON *root_json):
 	# 	self.p_state.RELAYED_CAW_ERR = pkt_stream.ERRORLEVEL
 	# 	return
 
-	# while : # wörk
-	# 	parse_any(pkt_stream)
+	# while (pkt_stream.remaining_bytes() > 1) or (pkt_stream.remaining_bits() > 6):
+	# 	message_parse_any(pkt_stream)

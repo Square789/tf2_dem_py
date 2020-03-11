@@ -1,6 +1,8 @@
 from libc.stdio cimport FILE
 from libc.stdint cimport uint8_t, uint32_t, uint64_t
 
+# UNUSED
+
 cdef class CharArrayWrapper:
 	cdef:
 		uint8_t *mem_ptr
@@ -16,10 +18,11 @@ cdef class CharArrayWrapper:
 	cdef void _read_raw(self, const void *file_ptr, size_t, uint8_t read_len)
 	cdef uint8_t _ver_buf_health(self, size_t req_bytes, uint8_t req_bits)
 	cdef uint32_t dist_until_null(self)
+	cdef uint8_t remaining_bits(self)
+	cdef size_t remaining_bytes(self)
 
 	cdef uint8_t *get_chars(self, size_t req_len)
-	cdef str get_next_utf8_str(self)
-	cdef str get_utf8_str(self, size_t req_len)
+	# cdef str get_next_utf8_str(self)
 
 	cdef uint64_t get_int(self, uint8_t req_bits)
 	cdef uint32_t get_uint32(self)

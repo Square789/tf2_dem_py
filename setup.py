@@ -26,6 +26,7 @@ for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
 		sources = [
 			i,
 			"tf2_dem_py/cJSON/cJSON.c", # Apparently required, idk in what way
+			"tf2_dem_py/char_array_wrapper/char_array_wrapper.c",
 		],
 		extra_compile_args = ["-DMS_WIN64"],
 	))
@@ -39,6 +40,7 @@ setup(
             "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0"
             "/mingw64/x86_64-w64-mingw32/include",
 			"tf2_dem_py/cJSON", # Required for "extern from" stmt in cJSON_wrapper.pxd
+			"tf2_dem_py/char_array_wrapper", # ... char_array_wrapper.pxd
 		],
 	ext_modules = cythonize(
 		extensions,

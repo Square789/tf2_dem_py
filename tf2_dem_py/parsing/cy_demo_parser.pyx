@@ -1,4 +1,4 @@
-from libc.stdio cimport FILE, fopen, fread, fclose, ftell
+from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint8_t
 
@@ -10,6 +10,7 @@ from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON_CreateObject, cJSON_Version,
 	cJSON_Print, cJSON_Delete)
 
 import json
+from time import time
 
 ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",
@@ -70,11 +71,12 @@ cdef class CyDemoParser():
 		self.state = NULL
 
 	cpdef dict parse(self):
-		cdef char *res_str 
+		cdef char *res_str
+
+		start = time()
 
 		header.parse(self.stream, self.state, self.json_obj)
 		if self.state.FAILURE != 0:
-			print(self.state.FAILURE, self.state.RELAYED_CAW_ERR)
 			raise ParserError("Failed to read header, additional "
 				"info: {}".format(format_parser_error(
 					self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
@@ -86,8 +88,11 @@ cdef class CyDemoParser():
 					<int>ftell(self.stream), format_parser_error(
 						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
+		end = time()
+
 		res_str = cJSON_Print(self.json_obj)
 		cJSON_Delete(self.json_obj)
 		if res_str == NULL:
 			raise ParserError("JSON library failed turning json to string.")
+		print("Took ", end - start)
 		return json.loads(res_str.decode("utf_8"))

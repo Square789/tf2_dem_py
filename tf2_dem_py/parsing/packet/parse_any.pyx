@@ -21,8 +21,6 @@ cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	cdef uint8_t packet_type
 	fread(&packet_type, sizeof(packet_type), 1, stream)
 
-	#printf("Next packet at %16u: %u\n", <int>ftell(stream), <int>packet_type)
-
 	if packet_type == 1:
 		message.parse(stream, parser_state, root_json)
 	elif packet_type == 2:
