@@ -1,4 +1,0 @@
-
-
-
-cdef void parse_any(CharArrayWrapper *caw)

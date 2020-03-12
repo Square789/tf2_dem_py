@@ -3,12 +3,13 @@ from libc.stdint cimport uint8_t, uint32_t
 
 from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.char_array_wrapper.char_array_wrapper cimport *
-#from tf2_dem_py.parsing.message.parse_any cimport parse_any as message_parse_any
+from tf2_dem_py.parsing.message.parse_any cimport parse_any as message_parse_any
 from tf2_dem_py.cJSON.cJSON_wrapper cimport cJSON
 
 cdef void parse(FILE *stream, ParserState *p_state, cJSON *root_json):
 	cdef uint32_t tick
 	cdef uint32_t pkt_len
+	cdef uint8_t msg_id = 0
 
 	# Read tick
 	fread(&tick, sizeof(tick), 1, stream)
@@ -26,14 +27,23 @@ cdef void parse(FILE *stream, ParserState *p_state, cJSON *root_json):
 		p_state.FAILURE |= 0b1000
 		return
 
-	fseek(stream, pkt_len, SEEK_CUR)
-	# cdef CharArrayWrapper pkt_stream = CharArrayWrapper.create_mew(
-	# 	stream, pkt_len)
+	# fseek(stream, pkt_len, SEEK_CUR)
+	print("File ptr @", ftell(stream))
 
-	# if pkt_stream.ERRORLEVEL != 0:
-	# 	self.p_state.FAILURE |= 0b1
-	# 	self.p_state.RELAYED_CAW_ERR = pkt_stream.ERRORLEVEL
-	# 	return
+	cdef CharArrayWrapper *pkt_caw = CAW_create_new(stream, pkt_len)
 
-	# while (pkt_stream.remaining_bytes() > 1) or (pkt_stream.remaining_bits() > 6):
-	# 	message_parse_any(pkt_stream)
+	if CAW_get_errorlevel(pkt_caw) != 0:
+		p_state.FAILURE |= 0b1
+		p_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
+		return
+
+	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
+		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
+		print("    Next message:", msg_id)
+		if msg_id == 1:
+			print("     -Message bad, exiting")
+			return
+		else:
+			print("     -No parser for message with id", msg_id)
+			return
+

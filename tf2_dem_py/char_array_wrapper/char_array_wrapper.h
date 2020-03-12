@@ -42,6 +42,16 @@ void CAW_delete(CharArrayWrapper *caw);
  * in the target pointer.
  */
 void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr, size_t req_bytes, uint8_t req_bits);
+/* Returns the distance until the next nullbyte is encountered,
+ * that is the amount of bytes that would have to be fetched to receive
+ * a null-terminated string.
+ * If end of the chararray is hit, ERRORLEVEL's first bit will be set to 1,
+ * the returned value may be 0 only in this case, as it then is equal to
+ * caw->mem_len - caw->bytepos
+ */
+size_t CAW_dist_until_null(CharArrayWrapper *caw);
+uint8_t CAW_remaining_bits(CharArrayWrapper *caw);
+size_t CAW_remaining_bytes(CharArrayWrapper *caw);
 /* Returns a pointer to an array of req_len chars.
  * Pointer has to be freed.
  * Will return Nullpointer and set second bit of ERRORLEVEL

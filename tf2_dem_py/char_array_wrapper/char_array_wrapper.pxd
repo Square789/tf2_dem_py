@@ -9,6 +9,8 @@ cdef extern from "char_array_wrapper.h":
 
 	cdef void CAW_delete(CharArrayWrapper *caw)
 	cdef void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr, size_t req_bytes, uint8_t req_bits)
+	cdef uint8_t CAW_remaining_bits(CharArrayWrapper *caw)
+	cdef size_t CAW_remaining_bytes(CharArrayWrapper *caw)
 
 	cdef uint8_t *CAW_get_chars(CharArrayWrapper *caw, size_t req_len)
 	cdef float CAW_get_flt(CharArrayWrapper *caw)
