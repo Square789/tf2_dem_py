@@ -244,6 +244,27 @@ float CAW_get_flt(CharArrayWrapper *caw)
 	return f;
 }
 
+uint8_t CAW_get_bit(CharArrayWrapper *caw)
+{
+	uint8_t i;
+	CAW_read_raw(caw, &i, 0, 1);
+	return i;
+}
+
+uint8_t CAW_get_uint8(CharArrayWrapper *caw)
+{
+	uint8_t i;
+	CAW_read_raw(caw, &i, 1, 0);
+	return i;
+}
+
+uint16_t CAW_get_uint16(CharArrayWrapper *caw)
+{
+	uint16_t i;
+	CAW_read_raw(caw, &i, 2, 0);
+	return i;
+}
+
 uint32_t CAW_get_uint32(CharArrayWrapper *caw)
 {
 	uint32_t i;

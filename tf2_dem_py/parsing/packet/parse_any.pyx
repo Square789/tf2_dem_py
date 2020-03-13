@@ -36,6 +36,7 @@ cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	elif packet_type == 7:
 		printf("STOP\n")
 		parser_state.finished = 1
+		return
 	elif packet_type == 8:
 		stringtables.parse(stream, parser_state, root_json)
 	else:

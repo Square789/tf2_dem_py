@@ -7,7 +7,7 @@ from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
 from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON_CreateObject, cJSON_Version,
-	cJSON_Print, cJSON_Delete)
+	cJSON_PrintUnformatted, cJSON_Delete)
 
 import json
 from time import time
@@ -30,10 +30,9 @@ ERR_STRINGS_CAW = (
 )
 
 cdef str format_parser_error(uint8_t f_byte, uint8_t caw_byte):
-	mesg_p = [j for i, j in enumerate(ERR_STRINGS_P)
-		if (f_byte & (1 << i) != 0)]
-	mesg_c = [j for i, j in enumerate(ERR_STRINGS_CAW)
-		if (caw_byte & (1 << i) != 0)] if f_byte & 1 == 1 else None
+	mesg_p = [j for i, j in enumerate(ERR_STRINGS_P) if (f_byte & (1 << i) != 0)]
+	mesg_c = [j for i, j in enumerate(ERR_STRINGS_CAW) if (caw_byte & (1 << i) != 0)] \
+		if f_byte & 1 == 1 else None
 	if mesg_c is not None:
 		return ("\n    ".join(mesg_p) +
 			"\n    ===CharArrayWrapper errors:===\n    " +
@@ -85,13 +84,15 @@ cdef class CyDemoParser():
 		while not self.state.finished: # Main parser loop
 			parse_any(self.stream, self.state, self.json_obj)
 			if self.state.FAILURE != 0:
+				print("failure")
+				break
 				raise ParserError("Demo parser failed @ byte {}; {}".format(
 					<int>ftell(self.stream), format_parser_error(
 						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
 		end = time()
 
-		res_str = cJSON_Print(self.json_obj)
+		res_str = cJSON_PrintUnformatted(self.json_obj)
 		cJSON_Delete(self.json_obj)
 		if res_str == NULL:
 			raise ParserError("JSON library failed turning json to string.")

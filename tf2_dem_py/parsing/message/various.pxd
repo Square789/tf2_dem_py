@@ -8,3 +8,10 @@ cdef class Print():
 
 	@staticmethod
 	cdef void parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) nogil
+
+cdef class ServerInfo():
+	@staticmethod
+	cdef void skip(CharArrayWrapper *caw, ParserState *parser_state) nogil
+
+	@staticmethod
+	cdef void parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) nogil

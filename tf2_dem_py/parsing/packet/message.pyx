@@ -38,12 +38,20 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		printf("Next message: %u\n", msg_id)
-		if msg_id == 7:
+		#printf("Next message: %u\n", msg_id)
+		if msg_id == 0:
+			pass
+		elif msg_id == 7:
 			Print.parse(pkt_caw, parser_state, root_json)
+		elif msg_id == 8:
+			ServerInfo.parse(pkt_caw, parser_state, root_json)
 		else:
-			printf(" -No parser for message with id %u\n", msg_id) # Unknown message
 			parser_state.FAILURE |= 0b100000
+			return
+
+		if CAW_get_errorlevel(pkt_caw) != 0:
+			parser_state.FAILURE |= 0b1
+			parser_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
 			return
 
 		if parser_state.FAILURE != 0: # Set by message parser

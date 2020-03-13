@@ -70,6 +70,12 @@ uint8_t *CAW_get_chars(CharArrayWrapper *caw, size_t req_len);
 uint8_t *CAW_get_nulltrm_str(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as a floating point number. */
 float CAW_get_flt(CharArrayWrapper *caw);
+/* Returns the next bit in an unsigned integer. */
+uint8_t CAW_get_bit(CharArrayWrapper *caw);
+/* Returns the next 8 bits interpreted as an unsigned integer. */
+uint8_t CAW_get_uint8(CharArrayWrapper *caw);
+/* Returns the next 16 bits interpreted as an unsigned integer. */
+uint16_t CAW_get_uint16(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as an unsigned integer. */
 uint32_t CAW_get_uint32(CharArrayWrapper *caw);
 /* Returns errorbyte from a CharArrayWrapper. */
