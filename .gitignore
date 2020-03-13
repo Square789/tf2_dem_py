@@ -7,6 +7,7 @@ __pycache__/
 *.so
 *.c
 !tf2_dem_py/cJSON/*.c
+!tf2_dem_py/char_array_wrapper/*.c
 
 # Distribution / packaging
 .Python

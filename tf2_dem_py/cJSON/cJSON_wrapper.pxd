@@ -2,7 +2,7 @@
 Incomplete and tf2_dem_py-specific wrapper for the cJSON library.
 """
 
-cdef extern from "cJSON.h":
+cdef extern from "cJSON.h" nogil:
 
 	cdef struct cJSON:
 		pass

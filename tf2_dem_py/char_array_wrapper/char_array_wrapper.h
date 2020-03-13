@@ -29,7 +29,6 @@ typedef struct CharArrayWrapper {
 	uint8_t ERRORLEVEL;
 } CharArrayWrapper;
 
-
 /* Create a new CharArrayWrapper and return a pointer to it.
  * May return a Nullpointer on CharArrayWrapper allocation failure.
  * Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
@@ -41,13 +40,18 @@ void CAW_delete(CharArrayWrapper *caw);
  * into the target pointer. It is in the caller's responsibility enough space is present
  * in the target pointer.
  */
+
 void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr, size_t req_bytes, uint8_t req_bits);
+/* Skip requested amount of bits and bytes ahead. Sets first bit of ERRORLEVEL if buffer
+ * is too short.
+ */
+void CAW_skip(CharArrayWrapper *caw, size_t bytes, uint8_t bits);
 /* Returns the distance until the next nullbyte is encountered,
  * that is the amount of bytes that would have to be fetched to receive
  * a null-terminated string.
  * If end of the chararray is hit, ERRORLEVEL's first bit will be set to 1,
  * the returned value may be 0 only in this case, as it then is equal to
- * caw->mem_len - caw->bytepos
+ * caw->mem_len - caw->bytepos. The block of this length will not end with null then.
  */
 size_t CAW_dist_until_null(CharArrayWrapper *caw);
 uint8_t CAW_remaining_bits(CharArrayWrapper *caw);
@@ -58,6 +62,12 @@ size_t CAW_remaining_bytes(CharArrayWrapper *caw);
  * to 1 on alloc error.
  */
 uint8_t *CAW_get_chars(CharArrayWrapper *caw, size_t req_len);
+/* Returns a pointer to the next nullterminated string.
+ * Pointer has to be freed.
+ * Will return a Nullpointer and set second bit of ERRORLEVEL to 1
+ * on alloc error.
+ */
+uint8_t *CAW_get_nulltrm_str(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as a floating point number. */
 float CAW_get_flt(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as an unsigned integer. */

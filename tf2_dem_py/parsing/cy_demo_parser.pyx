@@ -16,8 +16,9 @@ ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",
 	"Unkown packet id encountered.",
 	"File I/O error.",
-	"Unexpected EOF."
-	"cJSON error.",
+	"Unexpected EOF.",
+	"cJSON error. (Likely due to memory allocation failure.)",
+	"Unknown message id encountered.",
 )
 
 ERR_STRINGS_CAW = (
@@ -30,9 +31,9 @@ ERR_STRINGS_CAW = (
 
 cdef str format_parser_error(uint8_t f_byte, uint8_t caw_byte):
 	mesg_p = [j for i, j in enumerate(ERR_STRINGS_P)
-		if (f_byte & (2**i) == 1)]
+		if (f_byte & (1 << i) != 0)]
 	mesg_c = [j for i, j in enumerate(ERR_STRINGS_CAW)
-		if (caw_byte & (2**i) == 1)] if f_byte & 1 == 1 else None
+		if (caw_byte & (1 << i) != 0)] if f_byte & 1 == 1 else None
 	if mesg_c is not None:
 		return ("\n    ".join(mesg_p) +
 			"\n    ===CharArrayWrapper errors:===\n    " +
