@@ -8,6 +8,7 @@ __pycache__/
 *.c
 !tf2_dem_py/cJSON/*.c
 !tf2_dem_py/char_array_wrapper/*.c
+!tf2_dem_py/parsing/message/*.c
 
 # Distribution / packaging
 .Python

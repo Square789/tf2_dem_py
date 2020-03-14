@@ -14,7 +14,8 @@ FAILURE:
 RELAYED_CAW_ERR: See CharArrayWrapper error
 """
 
-cdef struct ParserState:
-	uint8_t finished
-	uint8_t FAILURE
-	uint8_t RELAYED_CAW_ERR
+cdef extern from "tf2_dem_py/parsing/parser_state.h":
+	cdef struct ParserState:
+		uint8_t finished
+		uint8_t FAILURE
+		uint8_t RELAYED_CAW_ERR

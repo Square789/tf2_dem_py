@@ -2,6 +2,9 @@
 #ifndef CHAR_ARRAY_WRAPPER__H
 #define CHAR_ARRAY_WRAPPER__H
 
+#include <stdio.h>
+#include <stdint.h>
+
 #define ERR_BUFFER_TOO_SHORT    (1 << 0)
 #define ERR_MEMORY_ALLOCATION   (1 << 1)
 #define ERR_INIT_IO_READ        (1 << 2)

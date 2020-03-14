@@ -1,6 +1,7 @@
 import ast
 import glob
 import os
+from pathlib import Path
 from setuptools import setup, Extension
 from Cython.Build.Cythonize import cythonize
 
@@ -16,6 +17,26 @@ with open("tf2_dem_py/demo_parser.py") as h:
 if __version__ == None:
 	raise SyntaxError("Version not found.")
 
+SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
+SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
+SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
+
+# C implemented message parsers required by message.pyx
+# CAW required by everything in parsing and header
+# cJSON as well
+def deliver_sources(strpath):
+	srcs = [strpath]
+	path = Path(strpath)
+	if path.match("tf2_dem_py/parsing/packet/message.pyx"):
+		srcs.extend(SRCS_MSG)
+	if path.match("tf2_dem_py/parsing/header.pyx") or \
+			path.match("tf2_dem_py/parsing/packet/*.pyx"):
+		srcs.append(SRC_CJSON)
+		srcs.append(SRC_CAW)
+	elif path.match("tf2_dem_py/parsing/cy_demo_parser.pyx"):
+		srcs.append(SRC_CJSON)
+	return srcs
+
 extensions = []
 
 for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
@@ -23,11 +44,7 @@ for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
 		continue
 	extensions.append(Extension(
 		os.path.splitext(i)[0].replace(os.path.sep, "."),
-		sources = [
-			i,
-			"tf2_dem_py/cJSON/cJSON.c", # Apparently required, idk in what way
-			"tf2_dem_py/char_array_wrapper/char_array_wrapper.c",
-		],
+		sources = deliver_sources(i),
 		extra_compile_args = ["-DMS_WIN64"],
 	))
 
@@ -39,8 +56,7 @@ setup(
 	include_dirs = [
             "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0"
             "/mingw64/x86_64-w64-mingw32/include",
-			"tf2_dem_py/cJSON", # Required for "extern from" stmt in cJSON_wrapper.pxd
-			"tf2_dem_py/char_array_wrapper", # ... char_array_wrapper.pxd
+			".",
 		],
 	ext_modules = cythonize(
 		extensions,

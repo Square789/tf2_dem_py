@@ -10,6 +10,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	cdef uint32_t tick
 	cdef uint32_t pkt_len
 	cdef uint8_t msg_id = 0
+	cdef MsgParserBase *msg_parser
 
 	# Read tick
 	fread(&tick, sizeof(tick), 1, stream)
@@ -38,16 +39,18 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		#printf("Next message: %u\n", msg_id)
-		if msg_id == 0:
-			pass
-		elif msg_id == 7:
-			Print.parse(pkt_caw, parser_state, root_json)
+		printf("njoy %u\n", msg_id)
+		#if msg_id == 0:
+		#	Empty#.parse(pkt_caw, parser_state, root_json)
+		if msg_id == 7:
+			msg_parser = Print
 		elif msg_id == 8:
-			ServerInfo.parse(pkt_caw, parser_state, root_json)
+			msg_parser = ServerInfo
 		else:
 			parser_state.FAILURE |= 0b100000
 			return
+
+		msg_parser.parse(pkt_caw, parser_state, root_json)
 
 		if CAW_get_errorlevel(pkt_caw) != 0:
 			parser_state.FAILURE |= 0b1

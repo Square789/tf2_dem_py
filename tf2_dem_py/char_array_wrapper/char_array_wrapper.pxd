@@ -1,7 +1,7 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from libc.stdio cimport FILE
 
-cdef extern from "char_array_wrapper.h" nogil:
+cdef extern from "tf2_dem_py/char_array_wrapper/char_array_wrapper.h" nogil:
 	cdef struct CharArrayWrapper:
 		pass
 
