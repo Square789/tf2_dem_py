@@ -3,11 +3,23 @@
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/parsing/parser_state.h"
 
+#include "tf2_dem_py/parsing/message/various.h"
+
 void p_Empty(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-	}
+}
 
 void s_Empty(CharArrayWrapper *caw, ParserState *parser_state) {
-	}
+}
+
+void p_NetTick(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	uint32_t tick = CAW_get_uint32(caw);
+	uint16_t frame_time = CAW_get_uint16(caw);
+	uint16_t std_dev = CAW_get_uint16(caw);
+}
+
+void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 8, 0);
+}
 
 void p_Print(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t *str_ptr = CAW_get_nulltrm_str(caw);

@@ -84,8 +84,6 @@ cdef class CyDemoParser():
 		while not self.state.finished: # Main parser loop
 			parse_any(self.stream, self.state, self.json_obj)
 			if self.state.FAILURE != 0:
-				print("failure")
-				break
 				raise ParserError("Demo parser failed @ byte {}; {}".format(
 					<int>ftell(self.stream), format_parser_error(
 						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))

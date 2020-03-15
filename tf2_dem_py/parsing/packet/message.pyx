@@ -40,12 +40,16 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
 		printf("njoy %u\n", msg_id)
-		#if msg_id == 0:
-		#	Empty#.parse(pkt_caw, parser_state, root_json)
-		if msg_id == 7:
+		if msg_id == 0:
+			msg_parser = Empty
+		elif msg_id == 3:
+			msg_parser = NetTick
+		elif msg_id == 7:
 			msg_parser = Print
 		elif msg_id == 8:
 			msg_parser = ServerInfo
+		elif msg_id == 12:
+			msg_parser = StringTableCreate
 		else:
 			parser_state.FAILURE |= 0b100000
 			return

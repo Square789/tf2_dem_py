@@ -13,7 +13,10 @@ typedef struct MsgParserBase
 	void (*skip)(CharArrayWrapper *caw, ParserState *parser_state);
 } MsgParserBase;
 
+extern MsgParserBase *Empty;
+extern MsgParserBase *NetTick;
 extern MsgParserBase *Print;
 extern MsgParserBase *ServerInfo;
+extern MsgParserBase *StringTableCreate;
 
 #endif

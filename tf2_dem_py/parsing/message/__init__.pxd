@@ -9,5 +9,8 @@ cdef extern from "__init__.h" nogil:
 		void (*parse)(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json)
 		void (*skip)(CharArrayWrapper *caw, ParserState *parser_state)
 
+	cdef MsgParserBase *Empty
+	cdef MsgParserBase *NetTick
 	cdef MsgParserBase *Print
 	cdef MsgParserBase *ServerInfo
+	cdef MsgParserBase *StringTableCreate
