@@ -1,8 +1,8 @@
 from libc.stdio cimport FILE
 
-from tf2_dem_py.char_array_wrapper.char_array_wrapper cimport *
+from tf2_dem_py.char_array_wrapper cimport *
 from tf2_dem_py.parsing.parser_state cimport ParserState
-from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON, cJSON_CreateObject,
+from tf2_dem_py.cJSON cimport (cJSON, cJSON_CreateObject,
 	cJSON_AddNumberToObject, cJSON_AddVolatileStringRefToObject, cJSON_AddObjectToObject)
 
 cdef void parse(FILE *stream, ParserState* p_state, cJSON *root_json):

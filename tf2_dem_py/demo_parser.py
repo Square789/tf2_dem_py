@@ -3,7 +3,7 @@ Main parser class
 """
 from tf2_dem_py.parsing.cy_demo_parser import CyDemoParser
 
-__version__ = "0.0.1-dev-11"
+__version__ = "0.0.1-dev-12"
 
 class DemoParser():
 	def __init__(self, target):

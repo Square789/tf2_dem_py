@@ -8,7 +8,7 @@ cimport tf2_dem_py.parsing.packet.synctick as synctick
 cimport tf2_dem_py.parsing.packet.consolecmd as consolecmd
 cimport tf2_dem_py.parsing.packet.usercmd as usercmd
 from tf2_dem_py.parsing.parser_state cimport ParserState
-from tf2_dem_py.cJSON.cJSON_wrapper cimport cJSON
+from tf2_dem_py.cJSON cimport cJSON
 
 cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	"""

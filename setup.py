@@ -22,8 +22,7 @@ SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
 
 # C implemented message parsers required by message.pyx
-# CAW required by everything in parsing and header
-# cJSON as well
+# CAW and cJSON required by everything in parsing and header
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)

@@ -6,7 +6,7 @@ from tf2_dem_py.parsing cimport header
 from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
-from tf2_dem_py.cJSON.cJSON_wrapper cimport (cJSON_CreateObject, cJSON_Version,
+from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
 	cJSON_PrintUnformatted, cJSON_Delete)
 
 import json
