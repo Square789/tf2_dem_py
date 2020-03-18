@@ -173,7 +173,7 @@ size_t CAW_dist_until_null(CharArrayWrapper *caw)
 	{
 		for (i = 0; i < maxdist; i++)
 		{
-			cur_byte = caw->mem_ptr[caw->bytepos + c_ln];
+			cur_byte = caw->mem_ptr[caw->bytepos + i];
 			c_ln += 1;
 			if (cur_byte == 0x00)
 			{
@@ -184,13 +184,13 @@ size_t CAW_dist_until_null(CharArrayWrapper *caw)
 		for (i = 0; i < maxdist; i++)
 		{
 			// Current byte is bitbuffer ORed with the next unread byte shifted to fill rest of bitbuffer
-			cur_byte = carry | (caw->mem_ptr[caw->bytepos + c_ln] << caw->bitbuf_len);
+			cur_byte = carry | ((caw->mem_ptr[caw->bytepos + i]) << (caw->bitbuf_len));
 			c_ln += 1;
 			if (cur_byte == 0x00)
 			{
 				goto dist_until_null_break;
 			}
-			carry = (caw->mem_ptr[caw->bytepos + c_ln] >> (8 - caw->bitbuf_len));
+			carry = ((caw->mem_ptr[caw->bytepos + i]) >> (8 - caw->bitbuf_len));
 		}
 	}
 	caw->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;

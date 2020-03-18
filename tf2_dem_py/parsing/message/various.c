@@ -21,6 +21,27 @@ void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 8, 0);
 }
 
+void p_SetConVar(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_SetConVar(caw, parser_state);
+}
+
+void s_SetConVar(CharArrayWrapper *caw, ParserState *parser_state) {
+	uint8_t amt = CAW_get_uint8(caw);
+	for (uint8_t i = 0; i < amt; i++) {
+		CAW_skip(caw, CAW_dist_until_null(caw), 0);
+		CAW_skip(caw, CAW_dist_until_null(caw), 0);
+	}
+}
+
+void p_SigOnState(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	uint8_t state = CAW_get_uint8(caw);
+	uint32_t count = CAW_get_uint32(caw);
+}
+
+void s_SigOnState(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 5, 0);
+}
+
 void p_Print(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t *str_ptr = CAW_get_nulltrm_str(caw);
 
@@ -87,4 +108,12 @@ void s_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, CAW_dist_until_null(caw), 0);
 	CAW_skip(caw, CAW_dist_until_null(caw), 0); // Less overhead than a loop i guess
 	CAW_skip(caw, 0, 1);
+}
+
+void p_SetView(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_SetView(caw, parser_state);
+}
+
+void s_SetView(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 1, 3);
 }

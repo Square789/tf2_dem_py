@@ -11,6 +11,14 @@ cdef extern from "__init__.h" nogil:
 
 	cdef MsgParserBase *Empty
 	cdef MsgParserBase *NetTick
+	cdef MsgParserBase *SetConVar
+	cdef MsgParserBase *SigOnState
 	cdef MsgParserBase *Print
 	cdef MsgParserBase *ServerInfo
+	cdef MsgParserBase *ClassInfo
 	cdef MsgParserBase *StringTableCreate
+	cdef MsgParserBase *VoiceInit
+	cdef MsgParserBase *ParseSounds
+	cdef MsgParserBase *SetView
+	cdef MsgParserBase *PacketEntities
+	cdef MsgParserBase *GameEventList

@@ -1,5 +1,5 @@
-#ifndef MESSAGE____INIT____H
-#define MESSAGE____INIT____H
+#ifndef MESSAGE___INIT____H
+#define MESSAGE___INIT____H
 
 #include <stdint.h>
 
@@ -15,8 +15,16 @@ typedef struct MsgParserBase
 
 extern MsgParserBase *Empty;
 extern MsgParserBase *NetTick;
+extern MsgParserBase *SetConVar;
+extern MsgParserBase *SigOnState;
 extern MsgParserBase *Print;
 extern MsgParserBase *ServerInfo;
+extern MsgParserBase *ClassInfo;
 extern MsgParserBase *StringTableCreate;
+extern MsgParserBase *VoiceInit;
+extern MsgParserBase *ParseSounds;
+extern MsgParserBase *SetView;
+extern MsgParserBase *PacketEntities;
+extern MsgParserBase *GameEventList;
 
 #endif

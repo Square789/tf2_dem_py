@@ -11,10 +11,19 @@ void s_Empty(CharArrayWrapper *caw, ParserState *parser_state);
 void p_NetTick(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state);
 
+void p_SetConVar(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_SetConVar(CharArrayWrapper *caw, ParserState *parser_state);
+
+void p_SigOnState(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_SigOnState(CharArrayWrapper *caw, ParserState *parser_state);
+
 void p_Print(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_Print(CharArrayWrapper *caw, ParserState *parser_state);
 
 void p_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state);
+
+void p_SetView(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_SetView(CharArrayWrapper *caw, ParserState *parser_state);
 
 #endif
