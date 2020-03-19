@@ -27,7 +27,7 @@ void p_SetConVar(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_j
 
 void s_SetConVar(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t amt = CAW_get_uint8(caw);
-	for (uint8_t i = 0; i < amt; i++) {
+	for (uint16_t i = 0; i < amt; i++) {
 		CAW_skip(caw, CAW_dist_until_null(caw), 0);
 		CAW_skip(caw, CAW_dist_until_null(caw), 0);
 	}

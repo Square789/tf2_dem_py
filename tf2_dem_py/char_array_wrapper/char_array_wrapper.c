@@ -102,11 +102,9 @@ void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr,
 			carry = caw->mem_ptr[caw->bytepos + i] >> (8 - caw->bitbuf_len);
 		}
 		caw->bytepos += req_bytes;
-		if (req_bits == 0)
+		caw->bitbuf = carry;
+		if (req_bits != 0) // Otherwise done
 		{
-			caw->bitbuf = carry;
-			// No other changes on bit level
-		} else {
 			// Throw extra char at tmp_ptr, change bitbuf_len, update bitbuf
 			if (req_bits <= caw->bitbuf_len) // Drain bitbuf of required bits
 			{

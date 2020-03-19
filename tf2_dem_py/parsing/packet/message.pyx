@@ -28,7 +28,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 		parser_state.FAILURE |= 0b1000
 		return
 
-	printf("File ptr @%u\n", ftell(stream))
+	printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
 
 	cdef CharArrayWrapper *pkt_caw = CAW_create_new(stream, pkt_len)
 
