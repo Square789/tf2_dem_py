@@ -19,6 +19,7 @@ ERR_STRINGS_P = (
 	"Unexpected EOF.",
 	"cJSON error. (Likely due to memory allocation failure.)",
 	"Unknown message id encountered.",
+	"Memory allocation failed.",
 )
 
 ERR_STRINGS_CAW = (
