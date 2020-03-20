@@ -12,6 +12,9 @@
 MsgParserBase Empty_s = {p_Empty, s_Empty};
 MsgParserBase *Empty = &Empty_s; // 0 //
 
+MsgParserBase File_s = {p_File, s_File};
+MsgParserBase *File = &File_s; // 2 //
+
 MsgParserBase NetTick_s = {p_NetTick, s_NetTick};
 MsgParserBase *NetTick = &NetTick_s; // 3 //
 
@@ -33,6 +36,9 @@ MsgParserBase *ClassInfo = &ClassInfo_s; // 10 //
 MsgParserBase StringTableCreate_s = {p_StringTableCreate, s_StringTableCreate};
 MsgParserBase *StringTableCreate = &StringTableCreate_s; // 12 //
 
+MsgParserBase StringTableUpdate_s = {p_StringTableUpdate, s_StringTableUpdate};
+MsgParserBase *StringTableUpdate = &StringTableUpdate_s; // 13 //
+
 MsgParserBase VoiceInit_s = {p_VoiceInit, s_VoiceInit};
 MsgParserBase *VoiceInit = &VoiceInit_s; // 14 //
 
@@ -45,11 +51,20 @@ MsgParserBase *SetView = &SetView_s; // 18 //
 MsgParserBase UserMessage_s = {p_UserMessage, s_UserMessage};
 MsgParserBase *UserMessage = &UserMessage_s; // 23 //
 
+MsgParserBase Entity_s = {p_Entity, s_Entity};
+MsgParserBase *Entity = &Entity_s; // 24 //
+
 MsgParserBase GameEvent_s = {p_GameEvent, s_GameEvent};
 MsgParserBase *GameEvent = &GameEvent_s; // 25 //
 
 MsgParserBase PacketEntities_s = {p_PacketEntities, s_PacketEntities};
 MsgParserBase *PacketEntities = &PacketEntities_s; // 26 //
+
+MsgParserBase TempEntities_s = {p_TempEntities, s_TempEntities};
+MsgParserBase *TempEntities = &TempEntities_s; // 27 //
+
+MsgParserBase PreFetch_s = {p_PreFetch, s_PreFetch};
+MsgParserBase *PreFetch = &PreFetch_s; // 28 //
 
 MsgParserBase GameEventList_s = {p_GameEventList, s_GameEventList};
 MsgParserBase *GameEventList = &GameEventList_s; // 30 //

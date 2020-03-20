@@ -8,20 +8,6 @@
 
 #include "tf2_dem_py/parsing/message/stringtables.h"
 
-uint32_t get_var_int(CharArrayWrapper *caw) {
-	uint32_t res = 0;
-	uint8_t i = 0;
-	uint8_t read;
-	for (i = 0; i < 35; i += 7) {
-		read = CAW_get_uint8(caw);
-		res |= ((read & 0x7F) << i);
-		if ((read >> 7) == 0) {
-			break;
-		}
-	}
-	return res;
-}
-
 void p_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t *str = CAW_get_nulltrm_str(caw);
 	if (str != 0) {
@@ -35,10 +21,29 @@ void s_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint16_t max_ln = CAW_get_uint16(caw);
 	uint16_t max_ln_skip = ((uint16_t)log2(max_ln)) + 1;
 	CAW_skip(caw, max_ln_skip / 8, max_ln_skip % 8);
-	uint32_t len = get_var_int(caw);
+	uint32_t len = CAW_get_var_int(caw);
 	if (CAW_get_bit(caw) == 1) {
 		CAW_skip(caw, 2, 0);
 	}
 	CAW_skip(caw, 0, 1);
 	CAW_skip(caw, len / 8, len % 8);
+}
+
+
+void p_StringTableUpdate(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_StringTableUpdate(caw, parser_state);
+}
+
+void s_StringTableUpdate(CharArrayWrapper *caw, ParserState *parser_state) {
+	// target_table = stream.read_int(5)
+	// changed = stream.read_int(16) if stream.read_boolean() else 1
+	// length = stream.read_int(20)
+	// data = stream.read_raw(length)
+	CAW_skip(caw, 0, 5);
+	if (CAW_get_bit(caw) == 1) {
+		CAW_skip(caw, 2, 0);
+	}
+	uint32_t length;
+	CAW_read_raw(caw, &length, 2, 4);
+	CAW_skip(caw, length / 8, length % 8);
 }

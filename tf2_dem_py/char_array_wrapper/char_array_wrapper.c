@@ -6,7 +6,7 @@
 
 #include "char_array_wrapper.h"
 
-CharArrayWrapper *CAW_create_new(FILE *fp, size_t initbytes) {
+CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
 	CharArrayWrapper *caw_ptr = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
 	if (caw_ptr == NULL) {
 		return NULL;
@@ -29,6 +29,22 @@ CharArrayWrapper *CAW_create_new(FILE *fp, size_t initbytes) {
 	if (read_res != initbytes) {
 		caw_ptr->ERRORLEVEL |= ERR_INIT_ODD_IO_RESULT;
 	}
+	return caw_ptr;
+}
+
+CharArrayWrapper *CAW_from_buffer(void *buf, size_t length) {
+	CharArrayWrapper *caw_ptr = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
+	if (caw_ptr == NULL) {
+		return NULL;
+	}
+	caw_ptr->mem_len = length;
+	caw_ptr->bitbuf = 0x0;
+	caw_ptr->bitbuf_len = 0;
+	caw_ptr->bytepos = 0;
+	caw_ptr->ERRORLEVEL = 0;
+
+	caw_ptr->mem_ptr = (uint8_t *)buf;
+
 	return caw_ptr;
 }
 
@@ -201,6 +217,20 @@ uint8_t *CAW_get_nulltrm_str(CharArrayWrapper *caw) {
 	}
 	CAW_read_raw(caw, res_ptr, ntstr_ln, 0);
 	return res_ptr;
+}
+
+uint32_t CAW_get_var_int(CharArrayWrapper *caw) {
+	uint32_t res = 0;
+	uint8_t i = 0;
+	uint8_t read;
+	for (i = 0; i < 35; i += 7) {
+		read = CAW_get_uint8(caw);
+		res |= ((read & 0x7F) << i);
+		if ((read >> 7) == 0) {
+			break;
+		}
+	}
+	return res;
 }
 
 float CAW_get_flt(CharArrayWrapper *caw) {

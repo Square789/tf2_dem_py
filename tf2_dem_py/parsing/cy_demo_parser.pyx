@@ -61,6 +61,7 @@ cdef class CyDemoParser():
 		self.state.finished = 0 # Initialize state
 		self.state.FAILURE = 0
 		self.state.RELAYED_CAW_ERR = 0
+		self.state.tick = 0
 
 		self.json_obj = cJSON_CreateObject()
 		print((cJSON_Version()).decode("utf-8"))

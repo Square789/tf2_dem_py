@@ -14,6 +14,7 @@ typedef struct MsgParserBase
 } MsgParserBase;
 
 extern MsgParserBase *Empty;
+extern MsgParserBase *File;
 extern MsgParserBase *NetTick;
 extern MsgParserBase *SetConVar;
 extern MsgParserBase *SigOnState;
@@ -21,12 +22,16 @@ extern MsgParserBase *Print;
 extern MsgParserBase *ServerInfo;
 extern MsgParserBase *ClassInfo;
 extern MsgParserBase *StringTableCreate;
+extern MsgParserBase *StringTableUpdate;
 extern MsgParserBase *VoiceInit;
 extern MsgParserBase *ParseSounds;
 extern MsgParserBase *SetView;
 extern MsgParserBase *UserMessage;
+extern MsgParserBase *Entity;
 extern MsgParserBase *GameEvent;
 extern MsgParserBase *PacketEntities;
+extern MsgParserBase *TempEntities;
+extern MsgParserBase *PreFetch;
 extern MsgParserBase *GameEventList;
 
 #endif

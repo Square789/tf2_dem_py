@@ -30,7 +30,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
 
-	cdef CharArrayWrapper *pkt_caw = CAW_create_new(stream, pkt_len)
+	cdef CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len)
 
 	if CAW_get_errorlevel(pkt_caw) != 0:
 		parser_state.FAILURE |= 0b1
@@ -39,9 +39,11 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		printf(" -Next message: %u\n", msg_id)
+		printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
 		if msg_id == 0:
 			msg_parser = Empty
+		elif msg_id == 2:
+			msg_parser = File
 		elif msg_id == 3:
 			msg_parser = NetTick
 		elif msg_id == 5:
@@ -56,6 +58,8 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = ClassInfo
 		elif msg_id == 12:
 			msg_parser = StringTableCreate
+		elif msg_id == 13:
+			msg_parser = StringTableUpdate
 		elif msg_id == 14:
 			msg_parser = VoiceInit
 		elif msg_id == 17:
@@ -64,10 +68,16 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = SetView
 		elif msg_id == 23:
 			msg_parser = UserMessage
+		elif msg_id == 24:
+			msg_parser = Entity
 		elif msg_id == 25:
 			msg_parser = GameEvent
 		elif msg_id == 26:
 			msg_parser = PacketEntities
+		elif msg_id == 27:
+			msg_parser = TempEntities
+		elif msg_id == 28:
+			msg_parser = PreFetch
 		elif msg_id == 30:
 			msg_parser = GameEventList
 		else:

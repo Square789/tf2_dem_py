@@ -8,4 +8,7 @@
 void p_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state);
 
+void p_StringTableUpdate(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_StringTableUpdate(CharArrayWrapper *caw, ParserState *parser_state);
+
 #endif

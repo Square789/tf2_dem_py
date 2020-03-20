@@ -23,3 +23,14 @@ void s_PacketEntities(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 0, 1);
 	CAW_skip(caw, length / 8, length % 8);
 }
+
+
+void p_TempEntities(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_TempEntities(caw, parser_state);
+}
+
+void s_TempEntities(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 1, 0);
+	uint32_t length = CAW_get_var_int(caw);
+	CAW_skip(caw, length / 8, length % 8);
+}

@@ -12,10 +12,23 @@ void s_Empty(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
+void p_File(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_File(caw, parser_state);
+}
+
+void s_File(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 4, 0);
+	CAW_skip(caw, CAW_dist_until_null(caw), 0);
+	CAW_skip(caw, 0, 1);
+}
+
+
 void p_NetTick(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint32_t tick = CAW_get_uint32(caw);
 	uint16_t frame_time = CAW_get_uint16(caw);
 	uint16_t std_dev = CAW_get_uint16(caw);
+
+	parser_state->tick = tick;
 }
 
 void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state) {
@@ -122,4 +135,25 @@ void p_SetView(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_jso
 
 void s_SetView(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 1, 3);
+}
+
+
+void p_Entity(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_Entity(caw, parser_state);
+}
+
+void s_Entity(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 2, 4);
+	uint16_t length;
+	CAW_read_raw(caw, &length, 1, 3);
+	CAW_skip(caw, length / 8, length % 8);
+}
+
+
+void p_PreFetch(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_PreFetch(caw, parser_state);
+}
+
+void s_PreFetch(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 1, 6);
 }

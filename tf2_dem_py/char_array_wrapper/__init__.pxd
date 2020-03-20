@@ -5,7 +5,7 @@ cdef extern from "tf2_dem_py/char_array_wrapper/char_array_wrapper.h" nogil:
 	cdef struct CharArrayWrapper:
 		pass
 
-	cdef CharArrayWrapper *CAW_create_new(FILE *fp, size_t initbytes)
+	cdef CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes)
 
 	cdef void CAW_delete(CharArrayWrapper *caw)
 	cdef void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr, size_t req_bytes, uint8_t req_bits)

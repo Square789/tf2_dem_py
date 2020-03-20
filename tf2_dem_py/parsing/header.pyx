@@ -11,7 +11,7 @@ cdef void parse(FILE *stream, ParserState* p_state, cJSON *root_json):
 	"""
 	cdef char json_err = 0
 
-	cdef CharArrayWrapper *header_caw = CAW_create_new(stream, 1072)
+	cdef CharArrayWrapper *header_caw = CAW_from_file(stream, 1072)
 	cdef cJSON *header = cJSON_AddObjectToObject(root_json, "header")
 
 	# Implicit type casts to double in AddNumber

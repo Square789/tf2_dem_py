@@ -7,6 +7,7 @@ typedef struct ParserState {
 	uint8_t finished;
 	uint8_t FAILURE;
 	uint8_t RELAYED_CAW_ERR;
+	uint32_t tick;
 
 } ParserState;
 

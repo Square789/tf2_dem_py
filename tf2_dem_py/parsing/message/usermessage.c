@@ -19,13 +19,15 @@ void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root
 	uint8_t *mesg; //lol
 
 	CAW_read_raw(caw, &len, 1, 3);
+	uint8_t *user_msg_buf = CAW_get_chars(caw, );
+
 	switch (user_message_type) {
 	case 4:
 		c = CAW_get_uint8(caw);
 		r = CAW_get_uint8(caw);
-		*chat = CAW_get_chars(caw, CAW_dist_until_null(caw));
-		*from = CAW_get_chars(caw, CAW_dist_until_null(caw));
-		*mesg = CAW_get_chars(caw, CAW_dist_until_null(caw));
+		chat = CAW_get_chars(caw, CAW_dist_until_null(caw));
+		from = CAW_get_chars(caw, CAW_dist_until_null(caw));
+		mesg = CAW_get_chars(caw, CAW_dist_until_null(caw));
 		printf("%u %u] %s : %s : %s", c, r, chat, from, mesg);
 		break;
 	default:

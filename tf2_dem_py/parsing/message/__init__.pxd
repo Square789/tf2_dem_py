@@ -10,6 +10,7 @@ cdef extern from "__init__.h" nogil:
 		void (*skip)(CharArrayWrapper *caw, ParserState *parser_state)
 
 	cdef MsgParserBase *Empty
+	cdef MsgParserBase *File
 	cdef MsgParserBase *NetTick
 	cdef MsgParserBase *SetConVar
 	cdef MsgParserBase *SigOnState
@@ -17,10 +18,14 @@ cdef extern from "__init__.h" nogil:
 	cdef MsgParserBase *ServerInfo
 	cdef MsgParserBase *ClassInfo
 	cdef MsgParserBase *StringTableCreate
+	cdef MsgParserBase *StringTableUpdate
 	cdef MsgParserBase *VoiceInit
 	cdef MsgParserBase *ParseSounds
 	cdef MsgParserBase *SetView
 	cdef MsgParserBase *UserMessage
+	cdef MsgParserBase *Entity
 	cdef MsgParserBase *GameEvent
 	cdef MsgParserBase *PacketEntities
+	cdef MsgParserBase *TempEntities
+	cdef MsgParserBase *PreFetch
 	cdef MsgParserBase *GameEventList

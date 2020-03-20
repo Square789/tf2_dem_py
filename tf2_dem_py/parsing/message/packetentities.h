@@ -8,4 +8,7 @@
 void p_PacketEntities(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_PacketEntities(CharArrayWrapper *caw, ParserState *parser_state);
 
+void p_TempEntities(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_TempEntities(CharArrayWrapper *caw, ParserState *parser_state);
+
 #endif

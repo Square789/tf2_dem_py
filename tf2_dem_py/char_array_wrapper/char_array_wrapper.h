@@ -36,7 +36,8 @@ typedef struct CharArrayWrapper {
  * May return a Nullpointer on CharArrayWrapper allocation failure.
  * Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
  */
-CharArrayWrapper *CAW_create_new(FILE *fp, size_t initbytes);
+CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
+CharArrayWrapper *CAW_from_buffer(void *buf, size_t length);
 /* Deallocate a CharArrayWrapper's memory. */
 void CAW_delete(CharArrayWrapper *caw);
 /* Reads the bytes from the CharArrayWrapper's current position and bitbuffer offset
@@ -71,6 +72,8 @@ uint8_t *CAW_get_chars(CharArrayWrapper *caw, size_t req_len);
  * on alloc error.
  */
 uint8_t *CAW_get_nulltrm_str(CharArrayWrapper *caw);
+/* Returns a var int from the stream. */
+uint32_t CAW_get_var_int(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as a floating point number. */
 float CAW_get_flt(CharArrayWrapper *caw);
 /* Returns the next bit in an unsigned integer. */
