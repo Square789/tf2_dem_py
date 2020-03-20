@@ -24,6 +24,8 @@ extern MsgParserBase *StringTableCreate;
 extern MsgParserBase *VoiceInit;
 extern MsgParserBase *ParseSounds;
 extern MsgParserBase *SetView;
+extern MsgParserBase *UserMessage;
+extern MsgParserBase *GameEvent;
 extern MsgParserBase *PacketEntities;
 extern MsgParserBase *GameEventList;
 

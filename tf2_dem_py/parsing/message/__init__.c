@@ -5,6 +5,7 @@
 #include "tf2_dem_py/parsing/message/gameevents.h"
 #include "tf2_dem_py/parsing/message/packetentities.h"
 #include "tf2_dem_py/parsing/message/stringtables.h"
+#include "tf2_dem_py/parsing/message/usermessage.h"
 #include "tf2_dem_py/parsing/message/various.h"
 #include "tf2_dem_py/parsing/message/voice.h"
 
@@ -40,6 +41,12 @@ MsgParserBase *ParseSounds = &ParseSounds_s; // 17 //
 
 MsgParserBase SetView_s = {p_SetView, s_SetView};
 MsgParserBase *SetView = &SetView_s; // 18 //
+
+MsgParserBase UserMessage_s = {p_UserMessage, s_UserMessage};
+MsgParserBase *UserMessage = &UserMessage_s; // 23 //
+
+MsgParserBase GameEvent_s = {p_GameEvent, s_GameEvent};
+MsgParserBase *GameEvent = &GameEvent_s; // 25 //
 
 MsgParserBase PacketEntities_s = {p_PacketEntities, s_PacketEntities};
 MsgParserBase *PacketEntities = &PacketEntities_s; // 26 //

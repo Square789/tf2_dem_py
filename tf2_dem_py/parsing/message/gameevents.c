@@ -8,6 +8,17 @@
 
 #include "tf2_dem_py/parsing/message/gameevents.h"
 
+void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_GameEvent(caw, parser_state);
+}
+
+void s_GameEvent(CharArrayWrapper *caw, ParserState *parser_state) {
+	uint16_t len = 0;
+	CAW_read_raw(caw, &len, 1, 3);
+	CAW_skip(caw, len / 8, len % 8);
+}
+
+
 void p_GameEventList(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	s_GameEventList(caw, parser_state);
 }

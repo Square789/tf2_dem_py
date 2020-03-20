@@ -11,6 +11,7 @@ void p_Empty(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json)
 void s_Empty(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
+
 void p_NetTick(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint32_t tick = CAW_get_uint32(caw);
 	uint16_t frame_time = CAW_get_uint16(caw);
@@ -20,6 +21,7 @@ void p_NetTick(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_jso
 void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 8, 0);
 }
+
 
 void p_SetConVar(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	s_SetConVar(caw, parser_state);
@@ -33,6 +35,7 @@ void s_SetConVar(CharArrayWrapper *caw, ParserState *parser_state) {
 	}
 }
 
+
 void p_SigOnState(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t state = CAW_get_uint8(caw);
 	uint32_t count = CAW_get_uint32(caw);
@@ -41,6 +44,7 @@ void p_SigOnState(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_
 void s_SigOnState(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 5, 0);
 }
+
 
 void p_Print(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t *str_ptr = CAW_get_nulltrm_str(caw);
@@ -61,6 +65,7 @@ void s_Print(CharArrayWrapper *caw, ParserState *parser_state) {
 	size_t dist = CAW_dist_until_null(caw);
 	CAW_skip(caw, dist, 0); // no error checks, occurs in message parsing loop
 }
+
 
 void p_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	cJSON *sinfo_json = cJSON_AddObjectToObject(root_json, "serverinfo");
@@ -109,6 +114,7 @@ void s_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, CAW_dist_until_null(caw), 0); // Less overhead than a loop i guess
 	CAW_skip(caw, 0, 1);
 }
+
 
 void p_SetView(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	s_SetView(caw, parser_state);

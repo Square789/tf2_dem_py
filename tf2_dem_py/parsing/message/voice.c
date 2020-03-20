@@ -26,6 +26,7 @@ void s_ParseSounds(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, length / 8, length % 8);
 }
 
+
 void p_VoiceInit(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	s_VoiceInit(caw, parser_state);
 }

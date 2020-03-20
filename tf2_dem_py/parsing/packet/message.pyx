@@ -62,6 +62,10 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = ParseSounds
 		elif msg_id == 18:
 			msg_parser = SetView
+		elif msg_id == 23:
+			msg_parser = UserMessage
+		elif msg_id == 25:
+			msg_parser = GameEvent
 		elif msg_id == 26:
 			msg_parser = PacketEntities
 		elif msg_id == 30:

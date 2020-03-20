@@ -20,5 +20,7 @@ cdef extern from "__init__.h" nogil:
 	cdef MsgParserBase *VoiceInit
 	cdef MsgParserBase *ParseSounds
 	cdef MsgParserBase *SetView
+	cdef MsgParserBase *UserMessage
+	cdef MsgParserBase *GameEvent
 	cdef MsgParserBase *PacketEntities
 	cdef MsgParserBase *GameEventList
