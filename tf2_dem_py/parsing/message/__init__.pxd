@@ -12,6 +12,7 @@ cdef extern from "__init__.h" nogil:
 	cdef MsgParserBase *Empty
 	cdef MsgParserBase *File
 	cdef MsgParserBase *NetTick
+	cdef MsgParserBase *StringCommand
 	cdef MsgParserBase *SetConVar
 	cdef MsgParserBase *SigOnState
 	cdef MsgParserBase *Print
@@ -22,6 +23,8 @@ cdef extern from "__init__.h" nogil:
 	cdef MsgParserBase *VoiceInit
 	cdef MsgParserBase *ParseSounds
 	cdef MsgParserBase *SetView
+	cdef MsgParserBase *FixAngle
+	cdef MsgParserBase *BspDecal
 	cdef MsgParserBase *UserMessage
 	cdef MsgParserBase *Entity
 	cdef MsgParserBase *GameEvent

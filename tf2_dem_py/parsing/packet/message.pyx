@@ -28,7 +28,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 		parser_state.FAILURE |= 0b1000
 		return
 
-	printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
+	#printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
 
 	cdef CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len)
 
@@ -39,13 +39,15 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
+		#printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
 		if msg_id == 0:
 			msg_parser = Empty
 		elif msg_id == 2:
 			msg_parser = File
 		elif msg_id == 3:
 			msg_parser = NetTick
+		elif msg_id == 4:
+			msg_parser = StringCommand
 		elif msg_id == 5:
 			msg_parser = SetConVar
 		elif msg_id == 6:
@@ -66,6 +68,10 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = ParseSounds
 		elif msg_id == 18:
 			msg_parser = SetView
+		elif msg_id == 19:
+			msg_parser = FixAngle
+		elif msg_id == 21:
+			msg_parser = BspDecal
 		elif msg_id == 23:
 			msg_parser = UserMessage
 		elif msg_id == 24:

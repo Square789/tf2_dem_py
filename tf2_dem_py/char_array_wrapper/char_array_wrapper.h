@@ -74,6 +74,8 @@ uint8_t *CAW_get_chars(CharArrayWrapper *caw, size_t req_len);
 uint8_t *CAW_get_nulltrm_str(CharArrayWrapper *caw);
 /* Returns a var int from the stream. */
 uint32_t CAW_get_var_int(CharArrayWrapper *caw);
+/* Returns a bitcoord from the stream, according to an obscure valve specification.  */
+float CAW_get_bit_coord(CharArrayWrapper *caw);
 /* Returns the next 32 bits interpreted as a floating point number. */
 float CAW_get_flt(CharArrayWrapper *caw);
 /* Returns the next bit in an unsigned integer. */
@@ -86,4 +88,5 @@ uint16_t CAW_get_uint16(CharArrayWrapper *caw);
 uint32_t CAW_get_uint32(CharArrayWrapper *caw);
 /* Returns errorbyte from a CharArrayWrapper. */
 uint8_t CAW_get_errorlevel(CharArrayWrapper *caw);
+
 #endif

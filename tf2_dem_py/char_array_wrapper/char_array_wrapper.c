@@ -233,6 +233,30 @@ uint32_t CAW_get_var_int(CharArrayWrapper *caw) {
 	return res;
 }
 
+float CAW_get_bit_coord(CharArrayWrapper *caw) {
+	uint8_t has_dec, has_frac;
+	uint8_t frac_val = 0;
+	int8_t sign;
+	uint16_t decimal_val = 0;
+	has_dec = CAW_get_bit(caw);
+	has_frac = CAW_get_bit(caw);
+	if (!(has_dec | has_frac)) {
+		return 0.0f;
+	}
+	if (CAW_get_bit(caw) == 1) {
+		sign = 1;
+	} else {
+		sign = -1;
+	}
+	if (has_dec == 1) {
+		CAW_read_raw(caw, &decimal_val, 1, 6);
+	}
+	if (has_frac == 1) {
+		CAW_read_raw(caw, &frac_val, 0, 5);
+	}
+	return sign * (decimal_val + (frac_val * 0.03125f));
+}
+
 float CAW_get_flt(CharArrayWrapper *caw) {
 	float f;
 	CAW_read_raw(caw, &f, 4, 0);

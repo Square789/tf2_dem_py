@@ -36,6 +36,15 @@ void s_NetTick(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
+void p_StringCommand(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_StringCommand(caw, parser_state);
+}
+
+void s_StringCommand(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, CAW_dist_until_null(caw), 0);
+}
+
+
 void p_SetConVar(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	s_SetConVar(caw, parser_state);
 }
@@ -135,6 +144,38 @@ void p_SetView(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_jso
 
 void s_SetView(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 1, 3);
+}
+
+
+void p_FixAngle(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_FixAngle(caw, parser_state);
+}
+
+void s_FixAngle(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 6, 1);
+}
+
+
+void p_BspDecal(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_BspDecal(caw, parser_state);
+}
+
+void s_BspDecal(CharArrayWrapper *caw, ParserState *parser_state) {
+	uint8_t existing_coords[3] = {0, 0, 0};
+	uint8_t i;
+	for (i = 0; i < 3; i++) {
+		existing_coords[i] = CAW_get_bit(caw);
+	}
+	for (i = 0; i < 3; i++) {
+		if (existing_coords[i] == 1) {
+			CAW_get_bit_coord(caw);
+		} 
+	}
+	CAW_skip(caw, 1, 1);
+	if (CAW_get_bit(caw) == 1) {
+		CAW_skip(caw, 3, 0);
+	}
+	CAW_skip(caw, 0, 1);
 }
 
 

@@ -18,6 +18,9 @@ MsgParserBase *File = &File_s; // 2 //
 MsgParserBase NetTick_s = {p_NetTick, s_NetTick};
 MsgParserBase *NetTick = &NetTick_s; // 3 //
 
+MsgParserBase StringCommand_s = {p_StringCommand, s_StringCommand};
+MsgParserBase *StringCommand = &StringCommand_s; // 4 //
+
 MsgParserBase SetConVar_s = {p_SetConVar, s_SetConVar};
 MsgParserBase *SetConVar = &SetConVar_s; // 5 //
 
@@ -47,6 +50,12 @@ MsgParserBase *ParseSounds = &ParseSounds_s; // 17 //
 
 MsgParserBase SetView_s = {p_SetView, s_SetView};
 MsgParserBase *SetView = &SetView_s; // 18 //
+
+MsgParserBase FixAngle_s = {p_FixAngle, s_FixAngle};
+MsgParserBase *FixAngle = &FixAngle_s; // 19 //
+
+MsgParserBase BspDecal_s = {p_BspDecal, s_BspDecal};
+MsgParserBase *BspDecal = &BspDecal_s; // 21 //
 
 MsgParserBase UserMessage_s = {p_UserMessage, s_UserMessage};
 MsgParserBase *UserMessage = &UserMessage_s; // 23 //
