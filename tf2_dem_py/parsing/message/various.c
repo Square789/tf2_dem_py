@@ -1,7 +1,7 @@
 
 #include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/parsing/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
 #include "tf2_dem_py/parsing/message/various.h"
 
@@ -72,13 +72,13 @@ void p_Print(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json)
 	uint8_t *str_ptr = CAW_get_nulltrm_str(caw);
 
 	if (CAW_get_errorlevel(caw) != 0) {
-		parser_state->FAILURE |= 0b1;
+		parser_state->FAILURE |= ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = CAW_get_errorlevel(caw);
 		return;
 	}
 
 	if (cJSON_AddVolatileStringRefToObject(root_json, "printmsglol", (const char *)str_ptr) == NULL) {
-		parser_state->FAILURE |= 0b10000;
+		parser_state->FAILURE |= ERR.CJSON;
 		return;
 	}
 }
@@ -94,7 +94,7 @@ void p_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_
 	uint8_t json_err = 0;
 
 	if (sinfo_json == NULL) {
-		parser_state->FAILURE |= 0b10000;
+		parser_state->FAILURE |= ERR.CJSON;
 		return;
 	}
 
@@ -117,13 +117,13 @@ void p_ServerInfo(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_
 	if (cJSON_AddBoolToObject(sinfo_json, "replay", CAW_get_bit(caw)) == NULL) { json_err = 1; }
 
 	if (CAW_get_errorlevel(caw) != 0) {
-		parser_state->FAILURE |= 0b1;
+		parser_state->FAILURE |= ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = CAW_get_errorlevel(caw);
 		return;
 	}
 
 	if (json_err == 1) {
-		parser_state->FAILURE |= 0b10000;
+		parser_state->FAILURE |= ERR.CJSON;
 		return;
 	}
 }

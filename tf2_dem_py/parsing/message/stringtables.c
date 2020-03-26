@@ -4,20 +4,20 @@
 
 #include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/parsing/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
 #include "tf2_dem_py/parsing/message/stringtables.h"
 
 void p_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-	uint8_t *str = CAW_get_nulltrm_str(caw);
-	if (str != 0) {
-		printf("%s\n", str);
-	} else { printf("huh\n"); }
+	//uint8_t *str = CAW_get_nulltrm_str(caw);
+	//if (str != 0) {
+	//	printf("%s\n", str);
+	//} else { printf("huh\n"); }
 	s_StringTableCreate(caw, parser_state);
 }
 
 void s_StringTableCreate(CharArrayWrapper *caw, ParserState *parser_state) {
-	//CAW_skip(caw, CAW_dist_until_null(caw), 0);
+	CAW_skip(caw, CAW_dist_until_null(caw), 0);
 	uint16_t max_ln = CAW_get_uint16(caw);
 	uint16_t max_ln_skip = ((uint16_t)log2(max_ln)) + 1;
 	CAW_skip(caw, max_ln_skip / 8, max_ln_skip % 8);

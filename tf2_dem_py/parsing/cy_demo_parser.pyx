@@ -3,7 +3,7 @@ from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint8_t, uint16_t
 
 from tf2_dem_py.parsing cimport header
-from tf2_dem_py.parsing.parser_state cimport ParserState
+from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
 from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
@@ -13,13 +13,13 @@ import json
 from time import time
 
 ERR_STRINGS_P = (
-	"See CharArrayWrapper error below.",
-	"Unkown packet id encountered.",
-	"File I/O error.",
-	"Unexpected EOF.",
-	"cJSON error. (Likely due to memory allocation failure.)",
-	"Unknown message id encountered.",
-	"Memory allocation failed.",
+	"See CharArrayWrapper error below.",#1
+	"Unkown packet id encountered.",#2
+	"File I/O error.",#4
+	"Unexpected EOF.",#8
+	"cJSON error. (Likely due to memory allocation failure.)",#16
+	"Unknown message id encountered.",#32
+	"Memory allocation failed.",#64
 )
 
 ERR_STRINGS_CAW = (

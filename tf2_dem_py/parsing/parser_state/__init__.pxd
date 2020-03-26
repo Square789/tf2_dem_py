@@ -15,10 +15,21 @@ FAILURE:
 RELAYED_CAW_ERR: See CharArrayWrapper error
 """
 
-cdef extern from "tf2_dem_py/parsing/parser_state.h":
+cdef extern from "tf2_dem_py/parsing/parser_state/parser_state.h":
 	cdef struct ParserState:
 		uint16_t flags
 		uint8_t finished
 		uint8_t FAILURE
 		uint8_t RELAYED_CAW_ERR
 		uint32_t tick
+
+	cdef struct ERR_s: # Only required for constant decl. below
+		uint8_t CAW
+		uint8_t UNKNOWN_PACKET_ID
+		uint8_t IO
+		uint8_t UNEXPECTED_EOF
+		uint8_t CJSON
+		uint8_t UNKNOWN_MESSAGE_ID
+		uint8_t MEMORY_ALLOCATION
+
+	const ERR_s ERR # export constant error struct

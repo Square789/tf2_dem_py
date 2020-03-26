@@ -7,7 +7,7 @@ cimport tf2_dem_py.parsing.packet.stringtables as stringtables
 cimport tf2_dem_py.parsing.packet.synctick as synctick
 cimport tf2_dem_py.parsing.packet.consolecmd as consolecmd
 cimport tf2_dem_py.parsing.packet.usercmd as usercmd
-from tf2_dem_py.parsing.parser_state cimport ParserState
+from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.cJSON cimport cJSON
 
 cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
@@ -40,4 +40,4 @@ cdef void parse_any(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	elif packet_type == 8:
 		stringtables.parse(stream, parser_state, root_json)
 	else:
-		parser_state.FAILURE |= 0b10
+		parser_state.FAILURE |= ERR.UNKNOWN_PACKET_ID

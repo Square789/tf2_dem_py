@@ -19,10 +19,11 @@ if __version__ == None:
 
 SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
+SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
 
 # C implemented message parsers required by message.pyx
-# CAW and cJSON required by everything in parsing and header
+# CAW, cJSON, parserstate required by everything in parsing and header
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)
@@ -32,8 +33,10 @@ def deliver_sources(strpath):
 			path.match("tf2_dem_py/parsing/packet/*.pyx"):
 		srcs.append(SRC_CJSON)
 		srcs.append(SRC_CAW)
+		srcs.append(SRC_PARSER_STATE)
 	elif path.match("tf2_dem_py/parsing/cy_demo_parser.pyx"):
 		srcs.append(SRC_CJSON)
+		srcs.append(SRC_PARSER_STATE)
 	return srcs
 
 extensions = []

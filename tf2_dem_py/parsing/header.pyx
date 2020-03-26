@@ -1,7 +1,7 @@
 from libc.stdio cimport FILE
 
 from tf2_dem_py.char_array_wrapper cimport *
-from tf2_dem_py.parsing.parser_state cimport ParserState
+from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.cJSON cimport (cJSON, cJSON_CreateObject,
 	cJSON_AddNumberToObject, cJSON_AddVolatileStringRefToObject, cJSON_AddObjectToObject)
 
@@ -28,8 +28,8 @@ cdef void parse(FILE *stream, ParserState* p_state, cJSON *root_json):
 	if cJSON_AddNumberToObject(header, "sigon", CAW_get_uint32(header_caw)) == NULL: json_err = 1
 
 	if CAW_get_errorlevel(header_caw) != 0:
-		p_state.FAILURE |= 0b1
+		p_state.FAILURE |= ERR.CAW
 		p_state.RELAYED_CAW_ERR = CAW_get_errorlevel(header_caw)
 
 	if json_err == 1:
-		p_state.FAILURE |= 0b10000
+		p_state.FAILURE |= ERR.CJSON

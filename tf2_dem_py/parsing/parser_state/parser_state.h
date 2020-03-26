@@ -11,4 +11,16 @@ typedef struct ParserState {
 	uint32_t tick;
 } ParserState;
 
+typedef struct ERR_s {
+	uint8_t CAW;
+	uint8_t UNKNOWN_PACKET_ID;
+	uint8_t IO;
+	uint8_t UNEXPECTED_EOF;
+	uint8_t CJSON;
+	uint8_t UNKNOWN_MESSAGE_ID;
+	uint8_t MEMORY_ALLOCATION;
+} ERR_s;
+
+extern const ERR_s ERR;
+
 #endif

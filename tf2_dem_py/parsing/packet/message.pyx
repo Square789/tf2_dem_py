@@ -1,7 +1,7 @@
 from libc.stdio cimport FILE, fread, fseek, ftell, ferror, feof, SEEK_CUR, printf
 from libc.stdint cimport uint8_t, uint32_t
 
-from tf2_dem_py.parsing.parser_state cimport ParserState
+from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.char_array_wrapper cimport *
 from tf2_dem_py.parsing.message cimport *
 from tf2_dem_py.cJSON cimport cJSON
@@ -22,10 +22,10 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	fread(&pkt_len, sizeof(pkt_len), 1, stream)
 
 	if ferror(stream) != 0:
-		parser_state.FAILURE |= 0b100
+		parser_state.FAILURE |= ERR.IO
 		return
 	if feof(stream) != 0:
-		parser_state.FAILURE |= 0b1000
+		parser_state.FAILURE |= ERR.UNEXCPECTED_EOF
 		return
 
 	#printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
@@ -33,7 +33,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	cdef CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len)
 
 	if CAW_get_errorlevel(pkt_caw) != 0:
-		parser_state.FAILURE |= 0b1
+		parser_state.FAILURE |= ERR.CAW
 		parser_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
 		return
 
@@ -89,13 +89,13 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 		elif msg_id == 30:
 			msg_parser = GameEventList
 		else:
-			parser_state.FAILURE |= 0b100000
+			parser_state.FAILURE |= ERR.UNKNOWN_MESSAGE_ID
 			return
 
 		msg_parser.parse(pkt_caw, parser_state, root_json)
 
 		if CAW_get_errorlevel(pkt_caw) != 0:
-			parser_state.FAILURE |= 0b1
+			parser_state.FAILURE |= ERR.CAW
 			parser_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
 			return
 
