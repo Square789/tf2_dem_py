@@ -1,13 +1,13 @@
 from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf
 from libc.stdlib cimport malloc, free
-from libc.stdint cimport uint8_t
+from libc.stdint cimport uint8_t, uint16_t
 
 from tf2_dem_py.parsing cimport header
 from tf2_dem_py.parsing.parser_state cimport ParserState
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
 from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
-	cJSON_PrintUnformatted, cJSON_Delete)
+	cJSON_PrintUnformatted, cJSON_Delete, cJSON_AddArrayToObject)
 
 import json
 from time import time
@@ -53,19 +53,27 @@ cdef class CyDemoParser():
 	"""
 	# attrs in pxd
 
-	def __cinit__(self, char *target_file):
+	def __cinit__(self, char *target_file, uint16_t flags):
+		cdef cJSON *chatarray
+
 		self.stream = fopen(target_file, "rb")
 
 		self.state = <ParserState *>malloc(sizeof(ParserState))
 		if self.state == NULL:
-			raise MemoryError("Failed to alloc memory for ParserState")
-		self.state.finished = 0 # Initialize state
+			raise MemoryError("Failed to alloc memory for ParserState.")
+		self.state.flags = flags # Initialize state
+		self.state.finished = 0
 		self.state.FAILURE = 0
 		self.state.RELAYED_CAW_ERR = 0
 		self.state.tick = 0
 
 		self.json_obj = cJSON_CreateObject()
 		print((cJSON_Version()).decode("utf-8"))
+
+		if self.state.flags & 0b1: # Chat should be included in result
+			chatarray = cJSON_AddArrayToObject(self.json_obj, "chat")
+			if chatarray == NULL:
+				raise MemoryError("Failed to alloc memory for cJSON chat array.")
 
 	def __dealloc__(self):
 		fclose(self.stream)
@@ -95,6 +103,6 @@ cdef class CyDemoParser():
 		res_str = cJSON_PrintUnformatted(self.json_obj)
 		cJSON_Delete(self.json_obj)
 		if res_str == NULL:
-			raise ParserError("JSON library failed turning json to string.")
+			raise ParserError("cJSON library failed turning json to string.")
 		print("Took ", end - start)
 		return json.loads(res_str.decode("utf_8"))

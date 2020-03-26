@@ -8,6 +8,9 @@
 void p_VoiceInit(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_VoiceInit(CharArrayWrapper *caw, ParserState *parser_state);
 
+void p_VoiceData(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_VoiceData(CharArrayWrapper *caw, ParserState *parser_state);
+
 void p_ParseSounds(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_ParseSounds(CharArrayWrapper *caw, ParserState *parser_state);
 

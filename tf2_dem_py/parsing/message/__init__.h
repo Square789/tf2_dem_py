@@ -25,6 +25,7 @@ extern MsgParserBase *ClassInfo;
 extern MsgParserBase *StringTableCreate;
 extern MsgParserBase *StringTableUpdate;
 extern MsgParserBase *VoiceInit;
+extern MsgParserBase *VoiceData;
 extern MsgParserBase *ParseSounds;
 extern MsgParserBase *SetView;
 extern MsgParserBase *FixAngle;

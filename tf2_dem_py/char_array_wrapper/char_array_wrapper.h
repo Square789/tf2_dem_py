@@ -50,6 +50,16 @@ void CAW_read_raw(CharArrayWrapper *caw, void *target_ptr, size_t req_bytes, uin
  * is too short.
  */
 void CAW_skip(CharArrayWrapper *caw, size_t bytes, uint8_t bits);
+/* Jump to a position in chararray. Sets first bit of ERRORLEVEL if buffer
+ * is too short. Has no effect if more than 7 bits are requested, so
+ * don't do that. Function is unsafe as it does not perform enough error checks.
+ * Note that specifying a byte X and a bit > 0 will cause the passed in
+ * CharArrayWrapper's bytepos field to be X + 1, as it always points to
+ * the index of the next untouched char.
+ */
+void CAW_set_pos(CharArrayWrapper *caw, size_t byte, uint8_t bit);
+size_t CAW_get_pos_byte(CharArrayWrapper *caw);
+uint8_t CAW_get_pos_bit(CharArrayWrapper *caw);
 /* Returns the distance until the next nullbyte is encountered,
  * that is the amount of bytes that would have to be fetched to receive
  * a null-terminated string.

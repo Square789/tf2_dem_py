@@ -39,7 +39,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		#printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
+		#printf("-Next message: %u, tick %u\n", msg_id, parser_state.tick)
 		if msg_id == 0:
 			msg_parser = Empty
 		elif msg_id == 2:
@@ -64,6 +64,8 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = StringTableUpdate
 		elif msg_id == 14:
 			msg_parser = VoiceInit
+		elif msg_id == 15:
+			msg_parser = VoiceData
 		elif msg_id == 17:
 			msg_parser = ParseSounds
 		elif msg_id == 18:

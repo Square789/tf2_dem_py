@@ -5,6 +5,7 @@ import os
 import sys
 from pprint import pprint
 
+from tf2_dem_py.flags import FLAGS
 from tf2_dem_py.demo_parser import DemoParser
 
 if len(sys.argv) > 1:
@@ -12,5 +13,5 @@ if len(sys.argv) > 1:
 else:
 	p = os.path.join(os.environ["USERPROFILE"], "Desktop", "demotesting", "gully.dem")
 
-dp = DemoParser(p)
+dp = DemoParser(p, (FLAGS.CHAT))
 pprint(dp.parse())

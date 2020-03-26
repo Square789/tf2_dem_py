@@ -45,6 +45,9 @@ MsgParserBase *StringTableUpdate = &StringTableUpdate_s; // 13 //
 MsgParserBase VoiceInit_s = {p_VoiceInit, s_VoiceInit};
 MsgParserBase *VoiceInit = &VoiceInit_s; // 14 //
 
+MsgParserBase VoiceData_s = {p_VoiceData, s_VoiceData};
+MsgParserBase *VoiceData = &VoiceData_s; // 15 //
+
 MsgParserBase ParseSounds_s = {p_ParseSounds, s_ParseSounds};
 MsgParserBase *ParseSounds = &ParseSounds_s; // 17 //
 

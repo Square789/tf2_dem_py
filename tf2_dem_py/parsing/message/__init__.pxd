@@ -21,6 +21,7 @@ cdef extern from "__init__.h" nogil:
 	cdef MsgParserBase *StringTableCreate
 	cdef MsgParserBase *StringTableUpdate
 	cdef MsgParserBase *VoiceInit
+	cdef MsgParserBase *VoiceData
 	cdef MsgParserBase *ParseSounds
 	cdef MsgParserBase *SetView
 	cdef MsgParserBase *FixAngle

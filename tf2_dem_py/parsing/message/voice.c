@@ -37,3 +37,15 @@ void s_VoiceInit(CharArrayWrapper *caw, ParserState *parser_state) {
 		CAW_skip(caw, 2, 0);
 	}
 }
+
+
+void p_VoiceData(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_VoiceData(caw, parser_state);
+}
+
+void s_VoiceData(CharArrayWrapper *caw, ParserState *parser_state) {
+	uint16_t len = 0;
+	CAW_skip(caw, 2, 0);
+	CAW_read_raw(caw, &len, 2, 0);
+	CAW_skip(caw, len / 8, len % 8);
+}

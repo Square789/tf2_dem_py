@@ -211,7 +211,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateStringReference(const char *string);
 /* Create a string where valuestring references a string, yet still
  * frees it when cJSON_Delete is run over a parent element. */
 CJSON_PUBLIC(cJSON *) cJSON_CreateVolatileStringReference(const char* string); // Original modification
-/* Create an object/array that only references it's elements so
+/* Create an object/array that only references its elements so
  * they will not be freed by cJSON_Delete */
 CJSON_PUBLIC(cJSON *) cJSON_CreateObjectReference(const cJSON *child);
 CJSON_PUBLIC(cJSON *) cJSON_CreateArrayReference(const cJSON *child);

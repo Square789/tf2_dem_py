@@ -63,7 +63,7 @@ void CAW_delete(CharArrayWrapper *caw) {
  *     1 if the buffer is too short.
  *     2 if more than 7 bits were requested.
  */
-uint8_t CAW__ver_buf_health(CharArrayWrapper *caw, size_t req_bytes, uint8_t req_bits) {
+inline uint8_t CAW__ver_buf_health(CharArrayWrapper *caw, size_t req_bytes, uint8_t req_bits) {
 	if (req_bits > 7)
 		return 2;
 	// Temp var in case bitbuf overflows
@@ -154,6 +154,39 @@ void CAW_skip(CharArrayWrapper *caw, size_t bytes, uint8_t bits) {
 			caw->bytepos += 1;
 		}
 	}
+}
+
+size_t CAW_get_pos_byte(CharArrayWrapper *caw) {
+	if (caw->bitbuf_len == 0) { // Next unread byte is basically position
+		return caw->bytepos;
+	} else { // Untouched data in bitbuffer -> pos is still in current byte
+		return caw->bytepos - 1;
+	}
+}
+
+uint8_t CAW_get_pos_bit(CharArrayWrapper *caw) {
+	if (caw->bitbuf_len == 0) {
+		return 0;
+	} else {
+		return (8 - caw->bitbuf_len);
+	}
+	// 0 0 1 0 1 1|0 1
+	// -----6-----|-2-
+	// -> pos = 8 - 6 = 2
+}
+
+void CAW_set_pos(CharArrayWrapper *caw, size_t byte, uint8_t bit) {
+	if (bit > 7) { return; }
+	if (byte > caw->mem_len) {
+		caw->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
+		return;
+	}
+	uint8_t trashbyte = 0;
+	caw->bytepos = byte;
+	caw->bitbuf = 0;
+	caw->bitbuf_len = 0;
+
+	CAW_read_raw(caw, &trashbyte, 0, bit);
 }
 
 size_t CAW_dist_until_null(CharArrayWrapper *caw) {
