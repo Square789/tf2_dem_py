@@ -28,7 +28,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 		parser_state.FAILURE |= ERR.UNEXCPECTED_EOF
 		return
 
-	#printf("File ptr @%u, packet length %u\n", ftell(stream), pkt_len)
+	#printf("Message packet, length %u\n", pkt_len)
 
 	cdef CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len)
 
@@ -39,7 +39,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
-		#printf("-Next message: %u, tick %u\n", msg_id, parser_state.tick)
+		#printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
 		if msg_id == 0:
 			msg_parser = Empty
 		elif msg_id == 2:
@@ -101,3 +101,5 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 		if parser_state.FAILURE != 0: # Set by message parser
 			return
+
+	CAW_delete(pkt_caw)

@@ -15,5 +15,5 @@ else:
 
 dp = DemoParser(p, (FLAGS.CHAT))
 res = dp.parse()
-#pprint(res, sort_dicts = False, compact = True)
-print(res)
+pprint(res, sort_dicts = False, compact = True)
+#print(res)

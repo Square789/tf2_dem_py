@@ -2,6 +2,8 @@ from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint8_t, uint16_t
 
+from cpython.exc cimport PyErr_CheckSignals
+
 from tf2_dem_py.parsing cimport header
 from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
@@ -68,7 +70,6 @@ cdef class CyDemoParser():
 		self.state.tick = 0
 
 		self.json_obj = cJSON_CreateObject()
-		print((cJSON_Version()).decode("utf-8"))
 
 		if self.state.flags & 0b1: # Chat should be included in result
 			chatarray = cJSON_AddArrayToObject(self.json_obj, "chat")
@@ -97,6 +98,7 @@ cdef class CyDemoParser():
 				raise ParserError("Demo parser failed @ byte {}; {}".format(
 					<int>ftell(self.stream), format_parser_error(
 						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
+			PyErr_CheckSignals() # yes or no who knows
 
 		end = time()
 

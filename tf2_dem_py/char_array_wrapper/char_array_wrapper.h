@@ -30,6 +30,7 @@ typedef struct CharArrayWrapper {
 	 *           \\ Instantiation failure, amount of bytes read differs from requested amount.
 	 */
 	uint8_t ERRORLEVEL;
+	uint8_t free_on_dealloc;
 } CharArrayWrapper;
 
 /* Create a new CharArrayWrapper and return a pointer to it.
@@ -37,7 +38,13 @@ typedef struct CharArrayWrapper {
  * Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
  */
 CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
-CharArrayWrapper *CAW_from_buffer(void *buf, size_t length);
+/* Create a CharArrayWrapper from an existing CharArrayWrapper.
+ * The new CharArrayWrapper's pos_byte will be 0, however may be offset
+ * on a bit level already, if the parent CharArrayWrapper was.
+ * As the new CharArrayWrapper works on the existing memory chunk
+ * of the old one, bit-level precision is not possible.
+ */
+CharArrayWrapper *CAW_from_caw(CharArrayWrapper *caw, size_t len);
 /* Deallocate a CharArrayWrapper's memory. */
 void CAW_delete(CharArrayWrapper *caw);
 /* Reads the bytes from the CharArrayWrapper's current position and bitbuffer offset

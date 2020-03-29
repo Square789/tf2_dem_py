@@ -16,6 +16,7 @@ CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
 	caw_ptr->bitbuf_len = 0;
 	caw_ptr->bytepos = 0;
 	caw_ptr->ERRORLEVEL = 0;
+	caw_ptr->free_on_dealloc = 1;
 
 	caw_ptr->mem_ptr = (uint8_t *)malloc(initbytes);
 	if (caw_ptr->mem_ptr == NULL) {
@@ -32,25 +33,45 @@ CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
 	return caw_ptr;
 }
 
-CharArrayWrapper *CAW_from_buffer(void *buf, size_t length) {
-	CharArrayWrapper *caw_ptr = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
-	if (caw_ptr == NULL) {
+// CharArrayWrapper *CAW_from_buffer(void *buf, size_t length, uint8_t free_on_dealloc) {
+// 	CharArrayWrapper *caw_ptr = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
+// 	if (caw_ptr == NULL) {
+// 		return NULL;
+// 	}
+// 	caw_ptr->mem_len = length;
+// 	caw_ptr->bitbuf = 0x0;
+// 	caw_ptr->bitbuf_len = 0;
+// 	caw_ptr->bytepos = 0;
+// 	caw_ptr->ERRORLEVEL = 0;
+// 	caw_ptr->free_on_dealloc = free_on_dealloc;
+
+// 	caw_ptr->mem_ptr = (uint8_t *)buf;
+
+// 	return caw_ptr;
+// }
+
+CharArrayWrapper *CAW_from_caw(CharArrayWrapper *caw, size_t len) {
+	CharArrayWrapper *new_caw = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
+	if (new_caw == NULL) {
 		return NULL;
 	}
-	caw_ptr->mem_len = length;
-	caw_ptr->bitbuf = 0x0;
-	caw_ptr->bitbuf_len = 0;
-	caw_ptr->bytepos = 0;
-	caw_ptr->ERRORLEVEL = 0;
+	new_caw->mem_len = len;
+	new_caw->mem_ptr = caw->mem_ptr + CAW_get_pos_byte(caw);
+	new_caw->bytepos = 0;
+	new_caw->bitbuf = 0;
+	new_caw->bitbuf_len = 0;
+	new_caw->ERRORLEVEL = 0;
+	new_caw->free_on_dealloc = 0;
 
-	caw_ptr->mem_ptr = (uint8_t *)buf;
-
-	return caw_ptr;
+	CAW_skip(new_caw, 0, CAW_get_pos_bit(caw));
+	return new_caw;
 }
 
 void CAW_delete(CharArrayWrapper *caw) {
-	free(caw->mem_ptr);
-	caw->mem_ptr = NULL;
+	if (caw->free_on_dealloc != 0) {
+		free(caw->mem_ptr);
+		caw->mem_ptr = NULL;
+	}
 	free(caw);
 	caw = NULL;
 }
@@ -181,12 +202,11 @@ void CAW_set_pos(CharArrayWrapper *caw, size_t byte, uint8_t bit) {
 		caw->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
 		return;
 	}
-	uint8_t trashbyte = 0;
 	caw->bytepos = byte;
 	caw->bitbuf = 0;
 	caw->bitbuf_len = 0;
 
-	CAW_read_raw(caw, &trashbyte, 0, bit);
+	CAW_skip(caw, 0, bit);
 }
 
 size_t CAW_dist_until_null(CharArrayWrapper *caw) {

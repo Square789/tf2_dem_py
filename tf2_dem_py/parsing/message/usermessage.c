@@ -28,9 +28,9 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	} else {
 		CAW_set_pos(um_caw, CAW_get_pos_byte(um_caw) - 1, CAW_get_pos_bit(um_caw));
 
-		chat = CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
-		from = CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
-		mesg = CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
+		chat = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
+		from = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
+		mesg = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
 		if (um_caw->ERRORLEVEL != 0) {
 			return; // Will be taken care of by p_UserMessage.
 		}
@@ -57,34 +57,37 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t user_message_type;
 	uint16_t len;
-	size_t buflen;
+	size_t req_caw_len;
 
 	user_message_type = CAW_get_uint8(caw);
 	CAW_read_raw(caw, &len, 1, 3);
 
+	// Calculate the length (in bytes) for the new CAW, the base CAW's bit
+	// offset in mind.
+	len += CAW_get_pos_bit(caw);
 	if (len % 8 == 0) {
-		buflen = (len / 8);
+		req_caw_len = (len / 8);
 	} else {
-		buflen = (len / 8) + 1;
+		req_caw_len = (len / 8) + 1;
 	}
-
 	// Copy usermessage into own buffer and create CAW on it.
-	uint8_t *user_msg_buf = (uint8_t *)malloc(buflen);
-	if (user_msg_buf == NULL) {
-		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
-		return;
-	}
-	CAW_read_raw(caw, user_msg_buf, len / 8, len % 8);
-	if (caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ERR.CAW;
-		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-		return;
-	}
-	CharArrayWrapper *user_message_caw = CAW_from_buffer((void *)user_msg_buf, buflen);
+	// uint8_t *user_msg_buf = (uint8_t *)malloc(req_caw_len);
+	// if (user_msg_buf == NULL) {
+	// 	parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+	// 	return;
+	// }
+	// if (caw->ERRORLEVEL != 0) {
+	// 	parser_state->FAILURE |= ERR.CAW;
+	// 	parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
+	// 	return;
+	// }
+	CharArrayWrapper *user_message_caw = CAW_from_caw(caw, req_caw_len);
 	if (user_message_caw == NULL) {
 		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 		return;
 	}
+	len -= CAW_get_pos_bit(caw); // Remove adjustment bits again
+	CAW_skip(caw, len / 8, len % 8);
 
 	switch (user_message_type) {
 	case 4:
