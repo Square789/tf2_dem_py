@@ -37,7 +37,7 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		parser_state->FAILURE |= ERR_MEMORY_ALLOCATION;
 		return;
 	}
-	memset(ged->entries, 0, ENTRIES_SIZE_BLOCK); // Zero it
+	memset(ged->entries, 0, sizeof(GameEventEntry) * ENTRIES_SIZE_BLOCK); // Zero it
 
 	CAW_read_raw(caw, &last_type, 0, 3);
 	while (last_type != 0) {
