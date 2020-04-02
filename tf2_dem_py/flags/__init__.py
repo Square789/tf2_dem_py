@@ -5,3 +5,4 @@ parser upon instantiation.
 
 class FLAGS:
 	CHAT = (1 << 0)
+

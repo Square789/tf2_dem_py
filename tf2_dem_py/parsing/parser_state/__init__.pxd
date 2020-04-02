@@ -1,5 +1,7 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 
+from tf2_dem_py.parsing.game_events cimport GameEventDefinitionArray
+
 """
 finished: 0 if parser is not done with parsing the demo, 1 else.
 FAILURE:
@@ -22,6 +24,7 @@ cdef extern from "tf2_dem_py/parsing/parser_state/parser_state.h":
 		uint8_t FAILURE
 		uint8_t RELAYED_CAW_ERR
 		uint32_t tick
+		GameEventDefinitionArray *game_event_defs
 
 	cdef struct ERR_s: # Only required for constant decl. below
 		uint8_t CAW

@@ -2,6 +2,7 @@
 #define PARSER_STATE__H
 
 #include <stdint.h>
+#include "tf2_dem_py/parsing/game_events/game_events.h"
 
 typedef struct ParserState {
 	uint16_t flags;
@@ -9,6 +10,7 @@ typedef struct ParserState {
 	uint8_t FAILURE;
 	uint8_t RELAYED_CAW_ERR;
 	uint32_t tick;
+	GameEventDefinitionArray *game_event_defs;
 } ParserState;
 
 typedef struct ERR_s {

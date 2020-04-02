@@ -4,7 +4,7 @@ from tf2_dem_py.char_array_wrapper cimport CharArrayWrapper
 from tf2_dem_py.cJSON cimport cJSON
 from tf2_dem_py.parsing.parser_state cimport ParserState
 
-cdef extern from "__init__.h" nogil:
+cdef extern from "tf2_dem_py/parsing/message/__init__.h" nogil:
 	cdef struct MsgParserBase:
 		void (*parse)(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json)
 		void (*skip)(CharArrayWrapper *caw, ParserState *parser_state)

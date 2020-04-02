@@ -1,10 +1,16 @@
-from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf
+"""
+Main parser class
+"""
+
+from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf, rewind
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uint8_t, uint16_t
 
 from cpython.exc cimport PyErr_CheckSignals
 
+from tf2_dem_py.flags cimport FLAGS
 from tf2_dem_py.parsing cimport header
+from tf2_dem_py.parsing.game_events cimport free_GameEventDefinitionArray
 from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
@@ -13,6 +19,8 @@ from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
 
 import json
 from time import time
+
+__version__ = "0.0.1-dev-22"
 
 ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",#1
@@ -46,7 +54,7 @@ cdef str format_parser_error(uint8_t f_byte, uint8_t caw_byte):
 class ParserError(Exception):
 	pass
 
-cdef class CyDemoParser():
+cdef class DemoParser():
 	"""
 	Demo parser class.
 
@@ -55,7 +63,7 @@ cdef class CyDemoParser():
 	"""
 	# attrs in pxd
 
-	def __cinit__(self, char *target_file, uint16_t flags):
+	def __cinit__(self, char *target_file, uint16_t flagnum):
 		cdef cJSON *chatarray
 
 		self.stream = fopen(target_file, "rb")
@@ -63,15 +71,16 @@ cdef class CyDemoParser():
 		self.state = <ParserState *>malloc(sizeof(ParserState))
 		if self.state == NULL:
 			raise MemoryError("Failed to alloc memory for ParserState.")
-		self.state.flags = flags # Initialize state
+		self.state.flags = flagnum # Initialize state
 		self.state.finished = 0
 		self.state.FAILURE = 0
 		self.state.RELAYED_CAW_ERR = 0
 		self.state.tick = 0
+		self.state.game_event_defs = NULL
 
 		self.json_obj = cJSON_CreateObject()
 
-		if self.state.flags & 0b1: # Chat should be included in result
+		if self.state.flags & FLAGS.CHAT: # Chat should be included in result
 			chatarray = cJSON_AddArrayToObject(self.json_obj, "chat")
 			if chatarray == NULL:
 				raise MemoryError("Failed to alloc memory for cJSON chat array.")
@@ -81,10 +90,15 @@ cdef class CyDemoParser():
 		free(self.state)
 		self.state = NULL
 
+	cdef void cleanup(self):
+		free_GameEventDefinitionArray(self.state.game_event_defs)
+
 	cpdef dict parse(self):
 		cdef char *res_str
 
 		start = time()
+
+		rewind(self.stream)
 
 		header.parse(self.stream, self.state, self.json_obj)
 		if self.state.FAILURE != 0:
@@ -101,6 +115,9 @@ cdef class CyDemoParser():
 			PyErr_CheckSignals() # yes or no who knows
 
 		end = time()
+		printf("done.\n")
+
+		self.cleanup()
 
 		res_str = cJSON_PrintUnformatted(self.json_obj)
 		cJSON_Delete(self.json_obj)

@@ -8,16 +8,10 @@
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
+#include "tf2_dem_py/parsing/game_events/game_events.h"
 #include "tf2_dem_py/parsing/message/gameevents.h"
 
 static const uint8_t ENTRIES_SIZE_BLOCK = 4;
-
-// inline uint8_t read_game_event_entry(CharArrayWrapper *caw, GameEventEntry *target_ptr) {
-// 	target_ptr->name = CAW_get_nulltrm_str(caw);
-// 	CAW_read_raw(caw, &(target_ptr->value_type), 0, 3);
-// 	printf("Read game event entry: %u, %s\n", target_ptr->value_type, target_ptr->name);
-// 	return target_ptr->value_type;
-// }
 
 void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state,
 		GameEventDefinition *ged) {
@@ -44,9 +38,8 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		entry_name = (char *)CAW_get_nulltrm_str(caw);
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
-		//printf(" Set type and name to %u, %s\n", last_type, entry_name);
-
-		(ged->entries_length)++;
+		(ged->entries_length) += 1;
+		CAW_read_raw(caw, &last_type, 0, 3);
 
 		// Extend capacity if exceeded
 		if (ged->entries_length == ged->entries_capacity) {
@@ -55,7 +48,6 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 				sizeof(GameEventEntry) * (ENTRIES_SIZE_BLOCK + ged->entries_capacity)
 			);
 			if (tmp_new_entries == NULL) { // Failure check
-				free(ged->entries);
 				parser_state->FAILURE |= ERR_MEMORY_ALLOCATION;
 				return;
 			}
@@ -66,7 +58,6 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 				0, ENTRIES_SIZE_BLOCK
 			); // Zero out new array part
 		}
-		CAW_read_raw(caw, &last_type, 0, 3);
 	}
 }
 
@@ -87,11 +78,13 @@ void p_GameEventList(CharArrayWrapper *caw, ParserState *parser_state, cJSON *ro
 	uint32_t length;
 	CAW_read_raw(caw, &amount, 1, 1);
 	CAW_read_raw(caw, &length, 2, 4);
+	GameEventDefinitionArray *ged_arr = malloc(sizeof(GameEventDefinitionArray));
 	GameEventDefinition *game_event_defs = malloc(amount * sizeof(GameEventDefinition));
-	if (game_event_defs == NULL) {
+	if (game_event_defs == NULL || ged_arr == NULL) {
 		parser_state->FAILURE |= ERR_MEMORY_ALLOCATION;
 		return;
 	}
+
 	printf("Reading %u GameEventDefs\n", amount);
 	for (uint16_t i = 0; i < amount; i++) {
 		read_game_event_definition(caw, parser_state, game_event_defs + i);
@@ -99,6 +92,10 @@ void p_GameEventList(CharArrayWrapper *caw, ParserState *parser_state, cJSON *ro
 			return;
 		}
 	}
+	ged_arr->length = amount;
+	ged_arr->ptr = game_event_defs;
+
+	parser_state->game_event_defs = ged_arr;
 }
 
 void s_GameEventList(CharArrayWrapper *caw, ParserState *parser_state) {

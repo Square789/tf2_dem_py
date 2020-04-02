@@ -13,7 +13,7 @@ if len(sys.argv) > 1:
 else:
 	p = os.path.join(os.environ["USERPROFILE"], "Desktop", "demotesting", "gully.dem")
 
-dp = DemoParser(p, (FLAGS.CHAT))
+dp = DemoParser(bytes(p, encoding = "utf-8"), (FLAGS.CHAT))
 res = dp.parse()
 pprint(res, sort_dicts = False, compact = True)
 #print(res)

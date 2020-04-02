@@ -5,11 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
-*.c
-!tf2_dem_py/cJSON/*.c
-!tf2_dem_py/char_array_wrapper/*.c
-!tf2_dem_py/parsing/parser_state/*.c
-!tf2_dem_py/parsing/message/*.c
+tf2_dem_py/parsing/packet/*.c
+tf2_dem_py/parsing/*.c
+tf2_dem_py/*.c
+
+# Notes
+*.txt
+
 
 # Distribution / packaging
 .Python

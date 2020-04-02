@@ -5,6 +5,7 @@
 
 #include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
+#include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
 #include "tf2_dem_py/parsing/message/usermessage.h"
@@ -91,7 +92,7 @@ void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root
 
 	switch (user_message_type) {
 	case 4:
-		if (parser_state->flags & 0b1) {
+		if (parser_state->flags & FLAGS.CHAT) {
 			handle_say_text(user_message_caw, parser_state, cJSON_GetObjectItemCaseSensitive(root_json, "chat"));
 		}
 		break;
