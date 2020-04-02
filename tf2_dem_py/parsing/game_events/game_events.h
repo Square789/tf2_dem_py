@@ -18,7 +18,6 @@ typedef struct GameEventEntry {
 /* Contains items to form a demo-specific definition of a game
  * event. */
 typedef struct GameEventDefinition {
-	uint16_t event_type_id;
 	uint16_t event_type;
 	char *name;
 	uint16_t entries_capacity;

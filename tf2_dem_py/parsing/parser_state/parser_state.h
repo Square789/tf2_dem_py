@@ -21,6 +21,7 @@ typedef struct ERR_s {
 	uint8_t CJSON;
 	uint8_t UNKNOWN_MESSAGE_ID;
 	uint8_t MEMORY_ALLOCATION;
+	uint8_t UNKNOWN_GAME_EVENT;
 } ERR_s;
 
 extern const ERR_s ERR;

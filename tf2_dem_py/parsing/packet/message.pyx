@@ -1,10 +1,11 @@
 from libc.stdio cimport FILE, fread, fseek, ftell, ferror, feof, SEEK_CUR, printf
 from libc.stdint cimport uint8_t, uint32_t
 
-from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
 from tf2_dem_py.char_array_wrapper cimport *
-from tf2_dem_py.parsing.message cimport *
 from tf2_dem_py.cJSON cimport cJSON
+from tf2_dem_py.flags cimport FLAGS
+from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
+from tf2_dem_py.parsing.message cimport *
 
 cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	cdef uint32_t tick
@@ -92,7 +93,10 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			parser_state.FAILURE |= ERR.UNKNOWN_MESSAGE_ID
 			return
 
-		msg_parser.parse(pkt_caw, parser_state, root_json)
+		if should_parse(msg_id, parser_state.flags):
+			msg_parser.parse(pkt_caw, parser_state, root_json)
+		else:
+			msg_parser.skip(pkt_caw, parser_state)
 
 		if CAW_get_errorlevel(pkt_caw) != 0:
 			parser_state.FAILURE |= ERR.CAW
@@ -103,3 +107,12 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			return
 
 	CAW_delete(pkt_caw)
+
+cdef inline uint8_t should_parse(uint8_t m_id, uint16_t flag) nogil:
+	if m_id == 25:
+		if flag & FLAGS.GAME_EVENTS:
+			return 1
+		else:
+			return 0
+	else:
+		return 1

@@ -34,5 +34,6 @@ cdef extern from "tf2_dem_py/parsing/parser_state/parser_state.h":
 		uint8_t CJSON
 		uint8_t UNKNOWN_MESSAGE_ID
 		uint8_t MEMORY_ALLOCATION
+		uint8_t UNKNOWN_GAME_EVENT
 
 	const ERR_s ERR # export constant error struct

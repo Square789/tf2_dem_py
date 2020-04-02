@@ -20,7 +20,7 @@ from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
 import json
 from time import time
 
-__version__ = "0.0.1-dev-22"
+__version__ = "0.0.1-dev-23"
 
 ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",#1
@@ -30,6 +30,7 @@ ERR_STRINGS_P = (
 	"cJSON error. (Likely due to memory allocation failure.)",#16
 	"Unknown message id encountered.",#32
 	"Memory allocation failed.",#64
+	"Unknown game event encountered.",#128
 )
 
 ERR_STRINGS_CAW = (
@@ -85,15 +86,25 @@ cdef class DemoParser():
 			if chatarray == NULL:
 				raise MemoryError("Failed to alloc memory for cJSON chat array.")
 
+		if self.state.flags & FLAGS.GAME_EVENTS:
+			ge_array = cJSON_AddArrayToObject(self.json_obj, "game_events")
+			if ge_array == NULL:
+				raise MemoryError("Failed to alloc memory for cJSON game event array.")
+
 	def __dealloc__(self):
 		fclose(self.stream)
 		free(self.state)
 		self.state = NULL
 
 	cdef void cleanup(self):
+		cJSON_Delete(self.json_obj)
 		free_GameEventDefinitionArray(self.state.game_event_defs)
 
 	cpdef dict parse(self):
+		"""
+		Parses the demo, returning a dict corresponding to the flags the demo
+		parser was initialized with.
+		"""
 		cdef char *res_str
 
 		start = time()
@@ -117,10 +128,10 @@ cdef class DemoParser():
 		end = time()
 		printf("done.\n")
 
+		res_str = cJSON_PrintUnformatted(self.json_obj)
+
 		self.cleanup()
 
-		res_str = cJSON_PrintUnformatted(self.json_obj)
-		cJSON_Delete(self.json_obj)
 		if res_str == NULL:
 			raise ParserError("cJSON library failed turning json to string.")
 		print("Took ", end - start)

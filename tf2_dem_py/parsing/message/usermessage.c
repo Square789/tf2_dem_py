@@ -65,30 +65,11 @@ void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root
 
 	// Calculate the length (in bytes) for the new CAW, the base CAW's bit
 	// offset in mind.
-	len += CAW_get_pos_bit(caw);
-	if (len % 8 == 0) {
-		req_caw_len = (len / 8);
-	} else {
-		req_caw_len = (len / 8) + 1;
-	}
-	// Copy usermessage into own buffer and create CAW on it.
-	// uint8_t *user_msg_buf = (uint8_t *)malloc(req_caw_len);
-	// if (user_msg_buf == NULL) {
-	// 	parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
-	// 	return;
-	// }
-	// if (caw->ERRORLEVEL != 0) {
-	// 	parser_state->FAILURE |= ERR.CAW;
-	// 	parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-	// 	return;
-	// }
-	CharArrayWrapper *user_message_caw = CAW_from_caw(caw, req_caw_len);
+	CharArrayWrapper *user_message_caw = CAW_from_caw_b(caw, len);
 	if (user_message_caw == NULL) {
 		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 		return;
 	}
-	len -= CAW_get_pos_bit(caw); // Remove adjustment bits again
-	CAW_skip(caw, len / 8, len % 8);
 
 	switch (user_message_type) {
 	case 4:

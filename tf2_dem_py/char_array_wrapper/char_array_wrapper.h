@@ -43,8 +43,18 @@ CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
  * on a bit level already, if the parent CharArrayWrapper was.
  * As the new CharArrayWrapper works on the existing memory chunk
  * of the old one, bit-level precision is not possible.
+ * DO NOT DEALLOCATE THE PARENT CAW BEFORE THE NEWLY CREATED ONE.
+ * Returns Null on allocation failure.
  */
 CharArrayWrapper *CAW_from_caw(CharArrayWrapper *caw, size_t len);
+/* Create a CharArrayWrapper on another one, however taking an amount
+ * of bits as input and performing some size requirement calculations.
+ * As size_t * 8 may exceed capacity of uint64_t, this function is limited,
+ * but should work for smaller data blocks. The same byte-level restrictions
+ * as in CAW_from_caw apply.
+ * Returns Null on allocation failure.
+ */
+CharArrayWrapper *CAW_from_caw_b(CharArrayWrapper *caw, uint64_t bitlen);
 /* Deallocate a CharArrayWrapper's memory. */
 void CAW_delete(CharArrayWrapper *caw);
 /* Reads the bytes from the CharArrayWrapper's current position and bitbuffer offset

@@ -27,12 +27,13 @@ SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
 # C implemented message parsers required by message.pyx
 # CAW, cJSON, parserstate required by everything in parsing and header
 # GameEvents required by demo_parser.
-# Flags required by demo_parser.
+# Flags required by demo_parser and message.pyx, as they are used in C message parsers.
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)
 	if path.match("tf2_dem_py/parsing/packet/message.pyx"):
 		srcs.extend(SRCS_MSG)
+		srcs.append(SRC_FLAGS)
 	if path.match("tf2_dem_py/parsing/header.pyx") or \
 			path.match("tf2_dem_py/parsing/packet/*.pyx"):
 		srcs.append(SRC_CJSON)

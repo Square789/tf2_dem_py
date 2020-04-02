@@ -11,7 +11,7 @@ tf2_dem_py/*.c
 
 # Notes
 *.txt
-
+*.json
 
 # Distribution / packaging
 .Python

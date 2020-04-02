@@ -67,6 +67,21 @@ CharArrayWrapper *CAW_from_caw(CharArrayWrapper *caw, size_t len) {
 	return new_caw;
 }
 
+
+CharArrayWrapper *CAW_from_caw_b(CharArrayWrapper *caw, uint64_t bitlen) {
+	size_t req_bytelen = 0;
+	bitlen += CAW_get_pos_bit(caw);
+	if (bitlen % 8 == 0) {
+		req_bytelen = (bitlen / 8);
+	} else {
+		req_bytelen = (bitlen / 8) + 1;
+	}
+	CharArrayWrapper *user_message_caw = CAW_from_caw(caw, req_bytelen);
+	bitlen -= CAW_get_pos_bit(caw); // Remove adjustment bits again
+	CAW_skip(caw, bitlen / 8, bitlen % 8);
+	return user_message_caw;
+}
+
 void CAW_delete(CharArrayWrapper *caw) {
 	if (caw->free_on_dealloc != 0) {
 		free(caw->mem_ptr);
