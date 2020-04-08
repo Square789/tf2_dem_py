@@ -80,3 +80,6 @@ MsgParserBase *PreFetch = &PreFetch_s; // 28 //
 
 MsgParserBase GameEventList_s = {p_GameEventList, s_GameEventList};
 MsgParserBase *GameEventList = &GameEventList_s; // 30 //
+
+MsgParserBase GetCvarValue_s = {p_GetCvarValue, s_GetCvarValue};
+MsgParserBase *GetCvarValue = &GetCvarValue_s; // 31 //

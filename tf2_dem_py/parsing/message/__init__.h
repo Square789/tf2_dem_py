@@ -37,5 +37,6 @@ extern MsgParserBase *PacketEntities;
 extern MsgParserBase *TempEntities;
 extern MsgParserBase *PreFetch;
 extern MsgParserBase *GameEventList;
+extern MsgParserBase *GetCvarValue;
 
 #endif

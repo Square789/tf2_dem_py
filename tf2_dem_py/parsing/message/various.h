@@ -44,4 +44,7 @@ void s_Entity(CharArrayWrapper *caw, ParserState *parser_state);
 void p_PreFetch(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
 void s_PreFetch(CharArrayWrapper *caw, ParserState *parser_state);
 
+void p_GetCvarValue(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json);
+void s_GetCvarValue(CharArrayWrapper *caw, ParserState *parser_state);
+
 #endif

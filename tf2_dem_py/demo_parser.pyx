@@ -78,6 +78,7 @@ cdef class DemoParser():
 		self.state.RELAYED_CAW_ERR = 0
 		self.state.tick = 0
 		self.state.game_event_defs = NULL
+		self.state.current_message_contains_senderless_chat = 0
 
 		self.json_obj = cJSON_CreateObject()
 

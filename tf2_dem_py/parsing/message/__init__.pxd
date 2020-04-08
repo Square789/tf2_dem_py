@@ -33,3 +33,4 @@ cdef extern from "tf2_dem_py/parsing/message/__init__.h" nogil:
 	cdef MsgParserBase *TempEntities
 	cdef MsgParserBase *PreFetch
 	cdef MsgParserBase *GameEventList
+	cdef MsgParserBase *GetCvarValue

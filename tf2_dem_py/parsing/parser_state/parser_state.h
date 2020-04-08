@@ -11,6 +11,7 @@ typedef struct ParserState {
 	uint8_t RELAYED_CAW_ERR;
 	uint32_t tick;
 	GameEventDefinitionArray *game_event_defs;
+	uint8_t current_message_contains_senderless_chat;
 } ParserState;
 
 typedef struct ERR_s {

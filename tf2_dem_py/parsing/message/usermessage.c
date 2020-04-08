@@ -23,18 +23,18 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	client = CAW_get_uint8(um_caw);
 	r = CAW_get_uint8(um_caw);
 	is_senderless = CAW_get_uint8(um_caw);
-	if (is_senderless == 1) {
-		printf("Ignoring senderless message\n");
+	if (is_senderless == 1 || parser_state->current_message_contains_senderless_chat == 1) {
+		// purely speculative and highly likely the false way to do this.
+		parser_state->current_message_contains_senderless_chat = 1;
 		return;
-	} else {
-		CAW_set_pos(um_caw, CAW_get_pos_byte(um_caw) - 1, CAW_get_pos_bit(um_caw));
+	}
+	CAW_set_pos(um_caw, CAW_get_pos_byte(um_caw) - 1, CAW_get_pos_bit(um_caw));
 
-		chat = (char *)CAW_get_nulltrm_str(um_caw);
-		from = (char *)CAW_get_nulltrm_str(um_caw);
-		mesg = (char *)CAW_get_nulltrm_str(um_caw);
-		if (um_caw->ERRORLEVEL != 0) {
-			return; // Will be taken care of by p_UserMessage.
-		}
+	chat = (char *)CAW_get_nulltrm_str(um_caw);
+	from = (char *)CAW_get_nulltrm_str(um_caw);
+	mesg = (char *)CAW_get_nulltrm_str(um_caw);
+	if (um_caw->ERRORLEVEL != 0) {
+		return; // Will be taken care of by p_UserMessage.
 	}
 
 	// Store read chat message in json
@@ -61,7 +61,6 @@ void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root
 
 	user_message_type = CAW_get_uint8(caw);
 	CAW_read_raw(caw, &len, 1, 3);
-
 	// Calculate the length (in bytes) for the new CAW, the base CAW's bit
 	// offset in mind.
 	CharArrayWrapper *user_message_caw = CAW_from_caw_b(caw, len);

@@ -41,7 +41,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
 		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
 		# printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
-		if msg_id == 0:
+		if msg_id == 0: # YandereDev style
 			msg_parser = Empty
 		elif msg_id == 2:
 			msg_parser = File
@@ -89,6 +89,8 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			msg_parser = PreFetch
 		elif msg_id == 30:
 			msg_parser = GameEventList
+		elif msg_id == 31:
+			msg_parser = GetCvarValue
 		else:
 			parser_state.FAILURE |= ERR.UNKNOWN_MESSAGE_ID
 			return
@@ -107,6 +109,7 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 			return
 
 	CAW_delete(pkt_caw)
+	parser_state.current_message_contains_senderless_chat = 0
 
 cdef inline uint8_t should_parse(uint8_t m_id, uint16_t flag) nogil:
 	if m_id == 25:

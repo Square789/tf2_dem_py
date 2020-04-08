@@ -198,3 +198,13 @@ void p_PreFetch(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_js
 void s_PreFetch(CharArrayWrapper *caw, ParserState *parser_state) {
 	CAW_skip(caw, 1, 6);
 }
+
+
+void p_GetCvarValue(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	s_GetCvarValue(caw, parser_state);
+}
+
+void s_GetCvarValue(CharArrayWrapper *caw, ParserState *parser_state) {
+	CAW_skip(caw, 4, 0);
+	CAW_skip(caw, CAW_dist_until_null(caw), 0);
+}

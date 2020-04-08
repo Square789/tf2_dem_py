@@ -25,6 +25,7 @@ cdef extern from "tf2_dem_py/parsing/parser_state/parser_state.h":
 		uint8_t RELAYED_CAW_ERR
 		uint32_t tick
 		GameEventDefinitionArray *game_event_defs
+		uint8_t current_message_contains_senderless_chat
 
 	cdef struct ERR_s: # Only required for constant decl. below
 		uint8_t CAW
