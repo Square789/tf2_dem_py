@@ -1,5 +1,5 @@
 
-# Shoddy run script, pay no attention
+# Shoddy run script
 
 import os
 import json
@@ -17,14 +17,14 @@ else:
 dp = DemoParser(
 	bytes(p, encoding = "utf-8"),
 	(
-		#FLAGS.CHAT |
+		FLAGS.CHAT |
 		FLAGS.GAME_EVENTS
 	)
 )
 res = dp.parse()
-#pprint(res, sort_dicts = False, compact = True)
+# pprint(res, sort_dicts = False, compact = True)
 
 with open("lastdemo.json", "w") as h:
 	json.dump(res, h)
 
-#print(res)
+# print(res)

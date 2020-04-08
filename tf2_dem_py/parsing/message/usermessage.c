@@ -29,9 +29,9 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	} else {
 		CAW_set_pos(um_caw, CAW_get_pos_byte(um_caw) - 1, CAW_get_pos_bit(um_caw));
 
-		chat = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
-		from = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
-		mesg = (char *)CAW_get_chars(um_caw, CAW_dist_until_null(um_caw));
+		chat = (char *)CAW_get_nulltrm_str(um_caw);
+		from = (char *)CAW_get_nulltrm_str(um_caw);
+		mesg = (char *)CAW_get_nulltrm_str(um_caw);
 		if (um_caw->ERRORLEVEL != 0) {
 			return; // Will be taken care of by p_UserMessage.
 		}
@@ -57,8 +57,7 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 
 void p_UserMessage(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint8_t user_message_type;
-	uint16_t len;
-	size_t req_caw_len;
+	uint16_t len = 0;
 
 	user_message_type = CAW_get_uint8(caw);
 	CAW_read_raw(caw, &len, 1, 3);

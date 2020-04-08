@@ -34,7 +34,7 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 
 	CAW_read_raw(caw, &last_type, 0, 3);
 	while (last_type != 0) {
-		(char *)CAW_get_nulltrm_str(caw);
+		entry_name = (char *)CAW_get_nulltrm_str(caw);
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
 		(ged->entries_length) += 1; // Read entry's two attributes and bump length
