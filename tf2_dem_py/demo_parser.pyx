@@ -20,7 +20,7 @@ from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
 import json
 from time import time
 
-__version__ = "0.0.1-dev-23"
+__version__ = "0.0.1"
 
 ERR_STRINGS_P = (
 	"See CharArrayWrapper error below.",#1

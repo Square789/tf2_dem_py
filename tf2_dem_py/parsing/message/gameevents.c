@@ -31,11 +31,10 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 		return;
 	}
-	memset(ged->entries, 0, sizeof(GameEventEntry) * ENTRIES_SIZE_BLOCK); // Zero it
 
 	CAW_read_raw(caw, &last_type, 0, 3);
 	while (last_type != 0) {
-		entry_name = (char *)CAW_get_nulltrm_str(caw);
+		(char *)CAW_get_nulltrm_str(caw);
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
 		(ged->entries_length) += 1; // Read entry's two attributes and bump length
@@ -53,10 +52,6 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 			}
 			ged->entries = tmp_new_entries;
 			ged->entries_capacity += ENTRIES_SIZE_BLOCK;
-			memset(
-				ged->entries + ged->entries_capacity - ENTRIES_SIZE_BLOCK,
-				0, ENTRIES_SIZE_BLOCK
-			); // Zero out new array part
 		}
 	}
 }
@@ -99,7 +94,8 @@ void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_j
 	} // Find event definition
 	cJSON *ge_json = cJSON_CreateObject();
 	cJSON *entry_json = cJSON_CreateObject();
-	cJSON_AddStringToObject(ge_json, "type", event_def->name);
+	cJSON* event_name = cJSON_CreateStringReference(event_def->name);
+	cJSON_AddItemToObject(ge_json, "type", event_name);
 	cJSON_AddNumberToObject(ge_json, "id", event_def->event_type);
 	if (event_def == NULL || ge_json == NULL || entry_json == NULL) {
 		parser_state->FAILURE |= ERR.UNKNOWN_GAME_EVENT;
