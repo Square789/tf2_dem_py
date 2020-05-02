@@ -23,8 +23,8 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	char *entry_name = NULL;
 	GameEventEntry *tmp_new_entries = NULL;
 
-	CAW_read_raw(caw, &(ged->event_type), 1, 1);
-	ged->name = (char *)CAW_get_nulltrm_str(caw);
+	caw->read_raw(&(ged->event_type), 1, 1);
+	ged->name = (char *)caw->get_nulltrm_str();
 	ged->entries_capacity = ENTRIES_SIZE_BLOCK;
 	ged->entries_length = 0;
 
@@ -35,13 +35,13 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		return;
 	}
 
-	CAW_read_raw(caw, &last_type, 0, 3);
+	caw->read_raw(&last_type, 0, 3);
 	while (last_type != 0) {
-		entry_name = (char *)CAW_get_nulltrm_str(caw);
+		entry_name = (char *)caw->get_nulltrm_str();
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
 		(ged->entries_length) += 1; // Read entry's two attributes and bump length
-		CAW_read_raw(caw, &last_type, 0, 3);
+		caw->read_raw(&last_type, 0, 3);
 
 		// Extend capacity if exceeded
 		if (ged->entries_length == ged->entries_capacity) {
@@ -61,10 +61,8 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 
 uint8_t inline should_read_game_event(uint16_t event_id) {
 	switch (event_id) {
-	case 23:
-		return 1;
-	default:
-		return 0;
+		case 23: return 1;
+		default: return 0;
 	}
 }
 
@@ -117,37 +115,37 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *r
 		switch (event_def->entries[i].type) {
 		case 0:
 			break;
-		case 1: //String
+		case 1: // String
 			cJSON_AddVolatileStringRefToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_nulltrm_str());
 			break;
-		case 2:
+		case 2: // Float
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_flt());
 			break;
-		case 3:
+		case 3: // 32bInteger
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_uint32());
 			break;
-		case 4:
+		case 4: // 16bInteger
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_uint16());
 			break;
-		case 5:
+		case 5: // 8bInteger
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_uint8());
 			break;
-		case 6:
+		case 6: // Bit
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
 				ge_caw->get_bit());
 			break;
-		case 7:
+		case 7: // "Local" ?????
 			// No clue
 			break;
 		}

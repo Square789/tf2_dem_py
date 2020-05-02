@@ -16,15 +16,15 @@ class PacketEntities {
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		CAW_skip(caw, 1, 3);
-		if (CAW_get_bit(caw) == 1) {
-			CAW_skip(caw, 4, 0);
+		caw->skip(1, 3);
+		if (caw->get_bit() == 1) {
+			caw->skip(4, 0);
 		}
-		CAW_skip(caw, 1, 4);
+		caw->skip(1, 4);
 		uint32_t length = 0;
-		CAW_read_raw(caw, &length, 2, 4); //Strangely, no shift required despite 3 bytes read into 4 bytes
-		CAW_skip(caw, 0, 1);
-		CAW_skip(caw, length / 8, length % 8);
+		caw->read_raw(&length, 2, 4); //Strangely, no shift required despite 3 bytes read into 4 bytes
+		caw->skip(0, 1);
+		caw->skip(length / 8, length % 8);
 	}
 };
 
@@ -34,9 +34,9 @@ class TempEntities {
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		CAW_skip(caw, 1, 0);
-		uint32_t length = CAW_get_var_int(caw);
-		CAW_skip(caw, length / 8, length % 8);
+		caw->skip(1, 0);
+		uint32_t length = caw->get_var_int();
+		caw->skip(length / 8, length % 8);
 	}
 };
 

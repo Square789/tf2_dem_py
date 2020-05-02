@@ -22,19 +22,19 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	cJSON *message_json = NULL;
 	uint8_t json_err = 0;
 
-	client = CAW_get_uint8(um_caw);
-	r = CAW_get_uint8(um_caw);
-	is_senderless = CAW_get_uint8(um_caw);
+	client = um_caw->get_uint8();
+	r = um_caw->get_uint8();
+	is_senderless = um_caw->get_uint8();
 	if (is_senderless == 1 || parser_state->current_message_contains_senderless_chat == 1) {
 		// purely speculative and highly likely the false way to do this.
 		parser_state->current_message_contains_senderless_chat = 1;
 		return;
 	}
-	CAW_set_pos(um_caw, CAW_get_pos_byte(um_caw) - 1, CAW_get_pos_bit(um_caw));
+	um_caw->set_pos(um_caw->get_pos_byte() - 1, um_caw->get_pos_bit());
 
-	chat = (char *)CAW_get_nulltrm_str(um_caw);
-	from = (char *)CAW_get_nulltrm_str(um_caw);
-	mesg = (char *)CAW_get_nulltrm_str(um_caw);
+	chat = (char *)um_caw->get_nulltrm_str();
+	from = (char *)um_caw->get_nulltrm_str();
+	mesg = (char *)um_caw->get_nulltrm_str();
 	if (um_caw->ERRORLEVEL != 0) {
 		return; // Will be taken care of by p_UserMessage.
 	}
@@ -62,11 +62,11 @@ class UserMessage {
 		uint8_t user_message_type;
 		uint16_t len = 0;
 
-		user_message_type = CAW_get_uint8(caw);
-		CAW_read_raw(caw, &len, 1, 3);
+		user_message_type = caw->get_uint8();
+		caw->read_raw(&len, 1, 3);
 		// Calculate the length (in bytes) for the new CAW, the base CAW's bit
 		// offset in mind.
-		CharArrayWrapper *user_message_caw = CAW_from_caw_b(caw, len);
+		CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
 		if (user_message_caw == NULL) {
 			parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 			return;
@@ -87,14 +87,14 @@ class UserMessage {
 			// This may be ambigous in really odd cases where there is a message
 			// length discrepancy and the inner caw sets the out of bounds flag.
 		}
-		CAW_delete(user_message_caw);
+		delete user_message_caw;
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		CAW_skip(caw, 1, 0);
+		caw->skip(1, 0);
 		uint16_t len;
-		CAW_read_raw(caw, &len, 1, 3);
-		CAW_skip(caw, len / 8, len % 8);
+		caw->read_raw(&len, 1, 3);
+		caw->skip(len / 8, len % 8);
 	}
 };
 

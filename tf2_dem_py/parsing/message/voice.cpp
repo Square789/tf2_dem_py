@@ -16,17 +16,17 @@ class ParseSounds {
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		uint8_t reliable = CAW_get_bit(caw);
+		uint8_t reliable = caw->get_bit();
 		uint8_t num;
 		uint16_t length;
 		if (reliable == 1) {
 			num = 1;
-			length = (uint16_t)CAW_get_uint8(caw);
+			length = (uint16_t)caw->get_uint8();
 		} else {
-			num = CAW_get_uint8(caw);
-			length = CAW_get_uint16(caw);
+			num = caw->get_uint8();
+			length = caw->get_uint16();
 		}
-		CAW_skip(caw, length / 8, length % 8);
+		caw->skip(length / 8, length % 8);
 	}
 };
 
@@ -36,9 +36,9 @@ class VoiceInit {
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		CAW_skip(caw, CAW_dist_until_null(caw), 0);
-		if (CAW_get_uint8(caw) == 255) {
-			CAW_skip(caw, 2, 0);
+		caw->skip(caw->dist_until_null(), 0);
+		if (caw->get_uint8() == 255) {
+			caw->skip(2, 0);
 		}
 	}
 };
@@ -50,9 +50,9 @@ class VoiceData {
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
 		uint16_t len = 0;
-		CAW_skip(caw, 2, 0);
-		CAW_read_raw(caw, &len, 2, 0);
-		CAW_skip(caw, len / 8, len % 8);
+		caw->skip(2, 0);
+		caw->read_raw(&len, 2, 0);
+		caw->skip(len / 8, len % 8);
 	}
 };
 

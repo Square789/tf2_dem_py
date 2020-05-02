@@ -12,7 +12,7 @@ namespace MessageParsers {
 
 class StringTableCreate {
 	void parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-		// uint8_t *str = CAW_get_nulltrm_str(caw);
+		// uint8_t *str = caw->get_nulltrm_str();
 		// if (str != 0) {
 		// 	printf("%s\n", str);
 		// } else { printf("huh\n"); }
@@ -20,16 +20,16 @@ class StringTableCreate {
 	}
 
 	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		CAW_skip(caw, CAW_dist_until_null(caw), 0);
-		uint16_t max_ln = CAW_get_uint16(caw);
+		caw->skip(caw->dist_until_null(), 0);
+		uint16_t max_ln = caw->get_uint16();
 		uint16_t max_ln_skip = ((uint16_t)log2(max_ln)) + 1;
-		CAW_skip(caw, max_ln_skip / 8, max_ln_skip % 8);
-		uint32_t len = CAW_get_var_int(caw);
-		if (CAW_get_bit(caw) == 1) {
-			CAW_skip(caw, 2, 0);
+		caw->skip(max_ln_skip / 8, max_ln_skip % 8);
+		uint32_t len = caw->get_var_int();
+		if (caw->get_bit() == 1) {
+			caw->skip(2, 0);
 		}
-		CAW_skip(caw, 0, 1);
-		CAW_skip(caw, len / 8, len % 8);
+		caw->skip(0, 1);
+		caw->skip(len / 8, len % 8);
 	}
 };
 
@@ -43,13 +43,13 @@ class StringTableUpdate {
 		// changed = stream.read_int(16) if stream.read_boolean() else 1
 		// length = stream.read_int(20)
 		// data = stream.read_raw(length)
-		CAW_skip(caw, 0, 5);
-		if (CAW_get_bit(caw) == 1) {
-			CAW_skip(caw, 2, 0);
+		caw->skip(0, 5);
+		if (caw->get_bit() == 1) {
+			caw->skip(2, 0);
 		}
 		uint32_t length;
-		CAW_read_raw(caw, &length, 2, 4);
-		CAW_skip(caw, length / 8, length % 8);
+		caw->read_raw(&length, 2, 4);
+		caw->skip(length / 8, length % 8);
 	}
 };
 
