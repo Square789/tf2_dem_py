@@ -10,7 +10,10 @@
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
 #include "tf2_dem_py/parsing/game_events/game_events.h"
-#include "tf2_dem_py/parsing/message/gameevents.h"
+#include "tf2_dem_py/parsing/message/__init__.hpp"
+#include "tf2_dem_py/parsing/message/gameevents.hpp"
+
+namespace MessageParsers {
 
 static const uint8_t ENTRIES_SIZE_BLOCK = 4;
 
@@ -56,7 +59,7 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	}
 }
 
-uint8_t inline should_read_game_event(event_id) {
+uint8_t inline should_read_game_event(uint16_t event_id) {
 	switch (event_id) {
 	case 23:
 		return 1;
@@ -65,22 +68,25 @@ uint8_t inline should_read_game_event(event_id) {
 	}
 }
 
-
-void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	if (parser_state->game_event_defs == NULL) {
-		s_GameEvent(caw, parser_state); // Somehow received gameevent before gameevent defs
+		this->skip(caw, parser_state); // Somehow received gameevent before gameevent defs
 	}
 	uint16_t length;
-	CAW_read_raw(caw, &length, 1, 3);
-	CharArrayWrapper *ge_caw = CAW_from_caw_b(caw, (uint64_t)length);
+	caw->read_raw(&length, 1, 3);
+	CharArrayWrapper *ge_caw = caw->caw_from_caw_b((uint64_t)length);
+	uint16_t event_type = 0;
+	GameEventDefinition *event_def = NULL;
+	cJSON *ge_json = NULL;
+	cJSON *entry_json = NULL;
+	cJSON *event_name = NULL;
+
 	if (ge_caw == NULL) {
 		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 		return;
 	}
-	uint16_t event_type = 0;
-	GameEventDefinition *event_def = NULL;
 
-	CAW_read_raw(ge_caw, &event_type, 1, 1);
+	ge_caw->read_raw(&event_type, 1, 1);
 
 	if (!should_read_game_event(event_type)) {
 		goto cleanup_and_ret;
@@ -92,12 +98,17 @@ void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_j
 			break;
 		}
 	} // Find event definition
-	cJSON *ge_json = cJSON_CreateObject();
-	cJSON *entry_json = cJSON_CreateObject();
-	cJSON* event_name = cJSON_CreateStringReference(event_def->name);
+
+	if (event_def == NULL) {
+		goto cleanup_and_ret;
+	}
+
+	ge_json = cJSON_CreateObject();
+	entry_json = cJSON_CreateObject();
+	event_name = cJSON_CreateStringReference(event_def->name);
 	cJSON_AddItemToObject(ge_json, "type", event_name);
 	cJSON_AddNumberToObject(ge_json, "id", event_def->event_type);
-	if (event_def == NULL || ge_json == NULL || entry_json == NULL) {
+	if (ge_json == NULL || entry_json == NULL) {
 		parser_state->FAILURE |= ERR.UNKNOWN_GAME_EVENT;
 		goto cleanup_and_ret;
 	}
@@ -109,32 +120,32 @@ void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_j
 		case 1: //String
 			cJSON_AddVolatileStringRefToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_nulltrm_str(ge_caw));
+				ge_caw->get_nulltrm_str());
 			break;
 		case 2:
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_flt(ge_caw));
+				ge_caw->get_flt());
 			break;
 		case 3:
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_uint32(ge_caw));
+				ge_caw->get_uint32());
 			break;
 		case 4:
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_uint16(ge_caw));
+				ge_caw->get_uint16());
 			break;
 		case 5:
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_uint8(ge_caw));
+				ge_caw->get_uint8());
 			break;
 		case 6:
 			cJSON_AddNumberToObject(
 				entry_json, event_def->entries[i].name,
-				CAW_get_bit(ge_caw));
+				ge_caw->get_bit());
 			break;
 		case 7:
 			// No clue
@@ -147,25 +158,28 @@ void p_GameEvent(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_j
 		ge_json
 	);
 cleanup_and_ret:
-	CAW_delete(ge_caw);
+	delete ge_caw;
 	return;
 }
 
-void s_GameEvent(CharArrayWrapper *caw, ParserState *parser_state) {
+void GameEvent::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint16_t len = 0;
-	CAW_read_raw(caw, &len, 1, 3);
-	CAW_skip(caw, len / 8, len % 8);
+	caw->read_raw(&len, 1, 3);
+	caw->skip(len / 8, len % 8);
 }
 
-
-void p_GameEventList(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint16_t amount = 0;
 	uint32_t length = 0;
-	CAW_read_raw(caw, &amount, 1, 1);
-	CAW_read_raw(caw, &length, 2, 4);
-	GameEventDefinitionArray *ged_arr = malloc(sizeof(GameEventDefinitionArray));
-	GameEventDefinition *game_event_defs = malloc(amount * sizeof(GameEventDefinition));
-	CharArrayWrapper *gel_caw = CAW_from_caw_b(caw, length);
+	caw->read_raw(&amount, 1, 1);
+	caw->read_raw(&length, 2, 4);
+	if (caw->ERRORLEVEL != 0) {
+		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
+		return;
+	}
+	GameEventDefinitionArray *ged_arr = (GameEventDefinitionArray *)malloc(sizeof(GameEventDefinitionArray));
+	GameEventDefinition *game_event_defs = (GameEventDefinition *)malloc(amount * sizeof(GameEventDefinition));
+	CharArrayWrapper *gel_caw = caw->caw_from_caw_b(length);
 	if (game_event_defs == NULL || ged_arr == NULL || gel_caw == NULL) {
 		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
 		return;
@@ -182,12 +196,14 @@ void p_GameEventList(CharArrayWrapper *caw, ParserState *parser_state, cJSON *ro
 	ged_arr->ptr = game_event_defs;
 
 	parser_state->game_event_defs = ged_arr;
-	CAW_delete(gel_caw);
+	delete gel_caw;
 }
 
-void s_GameEventList(CharArrayWrapper *caw, ParserState *parser_state) {
-	CAW_skip(caw, 1, 1);
+void GameEventList::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+	caw->skip(1, 1);
 	uint32_t len = 0;
-	CAW_read_raw(caw, &len, 2, 4);
-	CAW_skip(caw, len / 8, len % 8);
+	caw->read_raw(&len, 2, 4);
+	caw->skip(len / 8, len % 8);
+}
+
 }

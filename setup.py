@@ -19,10 +19,11 @@ if __version__ == None:
 
 SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
-SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
-SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.c"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
+SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.c"
+SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
+SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
 
 # C implemented message parsers required by message.pyx
 # CAW, cJSON, parserstate required by everything in parsing and header
