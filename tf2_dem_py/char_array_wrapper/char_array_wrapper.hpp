@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define ERR_BUFFER_TOO_SHORT    (1 << 0)
-#define ERR_MEMORY_ALLOCATION   (1 << 1)
-#define ERR_INIT_IO_READ        (1 << 2)
-#define ERR_INIT_ALLOC          (1 << 3)
-#define ERR_INIT_ODD_IO_RESULT  (1 << 4)
+static const uint16_t CAW_ERR_BUFFER_TOO_SHORT   = (1 << 0);
+static const uint16_t CAW_ERR_MEMORY_ALLOCATION  = (1 << 1);
+static const uint16_t CAW_ERR_INIT_IO_READ       = (1 << 2);
+static const uint16_t CAW_ERR_INIT_ALLOC         = (1 << 3);
+static const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
 
 /* Create a new CharArrayWrapper and return a pointer to it.
 * May return a Nullpointer on CharArrayWrapper allocation failure.

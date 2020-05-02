@@ -17,15 +17,15 @@ CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
 
 	caw_ptr->mem_ptr = (char *)malloc(initbytes);
 	if (caw_ptr->mem_ptr == NULL) {
-		caw_ptr->ERRORLEVEL |= ERR_INIT_ALLOC;
+		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_ALLOC;
 	}
 
 	read_res = fread(caw_ptr->mem_ptr, sizeof(char), initbytes, fp);
 	if (ferror(fp)) {
-		caw_ptr->ERRORLEVEL |= ERR_INIT_IO_READ;
+		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_IO_READ;
 	}
 	if (read_res != initbytes) {
-		caw_ptr->ERRORLEVEL |= ERR_INIT_ODD_IO_RESULT;
+		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_ODD_IO_RESULT;
 	}
 	return caw_ptr;
 }
@@ -95,7 +95,7 @@ void CharArrayWrapper::read_raw(void *target_ptr, size_t req_bytes, uint8_t req_
 	size_t i; // Loop variable
 
 	if (this->_ver_buf_health(req_bytes, req_bits) != 0) {
-		this->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
+		this->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 	if (this->bitbuf_len == 0) { // No bit offset; Should work faster
@@ -151,7 +151,7 @@ void CharArrayWrapper::read_raw(void *target_ptr, size_t req_bytes, uint8_t req_
 
 void CharArrayWrapper::skip(size_t bytes, uint8_t bits) {
 	if (this->_ver_buf_health(bytes, bits) != 0) {
-		this->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
+		this->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 
@@ -195,7 +195,7 @@ uint8_t CharArrayWrapper::get_pos_bit() {
 void CharArrayWrapper::set_pos(size_t byte, uint8_t bit) {
 	if (bit > 7) { return; }
 	if (byte > this->mem_len) {
-		this->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
+		this->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 	this->bytepos = byte;
@@ -230,7 +230,7 @@ size_t CharArrayWrapper::dist_until_null() {
 			carry = ((this->mem_ptr[this->bytepos + i]) >> (8 - this->bitbuf_len));
 		}
 	}
-	this->ERRORLEVEL |= ERR_BUFFER_TOO_SHORT;
+	this->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
 dist_until_null_break:
 	return c_ln;
 }
@@ -246,7 +246,7 @@ size_t CharArrayWrapper::remaining_bytes() {
 char *CharArrayWrapper::get_chars(size_t req_len) {
 	char *ptr = (char *)malloc(req_len);
 	if (ptr == NULL) {
-		this->ERRORLEVEL |= ERR_MEMORY_ALLOCATION;
+		this->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
 		return ptr;
 	}
 	this->read_raw(ptr, req_len, 0);
@@ -256,12 +256,12 @@ char *CharArrayWrapper::get_chars(size_t req_len) {
 char *CharArrayWrapper::get_nulltrm_str() {
 	char *res_ptr;
 	size_t ntstr_ln = this->dist_until_null();
-	if (this->ERRORLEVEL & ERR_BUFFER_TOO_SHORT) { // set by method above
+	if (this->ERRORLEVEL & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
 		return NULL;
 	}
 	res_ptr = (char *)malloc(ntstr_ln);
 	if (res_ptr == NULL) {
-		this->ERRORLEVEL |= ERR_MEMORY_ALLOCATION;
+		this->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
 	this->read_raw(res_ptr, ntstr_ln, 0);
