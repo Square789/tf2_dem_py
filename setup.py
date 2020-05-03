@@ -24,7 +24,7 @@ SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.cpp"
 SRC_HEADER = "tf2_dem_py/parsing/demo_header.cpp"
 SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.cpp")
-SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packets/*.cpp")
+SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packet/*.cpp")
 SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
 
 # C implemented message parsers required by message.pyx
@@ -39,19 +39,22 @@ def deliver_sources(strpath):
 		srcs.append(SRC_FLAGS)
 		srcs.extend(SRCS_MSG)
 	elif path.match("tf2_dem_py/demo_parser.pyx"):
-		#srcs.append(SRC_CAW)
+		srcs.append(SRC_CAW)
 		srcs.append(SRC_CJSON)
 		srcs.append(SRC_FLAGS)
 		srcs.append(SRC_GAME_EVENTS)
-		#srcs.append(SRC_HEADER)
+		srcs.append(SRC_HEADER)
 		srcs.append(SRC_PARSER_STATE)
-		#srcs.extend(SRCS_MSG) ##
+		srcs.extend(SRCS_MSG)
+		srcs.extend(SRCS_PACKETS) ##
 	return srcs
 
 extensions = []
 
 for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
 	if os.path.split(i)[1] == "__init__.pyx":
+		continue
+	if "packet__" in i:
 		continue
 	extensions.append(Extension(
 		os.path.splitext(i)[0].replace(os.path.sep, "."),

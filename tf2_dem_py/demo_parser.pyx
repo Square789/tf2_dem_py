@@ -11,10 +11,10 @@ from libc.stdint cimport uint8_t, uint16_t
 from cpython.exc cimport PyErr_CheckSignals
 
 from tf2_dem_py.flags cimport FLAGS
-#from tf2_dem_py.parsing.demo_header cimport parse_demo_header 
+from tf2_dem_py.parsing.demo_header cimport parse_demo_header 
 from tf2_dem_py.parsing.game_events cimport free_GameEventDefinitionArray
 from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
-#from tf2_dem_py.parsing.packet.parse_any cimport parse_any
+from tf2_dem_py.parsing.packet cimport parse_any
 
 from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
 	cJSON_PrintUnformatted, cJSON_Delete, cJSON_AddArrayToObject, cJSON)
@@ -107,7 +107,7 @@ cdef class DemoParser():
 	cdef void cleanup(self):
 		print("cleanup")
 		cJSON_Delete(self.json_obj)
-		#free_GameEventDefinitionArray(self.state.game_event_defs)
+		free_GameEventDefinitionArray(self.state.game_event_defs)
 
 	cpdef dict parse(self):
 		print("parse")
@@ -115,25 +115,25 @@ cdef class DemoParser():
 		Parses the demo, returning a dict corresponding to the flags the demo
 		parser was initialized with.
 		"""
-	# 	cdef char *res_str
+		cdef char *res_str
 
 		start = time()
 
 		rewind(self.stream)
 
-		# parse_demo_header(self.stream, self.state, self.json_obj)
-		# if self.state.FAILURE != 0:
-		# 	raise ParserError("Failed to read header, additional "
-		# 		"info: {}".format(format_parser_error(
-		# 			self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
+		parse_demo_header(self.stream, self.state, self.json_obj)
+		if self.state.FAILURE != 0:
+			raise ParserError("Failed to read header, additional "
+				"info: {}".format(format_parser_error(
+					self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
-		# while not self.state.finished: # Main parser loop
-		# 	parse_any(self.stream, self.state, self.json_obj)
-		# 	if self.state.FAILURE != 0:
-		# 		raise ParserError("Demo parser failed @ byte {}; {}".format(
-		# 			<int>ftell(self.stream), format_parser_error(
-		# 				self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
-		# 	PyErr_CheckSignals() # yes or no who knows
+		while not self.state.finished: # Main parser loop
+			parse_any(self.stream, self.state, self.json_obj)
+			if self.state.FAILURE != 0:
+				raise ParserError("Demo parser failed @ byte {}; {}".format(
+					<int>ftell(self.stream), format_parser_error(
+						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
+			PyErr_CheckSignals() # yes or no who knows
 
 		end = time()
 		printf("done.\n")

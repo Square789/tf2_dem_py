@@ -124,6 +124,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, cJSON *root_json) {
 		if (parser_state->FAILURE != 0) { // Set by message parser
 			return;
 		}
+	}
 
 	delete pkt_caw;
 	parser_state->current_message_contains_senderless_chat = 0;
