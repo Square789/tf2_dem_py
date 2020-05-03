@@ -15,35 +15,35 @@ class IMsgParserBase
 	virtual void parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) = 0;
 	virtual void skip(CharArrayWrapper *caw, ParserState *parser_state) = 0;
 
-	private:
 	IMsgParserBase() {};
 };
 
+extern IMsgParserBase *cEmpty;
+extern IMsgParserBase *cFile;
+extern IMsgParserBase *cNetTick;
+extern IMsgParserBase *cStringCommand;
+extern IMsgParserBase *cSetConVar;
+extern IMsgParserBase *cSigOnState;
+extern IMsgParserBase *cPrint;
+extern IMsgParserBase *cServerInfo;
+extern IMsgParserBase *cClassInfo;
+extern IMsgParserBase *cStringTableCreate;
+extern IMsgParserBase *cStringTableUpdate;
+extern IMsgParserBase *cVoiceInit;
+extern IMsgParserBase *cVoiceData;
+extern IMsgParserBase *cParseSounds;
+extern IMsgParserBase *cSetView;
+extern IMsgParserBase *cFixAngle;
+extern IMsgParserBase *cBspDecal;
+extern IMsgParserBase *cUserMessage;
+extern IMsgParserBase *cEntity;
+extern IMsgParserBase *cGameEvent;
+extern IMsgParserBase *cPacketEntities;
+extern IMsgParserBase *cTempEntities;
+extern IMsgParserBase *cPreFetch;
+extern IMsgParserBase *cGameEventList;
+extern IMsgParserBase *cGetCvarValue;
+
 }
-// extern MsgParserBase *Empty;
-// extern MsgParserBase *File;
-// extern MsgParserBase *NetTick;
-// extern MsgParserBase *StringCommand;
-// extern MsgParserBase *SetConVar;
-// extern MsgParserBase *SigOnState;
-// extern MsgParserBase *Print;
-// extern MsgParserBase *ServerInfo;
-// extern MsgParserBase *ClassInfo;
-// extern MsgParserBase *StringTableCreate;
-// extern MsgParserBase *StringTableUpdate;
-// extern MsgParserBase *VoiceInit;
-// extern MsgParserBase *VoiceData;
-// extern MsgParserBase *ParseSounds;
-// extern MsgParserBase *SetView;
-// extern MsgParserBase *FixAngle;
-// extern MsgParserBase *BspDecal;
-// extern MsgParserBase *UserMessage;
-// extern MsgParserBase *Entity;
-// extern MsgParserBase *GameEvent;
-// extern MsgParserBase *PacketEntities;
-// extern MsgParserBase *TempEntities;
-// extern MsgParserBase *PreFetch;
-// extern MsgParserBase *GameEventList;
-// extern MsgParserBase *GetCvarValue;
 
 #endif

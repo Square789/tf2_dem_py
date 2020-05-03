@@ -1,7 +1,8 @@
+# distutils: language = c++
 
 from libc.stdint cimport uint8_t, uint16_t
 
-cdef extern from "tf2_dem_py/parsing/game_events/game_events.h":
+cdef extern from "tf2_dem_py/parsing/game_events/game_events.hpp":
 	cdef struct GameEventEntry:
 		char *name
 		uint8_t type_ "type" # Rename on python layer

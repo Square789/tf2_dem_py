@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include "tf2_dem_py/cJSON/cJSON.h"
-#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
+#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
-#include "tf2_dem_py/parsing/game_events/game_events.h"
+#include "tf2_dem_py/parsing/game_events/game_events.hpp"
 #include "tf2_dem_py/parsing/message/__init__.hpp"
 #include "tf2_dem_py/parsing/message/gameevents.hpp"
 
@@ -165,6 +165,7 @@ void GameEvent::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	caw->read_raw(&len, 1, 3);
 	caw->skip(len / 8, len % 8);
 }
+
 
 void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
 	uint16_t amount = 0;

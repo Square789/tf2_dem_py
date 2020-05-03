@@ -5,13 +5,17 @@ from tf2_dem_py.char_array_wrapper cimport *
 from tf2_dem_py.cJSON cimport cJSON
 from tf2_dem_py.flags cimport FLAGS
 from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
-from tf2_dem_py.parsing.message cimport *
+from tf2_dem_py.parsing.message cimport IMsgParserBase, cEmpty, cFile, cNetTick, \
+	cStringCommand, cSetConVar, cSigOnState, cPrint, cServerInfo, cClassInfo, \
+	cStringTableCreate, cStringTableUpdate, cVoiceInit, cVoiceData, cParseSounds, \
+	cSetView, cFixAngle, cBspDecal, cUserMessage, cEntity, cGameEvent, cPacketEntities, \
+	cTempEntities, cPreFetch, cGameEventList, cGetCvarValue
 
 cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 	cdef uint32_t tick
 	cdef uint32_t pkt_len
 	cdef uint8_t msg_id = 0
-	cdef MsgParserBase *msg_parser
+	cdef IMsgParserBase *msg_parser
 
 	# Read tick
 	fread(&tick, sizeof(tick), 1, stream)
@@ -33,64 +37,64 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 
 	cdef CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len)
 
-	if CAW_get_errorlevel(pkt_caw) != 0:
+	if pkt_caw.ERRORLEVEL != 0:
 		parser_state.FAILURE |= ERR.CAW
-		parser_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
+		parser_state.RELAYED_CAW_ERR = pkt_caw.ERRORLEVEL
 		return
 
-	while (CAW_remaining_bytes(pkt_caw) > 1) or (CAW_remaining_bits(pkt_caw) > 6):
-		CAW_read_raw(pkt_caw, &msg_id, 0, 6)
+	while (pkt_caw.remaining_bytes() > 1) or (pkt_caw.remaining_bits() > 6):
+		pkt_caw.read_raw(&msg_id, 0, 6)
 		# printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
 		if msg_id == 0: # YandereDev style
-			msg_parser = Empty
+			msg_parser = cEmpty
 		elif msg_id == 2:
-			msg_parser = File
+			msg_parser = cFile
 		elif msg_id == 3:
-			msg_parser = NetTick
+			msg_parser = cNetTick
 		elif msg_id == 4:
-			msg_parser = StringCommand
+			msg_parser = cStringCommand
 		elif msg_id == 5:
-			msg_parser = SetConVar
+			msg_parser = cSetConVar
 		elif msg_id == 6:
-			msg_parser = SigOnState
+			msg_parser = cSigOnState
 		elif msg_id == 7:
-			msg_parser = Print
+			msg_parser = cPrint
 		elif msg_id == 8:
-			msg_parser = ServerInfo
+			msg_parser = cServerInfo
 		elif msg_id == 10:
-			msg_parser = ClassInfo
+			msg_parser = cClassInfo
 		elif msg_id == 12:
-			msg_parser = StringTableCreate
+			msg_parser = cStringTableCreate
 		elif msg_id == 13:
-			msg_parser = StringTableUpdate
+			msg_parser = cStringTableUpdate
 		elif msg_id == 14:
-			msg_parser = VoiceInit
+			msg_parser = cVoiceInit
 		elif msg_id == 15:
-			msg_parser = VoiceData
+			msg_parser = cVoiceData
 		elif msg_id == 17:
-			msg_parser = ParseSounds
+			msg_parser = cParseSounds
 		elif msg_id == 18:
-			msg_parser = SetView
+			msg_parser = cSetView
 		elif msg_id == 19:
-			msg_parser = FixAngle
+			msg_parser = cFixAngle
 		elif msg_id == 21:
-			msg_parser = BspDecal
+			msg_parser = cBspDecal
 		elif msg_id == 23:
-			msg_parser = UserMessage
+			msg_parser = cUserMessage
 		elif msg_id == 24:
-			msg_parser = Entity
+			msg_parser = cEntity
 		elif msg_id == 25:
-			msg_parser = GameEvent
+			msg_parser = cGameEvent
 		elif msg_id == 26:
-			msg_parser = PacketEntities
+			msg_parser = cPacketEntities
 		elif msg_id == 27:
-			msg_parser = TempEntities
+			msg_parser = cTempEntities
 		elif msg_id == 28:
-			msg_parser = PreFetch
+			msg_parser = cPreFetch
 		elif msg_id == 30:
-			msg_parser = GameEventList
+			msg_parser = cGameEventList
 		elif msg_id == 31:
-			msg_parser = GetCvarValue
+			msg_parser = cGetCvarValue
 		else:
 			parser_state.FAILURE |= ERR.UNKNOWN_MESSAGE_ID
 			return
@@ -100,15 +104,15 @@ cdef void parse(FILE *stream, ParserState *parser_state, cJSON *root_json):
 		else:
 			msg_parser.skip(pkt_caw, parser_state)
 
-		if CAW_get_errorlevel(pkt_caw) != 0:
+		if pkt_caw.ERRORLEVEL != 0:
 			parser_state.FAILURE |= ERR.CAW
-			parser_state.RELAYED_CAW_ERR = CAW_get_errorlevel(pkt_caw)
+			parser_state.RELAYED_CAW_ERR = pkt_caw.ERRORLEVEL
 			return
 
 		if parser_state.FAILURE != 0: # Set by message parser
 			return
 
-	CAW_delete(pkt_caw)
+	del pkt_caw # C++ deletion, hopefully it works the way it should.
 	parser_state.current_message_contains_senderless_chat = 0
 
 cdef inline uint8_t should_parse(uint8_t m_id, uint16_t flag) nogil:

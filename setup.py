@@ -18,33 +18,34 @@ if __version__ == None:
 	raise SyntaxError("Version not found.")
 
 SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
-SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
+SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.cpp"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
-SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.c"
+SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.cpp"
+SRC_HEADER = "tf2_dem_py/parsing/demo_header.cpp"
 SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
-SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.c")
+SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.cpp")
+SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packets/*.cpp")
 SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
 
 # C implemented message parsers required by message.pyx
-# CAW, cJSON, parserstate required by everything in parsing and header
+# CAW, cJSON, parserstate required by everything in parsing as well
+# 	as the main demo parser as it incorporates the header parser.
 # GameEvents required by demo_parser.
-# Flags required by demo_parser and message.pyx, as they are used in C message parsers.
+# Flags required by demo_parser and message.pyx.
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)
 	if path.match("tf2_dem_py/parsing/packet/message.pyx"):
-		srcs.extend(SRCS_MSG)
 		srcs.append(SRC_FLAGS)
-	if path.match("tf2_dem_py/parsing/header.pyx") or \
-			path.match("tf2_dem_py/parsing/packet/*.pyx"):
-		srcs.append(SRC_CJSON)
-		srcs.append(SRC_CAW)
-		srcs.append(SRC_PARSER_STATE)
+		srcs.extend(SRCS_MSG)
 	elif path.match("tf2_dem_py/demo_parser.pyx"):
+		#srcs.append(SRC_CAW)
 		srcs.append(SRC_CJSON)
-		srcs.append(SRC_PARSER_STATE)
 		srcs.append(SRC_FLAGS)
 		srcs.append(SRC_GAME_EVENTS)
+		#srcs.append(SRC_HEADER)
+		srcs.append(SRC_PARSER_STATE)
+		#srcs.extend(SRCS_MSG) ##
 	return srcs
 
 extensions = []

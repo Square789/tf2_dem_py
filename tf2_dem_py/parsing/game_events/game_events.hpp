@@ -1,5 +1,5 @@
-#ifndef GAME_EVENTS__H
-#define GAME_EVENTS__H
+#ifndef GAME_EVENTS__HPP
+#define GAME_EVENTS__HPP
 
 #include <stdint.h>
 

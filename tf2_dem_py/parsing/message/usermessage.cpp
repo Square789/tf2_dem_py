@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "tf2_dem_py/cJSON/cJSON.h"
-#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
+#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
@@ -57,45 +57,43 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	cJSON_AddItemToArray(json_chat_array, message_json);
 }
 
-class UserMessage {
-	void parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-		uint8_t user_message_type;
-		uint16_t len = 0;
+void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+	uint8_t user_message_type;
+	uint16_t len = 0;
 
-		user_message_type = caw->get_uint8();
-		caw->read_raw(&len, 1, 3);
-		// Calculate the length (in bytes) for the new CAW, the base CAW's bit
-		// offset in mind.
-		CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
-		if (user_message_caw == NULL) {
-			parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
-			return;
-		}
-
-		switch (user_message_type) {
-			case 4:
-				if (parser_state->flags & FLAGS.CHAT) {
-					handle_say_text(user_message_caw, parser_state, cJSON_GetObjectItemCaseSensitive(root_json, "chat"));
-				}
-				break;
-			default:
-				break;
-		}
-		if (user_message_caw->ERRORLEVEL != 0) {
-			parser_state->FAILURE |= ERR.CAW;
-			parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
-			// This may be ambigous in really odd cases where there is a message
-			// length discrepancy and the inner caw sets the out of bounds flag.
-		}
-		delete user_message_caw;
+	user_message_type = caw->get_uint8();
+	caw->read_raw(&len, 1, 3);
+	// Calculate the length (in bytes) for the new CAW, the base CAW's bit
+	// offset in mind.
+	CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
+	if (user_message_caw == NULL) {
+		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+		return;
 	}
 
-	void skip(CharArrayWrapper *caw, ParserState *parser_state) {
-		caw->skip(1, 0);
-		uint16_t len;
-		caw->read_raw(&len, 1, 3);
-		caw->skip(len / 8, len % 8);
+	switch (user_message_type) {
+		case 4:
+			if (parser_state->flags & FLAGS.CHAT) {
+				handle_say_text(user_message_caw, parser_state, cJSON_GetObjectItemCaseSensitive(root_json, "chat"));
+			}
+			break;
+		default:
+			break;
 	}
-};
+	if (user_message_caw->ERRORLEVEL != 0) {
+		parser_state->FAILURE |= ERR.CAW;
+		parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
+		// This may be ambigous in really odd cases where there is a message
+		// length discrepancy and the inner caw sets the out of bounds flag.
+	}
+	delete user_message_caw;
+}
+
+void UserMessage::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+	caw->skip(1, 0);
+	uint16_t len;
+	caw->read_raw(&len, 1, 3);
+	caw->skip(len / 8, len % 8);
+}
 
 }

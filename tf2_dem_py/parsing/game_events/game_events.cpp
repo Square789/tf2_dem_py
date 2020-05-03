@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 
-#include "tf2_dem_py/parsing/game_events/game_events.h"
+#include "tf2_dem_py/parsing/game_events/game_events.hpp"
 
 void free_GameEventDefinitionArray(GameEventDefinitionArray *arrptr) {
 	if (arrptr == NULL) {

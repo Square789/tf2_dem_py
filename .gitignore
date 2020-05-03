@@ -5,9 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-tf2_dem_py/parsing/packet/*.c
-tf2_dem_py/parsing/*.c
 tf2_dem_py/*.c
+tf2_dem_py/*.cpp
 
 # Notes
 *.txt

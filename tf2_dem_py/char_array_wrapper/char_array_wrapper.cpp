@@ -62,15 +62,16 @@ CharArrayWrapper *CharArrayWrapper::caw_from_caw_b(uint64_t bitlen) {
 	return user_message_caw;
 }
 
-CharArrayWrapper::CharArrayWrapper(char *mem_ptr, size_t mem_len) {
-	this->mem_ptr = mem_ptr;
-	this->mem_len = mem_len;
-	this->bitbuf = 0;
-	this->bitbuf_len = 0;
-	this->bytepos = 0;
-	this->ERRORLEVEL = 0;
-	this->free_on_dealloc = 1;
-}
+CharArrayWrapper::CharArrayWrapper(char *mem_ptr, size_t mem_len):
+	mem_ptr(mem_ptr),
+	mem_len(mem_len),
+	free_on_dealloc(1)
+	{}
+	//this->bitbuf = 0
+	// this->bitbuf_len = 0;
+	// this->bytepos = 0;
+	// this->ERRORLEVEL = 0;
+	// this->free_on_dealloc = 1;
 
 CharArrayWrapper::~CharArrayWrapper() {
 	if (this->free_on_dealloc != 0) {

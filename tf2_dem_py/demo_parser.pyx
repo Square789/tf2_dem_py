@@ -1,5 +1,7 @@
+# distutils: language = c++
+
 """
-Main parser class
+Main parser class.
 """
 
 from libc.stdio cimport FILE, fopen, fread, fclose, ftell, printf, rewind
@@ -9,13 +11,13 @@ from libc.stdint cimport uint8_t, uint16_t
 from cpython.exc cimport PyErr_CheckSignals
 
 from tf2_dem_py.flags cimport FLAGS
-from tf2_dem_py.parsing cimport header
+#from tf2_dem_py.parsing.demo_header cimport parse_demo_header 
 from tf2_dem_py.parsing.game_events cimport free_GameEventDefinitionArray
 from tf2_dem_py.parsing.parser_state cimport ParserState, ERR
-from tf2_dem_py.parsing.packet.parse_any cimport parse_any
+#from tf2_dem_py.parsing.packet.parse_any cimport parse_any
 
 from tf2_dem_py.cJSON cimport (cJSON_CreateObject, cJSON_Version,
-	cJSON_PrintUnformatted, cJSON_Delete, cJSON_AddArrayToObject)
+	cJSON_PrintUnformatted, cJSON_Delete, cJSON_AddArrayToObject, cJSON)
 
 import json
 from time import time
@@ -65,7 +67,7 @@ cdef class DemoParser():
 	# attrs in pxd
 
 	def __cinit__(self, char *target_file, uint16_t flagnum):
-		cdef cJSON *chatarray
+		print("cinit")
 
 		self.stream = fopen(target_file, "rb")
 
@@ -80,9 +82,12 @@ cdef class DemoParser():
 		self.state.game_event_defs = NULL
 		self.state.current_message_contains_senderless_chat = 0
 
+		print("bleb")
 		self.json_obj = cJSON_CreateObject()
+		print("bleb")
 
 		if self.state.flags & FLAGS.CHAT: # Chat should be included in result
+			print("blebb")
 			chatarray = cJSON_AddArrayToObject(self.json_obj, "chat")
 			if chatarray == NULL:
 				raise MemoryError("Failed to alloc memory for cJSON chat array.")
@@ -91,40 +96,44 @@ cdef class DemoParser():
 			ge_array = cJSON_AddArrayToObject(self.json_obj, "game_events")
 			if ge_array == NULL:
 				raise MemoryError("Failed to alloc memory for cJSON game event array.")
+		print("bleb")
 
 	def __dealloc__(self):
+		print("dealloc")
 		fclose(self.stream)
 		free(self.state)
 		self.state = NULL
 
 	cdef void cleanup(self):
+		print("cleanup")
 		cJSON_Delete(self.json_obj)
-		free_GameEventDefinitionArray(self.state.game_event_defs)
+		#free_GameEventDefinitionArray(self.state.game_event_defs)
 
 	cpdef dict parse(self):
+		print("parse")
 		"""
 		Parses the demo, returning a dict corresponding to the flags the demo
 		parser was initialized with.
 		"""
-		cdef char *res_str
+	# 	cdef char *res_str
 
 		start = time()
 
 		rewind(self.stream)
 
-		header.parse(self.stream, self.state, self.json_obj)
-		if self.state.FAILURE != 0:
-			raise ParserError("Failed to read header, additional "
-				"info: {}".format(format_parser_error(
-					self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
+		# parse_demo_header(self.stream, self.state, self.json_obj)
+		# if self.state.FAILURE != 0:
+		# 	raise ParserError("Failed to read header, additional "
+		# 		"info: {}".format(format_parser_error(
+		# 			self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
 
-		while not self.state.finished: # Main parser loop
-			parse_any(self.stream, self.state, self.json_obj)
-			if self.state.FAILURE != 0:
-				raise ParserError("Demo parser failed @ byte {}; {}".format(
-					<int>ftell(self.stream), format_parser_error(
-						self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
-			PyErr_CheckSignals() # yes or no who knows
+		# while not self.state.finished: # Main parser loop
+		# 	parse_any(self.stream, self.state, self.json_obj)
+		# 	if self.state.FAILURE != 0:
+		# 		raise ParserError("Demo parser failed @ byte {}; {}".format(
+		# 			<int>ftell(self.stream), format_parser_error(
+		# 				self.state.FAILURE, self.state.RELAYED_CAW_ERR)))
+		# 	PyErr_CheckSignals() # yes or no who knows
 
 		end = time()
 		printf("done.\n")
@@ -137,3 +146,6 @@ cdef class DemoParser():
 			raise ParserError("cJSON library failed turning json to string.")
 		print("Took ", end - start)
 		return json.loads(res_str.decode("utf_8"))
+
+cpdef void bleb():
+	print("whocares")

@@ -3,11 +3,11 @@
 #include <stdint.h>
 
 #include "tf2_dem_py/cJSON/cJSON.h"
-#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
+#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
 #include "tf2_dem_py/parsing/message/__init__.hpp"
-#include "tf2_dem_py/parsing/message/classinfo.h"
+#include "tf2_dem_py/parsing/message/classinfo.hpp"
 
 namespace MessageParsers {
 

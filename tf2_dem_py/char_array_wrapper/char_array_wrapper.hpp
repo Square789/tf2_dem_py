@@ -11,12 +11,6 @@ static const uint16_t CAW_ERR_INIT_IO_READ       = (1 << 2);
 static const uint16_t CAW_ERR_INIT_ALLOC         = (1 << 3);
 static const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
 
-/* Create a new CharArrayWrapper and return a pointer to it.
-* May return a Nullpointer on CharArrayWrapper allocation failure.
-* Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
-*/
-CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
-
 class CharArrayWrapper {
 public:
 	// Pointer to the memory block the CharArrayWrapper works on.
@@ -127,8 +121,14 @@ public:
 	uint16_t get_uint16();
 	/* Returns the next 32 bits interpreted as an unsigned integer. */
 	uint32_t get_uint32();
-	/* Returns errorbyte from a CharArrayWrapper. */
+	/* Returns error number from a CharArrayWrapper. Used for cython integration, as -> is not supported. */
 	uint8_t get_errorlevel();
 };
+
+/* Create a new CharArrayWrapper and return a pointer to it.
+* May return a Nullpointer on CharArrayWrapper allocation failure.
+* Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
+*/
+CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
 
 #endif

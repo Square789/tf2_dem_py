@@ -2,7 +2,11 @@
 #define PARSER_STATE__H
 
 #include <stdint.h>
-#include "tf2_dem_py/parsing/game_events/game_events.h"
+#include "tf2_dem_py/parsing/game_events/game_events.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ParserState {
 	uint16_t flags;
@@ -26,5 +30,9 @@ typedef struct ERR_s {
 } ERR_s;
 
 extern const ERR_s ERR;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
