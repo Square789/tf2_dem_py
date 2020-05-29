@@ -35,10 +35,7 @@ SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)
-	if path.match("tf2_dem_py/parsing/packet/message.pyx"):
-		srcs.append(SRC_FLAGS)
-		srcs.extend(SRCS_MSG)
-	elif path.match("tf2_dem_py/demo_parser.pyx"):
+	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
 		srcs.append(SRC_CJSON)
 		srcs.append(SRC_FLAGS)
@@ -49,18 +46,25 @@ def deliver_sources(strpath):
 		srcs.extend(SRCS_PACKETS) ##
 	return srcs
 
-extensions = []
-
-for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
-	if os.path.split(i)[1] == "__init__.pyx":
-		continue
-	if "packet__" in i:
-		continue
-	extensions.append(Extension(
-		os.path.splitext(i)[0].replace(os.path.sep, "."),
-		sources = deliver_sources(i),
+extensions = [
+	Extension(
+		"tf2_dem_py.demo_parser",
+		sources = ["tf2_dem_py/demo_parser.cpp"],
 		extra_compile_args = ["-DMS_WIN64"],
-	))
+		extra_link_args = ["-static", "-static-libgcc", "-static-libstdc++"],
+	)
+]
+
+# for i in glob.glob("tf2_dem_py/**/*.pyx", recursive = True):
+# 	if os.path.split(i)[1] == "__init__.pyx":
+# 		continue
+# 	if "packet__" in i:
+# 		continue
+# 	extensions.append(Extension(
+# 		os.path.splitext(i)[0].replace(os.path.sep, "."),
+# 		sources = deliver_sources(i),
+# 		extra_compile_args = ["-DMS_WIN64"],
+# 	))
 
 setup(
 	name = "tf2_dem_py",
@@ -72,10 +76,5 @@ setup(
             "/mingw64/x86_64-w64-mingw32/include",
 			".",
 		],
-	ext_modules = cythonize(
-		extensions,
-		language_level = 3,
-		include_path = ["."], # Not .h files, but pxd
-		verbose = 1,
-	)
+	ext_modules = extensions,
 )

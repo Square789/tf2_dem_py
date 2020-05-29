@@ -1,5 +1,5 @@
-#ifndef MESSAGE___INIT____H
-#define MESSAGE___INIT____H
+#ifndef MESSAGE___INIT____HPP
+#define MESSAGE___INIT____HPP
 
 #include <stdint.h>
 

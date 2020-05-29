@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
