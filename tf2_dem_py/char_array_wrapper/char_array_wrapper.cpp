@@ -91,9 +91,11 @@ uint8_t CharArrayWrapper::_ver_buf_health(size_t req_bytes, uint8_t req_bits) {
 		return 0;
 	}
 
-void CharArrayWrapper::read_raw(void *target_ptr, size_t req_bytes, uint8_t req_bits) {
+void CharArrayWrapper::read_raw(void *target_ptr_, size_t req_bytes, uint8_t req_bits) {
 	uint8_t carry; // temporary bit level storage
 	size_t i; // Loop variable
+
+	uint8_t *target_ptr = (uint8_t *)target_ptr_;
 
 	if (this->_ver_buf_health(req_bytes, req_bits) != 0) {
 		this->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;

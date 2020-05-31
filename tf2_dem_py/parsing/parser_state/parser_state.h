@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 typedef struct ParserState {
-	uint16_t flags;
+	uint32_t flags;
 	uint8_t finished;
 	uint8_t FAILURE;
 	uint8_t RELAYED_CAW_ERR;
@@ -19,17 +19,19 @@ typedef struct ParserState {
 } ParserState;
 
 typedef struct ERR_s {
-	uint8_t CAW;
-	uint8_t UNKNOWN_PACKET_ID;
-	uint8_t IO;
-	uint8_t UNEXPECTED_EOF;
-	uint8_t CJSON;
-	uint8_t UNKNOWN_MESSAGE_ID;
-	uint8_t MEMORY_ALLOCATION;
-	uint8_t UNKNOWN_GAME_EVENT;
+	uint16_t CAW;
+	uint16_t UNKNOWN_PACKET_ID;
+	uint16_t IO;
+	uint16_t UNEXPECTED_EOF;
+	uint16_t UNKNOWN_MESSAGE_ID;
+	uint16_t MEMORY_ALLOCATION;
+	uint16_t UNKNOWN_GAME_EVENT;
+	uint16_t PYDICT;
+
+	uint16_t UNKNOWN;
 } ERR_s;
 
-extern const ERR_s ERR;
+extern const ERR_s ParserState_ERR;
 
 #ifdef __cplusplus
 }

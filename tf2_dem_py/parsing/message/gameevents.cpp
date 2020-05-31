@@ -1,10 +1,12 @@
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
@@ -31,7 +33,7 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	// Allocate block for GameEventEntries
 	ged->entries = (GameEventEntry *)malloc(ENTRIES_SIZE_BLOCK * sizeof(GameEventEntry));
 	if (ged->entries == NULL) {
-		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -50,7 +52,7 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 				sizeof(GameEventEntry) * (ENTRIES_SIZE_BLOCK + ged->entries_capacity)
 			);
 			if (tmp_new_entries == NULL) { // Failure check
-				parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+				parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 				return;
 			}
 			ged->entries = tmp_new_entries;
@@ -66,7 +68,7 @@ uint8_t inline should_read_game_event(uint16_t event_id) {
 	}
 }
 
-void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	if (parser_state->game_event_defs == NULL) {
 		this->skip(caw, parser_state); // Somehow received gameevent before gameevent defs
 	}
@@ -80,7 +82,7 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *r
 	cJSON *event_name = NULL;
 
 	if (ge_caw == NULL) {
-		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -107,7 +109,7 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *r
 	cJSON_AddItemToObject(ge_json, "type", event_name);
 	cJSON_AddNumberToObject(ge_json, "id", event_def->event_type);
 	if (ge_json == NULL || entry_json == NULL) {
-		parser_state->FAILURE |= ERR.UNKNOWN_GAME_EVENT;
+		parser_state->FAILURE |= ParserState_ERR.UNKNOWN_GAME_EVENT;
 		goto cleanup_and_ret;
 	}
 
@@ -152,7 +154,7 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *r
 	}
 	cJSON_AddItemToObject(ge_json, "fields", entry_json);
 	cJSON_AddItemToArray(
-		cJSON_GetObjectItemCaseSensitive(root_json, "game_events"),
+		cJSON_GetObjectItemCaseSensitive(root_dict, "game_events"),
 		ge_json
 	);
 cleanup_and_ret:
@@ -167,7 +169,7 @@ void GameEvent::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	uint16_t amount = 0;
 	uint32_t length = 0;
 	caw->read_raw(&amount, 1, 1);
@@ -180,7 +182,7 @@ void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSO
 	GameEventDefinition *game_event_defs = (GameEventDefinition *)malloc(amount * sizeof(GameEventDefinition));
 	CharArrayWrapper *gel_caw = caw->caw_from_caw_b(length);
 	if (game_event_defs == NULL || ged_arr == NULL || gel_caw == NULL) {
-		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		return;
 	}
 

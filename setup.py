@@ -27,29 +27,24 @@ SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.cpp")
 SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packet/*.cpp")
 SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
 
-# C implemented message parsers required by message.pyx
-# CAW, cJSON, parserstate required by everything in parsing as well
-# 	as the main demo parser as it incorporates the header parser.
-# GameEvents required by demo_parser.
-# Flags required by demo_parser and message.pyx.
 def deliver_sources(strpath):
 	srcs = [strpath]
 	path = Path(strpath)
 	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
-		srcs.append(SRC_CJSON)
-		srcs.append(SRC_FLAGS)
-		srcs.append(SRC_GAME_EVENTS)
+		#srcs.append(SRC_CJSON)
+		#srcs.append(SRC_FLAGS)
+		#srcs.append(SRC_GAME_EVENTS)
 		srcs.append(SRC_HEADER)
 		srcs.append(SRC_PARSER_STATE)
-		srcs.extend(SRCS_MSG)
-		srcs.extend(SRCS_PACKETS) ##
+		#srcs.extend(SRCS_MSG)
+		#srcs.extend(SRCS_PACKETS) ##
 	return srcs
 
 extensions = [
 	Extension(
 		"tf2_dem_py.demo_parser",
-		sources = ["tf2_dem_py/demo_parser.cpp"],
+		sources = deliver_sources("tf2_dem_py/demo_parser.cpp"),
 		extra_compile_args = ["-DMS_WIN64"],
 		extra_link_args = ["-static", "-static-libgcc", "-static-libstdc++"],
 	)

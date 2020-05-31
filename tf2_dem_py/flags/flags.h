@@ -8,8 +8,8 @@ extern "C" {
 #endif
 
 typedef struct FLAGS_s {
-	uint16_t CHAT;
-	uint16_t GAME_EVENTS;
+	uint32_t CHAT;
+	uint32_t GAME_EVENTS;
 } FLAGS_s;
 
 extern const FLAGS_s FLAGS;

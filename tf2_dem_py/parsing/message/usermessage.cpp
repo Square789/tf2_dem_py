@@ -1,9 +1,11 @@
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
 
-#include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
@@ -42,7 +44,7 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	// Store read chat message in json
 	message_json = cJSON_CreateObject();
 	if (message_json == NULL) {
-		parser_state->FAILURE |= ERR.CJSON;
+		parser_state->FAILURE |= ParserState_ERR.CJSON;
 		return;
 	}
 	if (cJSON_AddNumberToObject(message_json, "tick", parser_state->tick) == NULL) { json_err = 1; }
@@ -51,13 +53,13 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	if (cJSON_AddVolatileStringRefToObject(message_json, "message", mesg) == NULL) { json_err = 1; }
 
 	if (json_err == 1) {
-		parser_state->FAILURE |= ERR.CJSON;
+		parser_state->FAILURE |= ParserState_ERR.CJSON;
 		return;
 	}
 	cJSON_AddItemToArray(json_chat_array, message_json);
 }
 
-void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	uint8_t user_message_type;
 	uint16_t len = 0;
 
@@ -67,7 +69,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON 
 	// offset in mind.
 	CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
 	if (user_message_caw == NULL) {
-		parser_state->FAILURE |= ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -81,7 +83,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON 
 			break;
 	}
 	if (user_message_caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ERR.CAW;
+		parser_state->FAILURE |= ParserState_ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
 		// This may be ambigous in really odd cases where there is a message
 		// length discrepancy and the inner caw sets the out of bounds flag.

@@ -1,5 +1,6 @@
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 
-#include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
@@ -7,11 +8,11 @@
 
 namespace MessageParsers {
 
-void Empty::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {}
+void Empty::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {}
 void Empty::skip(CharArrayWrapper *caw, ParserState *parser_state) {}
 
 
-void File::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void File::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -22,7 +23,7 @@ void File::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void NetTick::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void NetTick::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	uint32_t tick = caw->get_uint32();
 	uint16_t frame_time = caw->get_uint16();
 	uint16_t std_dev = caw->get_uint16();
@@ -35,7 +36,7 @@ void NetTick::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void StringCommand::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void StringCommand::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -44,7 +45,7 @@ void StringCommand::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void SetConVar::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void SetConVar::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -57,7 +58,7 @@ void SetConVar::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void SigOnState::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void SigOnState::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -66,19 +67,28 @@ void SigOnState::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-	const char *str_ptr = caw->get_nulltrm_str();
+void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+	const char *str = caw->get_nulltrm_str();
+	PyObject *py_str;
 
 	if (caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ERR.CAW;
+		parser_state->FAILURE |= ParserState_ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
+		free(&str);
 		return;
 	}
 
-	if (cJSON_AddVolatileStringRefToObject(root_json, "printmsglol", str_ptr) == NULL) {
-		parser_state->FAILURE |= ERR.CJSON;
+	py_str = PyUnicode_FromString(str);
+	free(&str);
+	if (py_str == NULL) {
 		return;
 	}
+
+	if (PyDict_SetItemString(root_dict, "printmsg", py_str) < 0) {
+		parser_state->FAILURE |= ParserState_ERR.UNKNOWN;
+	}
+
+	Py_DECREF(py_str);
 }
 
 void Print::skip(CharArrayWrapper *caw, ParserState *parser_state) {
@@ -87,42 +97,64 @@ void Print::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
-	cJSON *sinfo_json = cJSON_AddObjectToObject(root_json, "serverinfo");
-	uint8_t json_err = 0;
+void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+	static char *SINFO_NAMES[16] = {
+		"version", "server_count", "stv", "dedicated",
+		"max_crc", "max_classes", "map_hash", "player_count",
+		"max_player_count", "interval_per_tick", "platform",
+		"game", "map_name", "skybox", "server_name", "replay",
+	};
+	PyObject *sinfo_dict = PyDict_New();
 
-	if (sinfo_json == NULL) {
-		parser_state->FAILURE |= ERR.CJSON;
+	if (sinfo_dict == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
 		return;
 	}
 
-	if (cJSON_AddNumberToObject(sinfo_json, "version", caw->get_uint16()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "server_count", caw->get_uint32()) == NULL) { json_err = 1; }
-	if (cJSON_AddBoolToObject(sinfo_json, "stv", caw->get_bit()) == NULL) { json_err = 1; }
-	if (cJSON_AddBoolToObject(sinfo_json, "dedicated", caw->get_bit()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "max_crc", caw->get_uint32()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "max_classes", caw->get_uint16()) == NULL) { json_err = 1; }
-	caw->skip(16, 0);
-	// if cJSON_AddVolatileStringRefToObject(sinfo_json, "map_hash", (const char *)caw->get_chars(16)) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "player_count", caw->get_uint8()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "max_player_count", caw->get_uint8()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "interval_per_tick", caw->get_flt()) == NULL) { json_err = 1; }
-	if (cJSON_AddNumberToObject(sinfo_json, "platform", caw->get_uint8()) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(sinfo_json, "game", (const char *)caw->get_nulltrm_str()) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(sinfo_json, "map_name", (const char *)caw->get_nulltrm_str()) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(sinfo_json, "skybox", (const char *)caw->get_nulltrm_str()) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(sinfo_json, "server_name", (const char *)caw->get_nulltrm_str()) == NULL) { json_err = 1; }
-	if (cJSON_AddBoolToObject(sinfo_json, "replay", caw->get_bit()) == NULL) { json_err = 1; }
+	char *tmp_str[5];
+	PyObject *sinfo[16];
+
+	sinfo[0]  = PyLong_FromLong(caw->get_uint16());
+	sinfo[1]  = PyLong_FromLong(caw->get_uint32());
+	sinfo[2]  = PyBool_FromLong(caw->get_bit());
+	sinfo[3]  = PyBool_FromLong(caw->get_bit());
+	sinfo[4]  = PyLong_FromLong(caw->get_uint32());
+	sinfo[5]  = PyLong_FromLong(caw->get_uint16());
+	tmp_str[0] = caw->get_chars(16);
+	sinfo[6]  = PyUnicode_FromStringAndSize(tmp_str[0], 16);
+	sinfo[7]  = PyLong_FromLong(caw->get_uint8());
+	sinfo[8]  = PyLong_FromLong(caw->get_uint8());
+	sinfo[9]  = PyFloat_FromDouble(caw->get_flt());
+	sinfo[10] = PyLong_FromLong(caw->get_uint8());
+	tmp_str[1] = caw->get_nulltrm_str();
+	sinfo[11] = PyUnicode_FromString(tmp_str[1]);
+	tmp_str[2] = caw->get_nulltrm_str();
+	sinfo[12] = PyUnicode_FromString(tmp_str[2]);
+	tmp_str[3] = caw->get_nulltrm_str();
+	sinfo[13] = PyUnicode_FromString(tmp_str[3]);
+	tmp_str[4] = caw->get_nulltrm_str();
+	sinfo[14] = PyUnicode_FromString(tmp_str[4]);
+	sinfo[15] = PyBool_FromLong(caw->get_bit());
+	for (uint8_t i; i < 5; i++) { free(tmp_str[i]); }
+
+	for (uint8_t i; i < 16; i++) {
+		if (sinfo[i] == NULL) { // Python conversion failure, error raised already
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		} else {
+			if (PyDict_SetItemString(sinfo_dict, SINFO_NAMES[i], sinfo[i]) < 0) {
+				parser_state->FAILURE |= ParserState_ERR.PYDICT;
+			} // Move value into dict, then decrease refcount
+			Py_DECREF(sinfo[i]);
+		}
+	}
+
+	if (PyDict_SetItemString(root_dict, "server_info", sinfo_dict) < 0) {
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+	}
 
 	if (caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ERR.CAW;
+		parser_state->FAILURE |= ParserState_ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-		return;
-	}
-
-	if (json_err == 1) {
-		parser_state->FAILURE |= ERR.CJSON;
-		return;
 	}
 }
 
@@ -136,7 +168,7 @@ void ServerInfo::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void SetView::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void SetView::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -145,7 +177,7 @@ void SetView::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void FixAngle::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void FixAngle::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -154,7 +186,7 @@ void FixAngle::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void BspDecal::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void BspDecal::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -177,7 +209,7 @@ void BspDecal::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void Entity::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void Entity::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -189,7 +221,7 @@ void Entity::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void PreFetch::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void PreFetch::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -198,7 +230,7 @@ void PreFetch::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void GetCvarValue::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void GetCvarValue::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 

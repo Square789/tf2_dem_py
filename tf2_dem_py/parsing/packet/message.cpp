@@ -1,8 +1,10 @@
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include <stdio.h>
 #include <stdint.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 #include "tf2_dem_py/parsing/message/__init__.hpp"
@@ -15,7 +17,7 @@ inline uint8_t should_parse(uint8_t m_id, uint16_t flag) {
 	}
 }
 
-void Message_parse(FILE *stream, ParserState *parser_state, cJSON *root_json) {
+void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict) {
 	uint32_t tick;
 	uint32_t pkt_len;
 	uint8_t msg_id = 0;
@@ -31,11 +33,11 @@ void Message_parse(FILE *stream, ParserState *parser_state, cJSON *root_json) {
 	fread(&pkt_len, sizeof(pkt_len), 1, stream);
 
 	if (ferror(stream) != 0) {
-		parser_state->FAILURE |= ERR.IO;
+		parser_state->FAILURE |= ParserState_ERR.IO;
 		return;
 	}
 	if (feof(stream) != 0) {
-		parser_state->FAILURE |= ERR.UNEXPECTED_EOF;
+		parser_state->FAILURE |= ParserState_ERR.UNEXPECTED_EOF;
 		return;
 	}
 
@@ -44,7 +46,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, cJSON *root_json) {
 	CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len);
 
 	if (pkt_caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ERR.CAW;
+		parser_state->FAILURE |= ParserState_ERR.CAW;
 		parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
 		return;
 	}
@@ -105,18 +107,18 @@ void Message_parse(FILE *stream, ParserState *parser_state, cJSON *root_json) {
 		case 31:
 			msg_parser = MessageParsers::cGetCvarValue; break;
 		default:
-			parser_state->FAILURE |= ERR.UNKNOWN_MESSAGE_ID;
+			parser_state->FAILURE |= ParserState_ERR.UNKNOWN_MESSAGE_ID;
 			return;
 		}
 
 		if (should_parse(msg_id, parser_state->flags)) {
-			msg_parser->parse(pkt_caw, parser_state, root_json);
+			msg_parser->parse(pkt_caw, parser_state, root_dict);
 		} else {
 			msg_parser->skip(pkt_caw, parser_state);
 		}
 
 		if (pkt_caw->ERRORLEVEL != 0) {
-			parser_state->FAILURE |= ERR.CAW;
+			parser_state->FAILURE |= ParserState_ERR.CAW;
 			parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
 			return;
 		}

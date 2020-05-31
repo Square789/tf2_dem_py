@@ -1,8 +1,10 @@
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include <stdint.h>
 #include <math.h>
 
-#include "tf2_dem_py/cJSON/cJSON.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
@@ -10,7 +12,7 @@
 
 namespace MessageParsers {
 
-void ParseSounds::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void ParseSounds::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -29,7 +31,7 @@ void ParseSounds::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void VoiceInit::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void VoiceInit::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
@@ -41,7 +43,7 @@ void VoiceInit::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void VoiceData::parse(CharArrayWrapper *caw, ParserState *parser_state, cJSON *root_json) {
+void VoiceData::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
