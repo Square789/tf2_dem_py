@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <math.h>
 
+#include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
@@ -14,15 +15,13 @@
 
 namespace MessageParsers {
 
-inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state, cJSON *json_chat_array) {
+inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state, PyObject *chat_list) {
+	static const char *CHAT_DICT_NAMES[] = {"tick", "chat", "from", "message"};
 	uint8_t client;
 	uint8_t r;
 	uint8_t is_senderless;
-	char *chat = NULL;
-	char *from = NULL;
-	char *mesg = NULL;
-	cJSON *message_json = NULL;
-	uint8_t json_err = 0;
+	PyObject *message_dict;
+	PyObject *chat[4];
 
 	client = um_caw->get_uint8();
 	r = um_caw->get_uint8();
@@ -34,34 +33,38 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	}
 	um_caw->set_pos(um_caw->get_pos_byte() - 1, um_caw->get_pos_bit());
 
-	chat = (char *)um_caw->get_nulltrm_str();
-	from = (char *)um_caw->get_nulltrm_str();
-	mesg = (char *)um_caw->get_nulltrm_str();
+	// Store read chat message in json
+	message_dict = PyDict_New();
+	if (message_dict == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		return;
+	}
+
+	chat[0] = PyLong_FromLong(parser_state->tick);
+	chat[1] = PyUnicode_FromCAWNulltrm(um_caw);
+	chat[2] = PyUnicode_FromCAWNulltrm(um_caw);
+	chat[3] = PyUnicode_FromCAWNulltrm(um_caw);
 	if (um_caw->ERRORLEVEL != 0) {
 		return; // Will be taken care of by p_UserMessage.
 	}
-
-	// Store read chat message in json
-	message_json = cJSON_CreateObject();
-	if (message_json == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.CJSON;
-		return;
+	for (uint8_t i = 0; i < 4; i++) {
+		if (chat[i] == NULL) { // Python conversion failure, error raised already
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		} else {
+			if (PyDict_SetItemString(message_dict, CHAT_DICT_NAMES[i], chat[i]) < 0) {
+				parser_state->FAILURE |= ParserState_ERR.PYDICT;
+			} // Move value into dict, then decrease refcount
+			Py_DECREF(chat[i]);
+		}
 	}
-	if (cJSON_AddNumberToObject(message_json, "tick", parser_state->tick) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(message_json, "chat", chat) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(message_json, "from", from) == NULL) { json_err = 1; }
-	if (cJSON_AddVolatileStringRefToObject(message_json, "message", mesg) == NULL) { json_err = 1; }
 
-	if (json_err == 1) {
-		parser_state->FAILURE |= ParserState_ERR.CJSON;
-		return;
-	}
-	cJSON_AddItemToArray(json_chat_array, message_json);
+	PyList_Append(chat_list, message_dict);
 }
 
 void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	uint8_t user_message_type;
 	uint16_t len = 0;
+	PyObject *message_list;
 
 	user_message_type = caw->get_uint8();
 	caw->read_raw(&len, 1, 3);
@@ -76,7 +79,12 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObje
 	switch (user_message_type) {
 		case 4:
 			if (parser_state->flags & FLAGS.CHAT) {
-				handle_say_text(user_message_caw, parser_state, cJSON_GetObjectItemCaseSensitive(root_json, "chat"));
+				message_list = PyDict_GetItemString(root_dict, "chat");
+				if (message_list == NULL) {
+					parser_state->FAILURE |= ParserState_ERR.PYLIST;
+					goto cleanup_and_ret;
+				}
+				handle_say_text(user_message_caw, parser_state, message_list);
 			}
 			break;
 		default:
@@ -88,6 +96,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObje
 		// This may be ambigous in really odd cases where there is a message
 		// length discrepancy and the inner caw sets the out of bounds flag.
 	}
+cleanup_and_ret:
 	delete user_message_caw;
 }
 

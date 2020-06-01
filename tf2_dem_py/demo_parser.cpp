@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 #include "tf2_dem_py/parsing/demo_header.hpp"
 #include "tf2_dem_py/parsing/packet/parse_any.hpp"
@@ -40,20 +41,39 @@ namespace DemoParser {
 		ParserState *parser_state = new ParserState;
 		FILE *demo_fp;
 		PyObject *res_dict;
+		PyObject *tmp;
 		char *demo_path;
 
 		if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:parse", KWARGS,
 				&demo_path)) {
 			return NULL;
-		} // I guess s does not need manual deallocation?
+		} // Does demo_path not need manual deallocation?
 
+		// Set up parsing/result storage facilities
 		parser_state->flags = self->flags;
 
 		res_dict = PyDict_New();
 		if (res_dict == NULL) {
 			return PyErr_NoMemory();
 		}
+		if (self->flags & FLAGS.CHAT) {
+			tmp = PyList_New(0);
+			if (tmp == NULL) {
+				return PyErr_NoMemory();
+			}
+			PyDict_SetItemString(res_dict, "chat", tmp);
+			Py_DECREF(tmp);
+		}
+		if (self->flags & FLAGS.GAME_EVENTS) {
+			tmp = PyList_New(0);
+			if (tmp == NULL) {
+				return PyErr_NoMemory();
+			}
+			PyDict_SetItemString(res_dict, "game_events", tmp);
+			Py_DECREF(tmp);
+		}
 
+		// Open file
 		printf("boutta open %s\n", demo_path);
 		demo_fp = fopen(demo_path, "rb");
 		if (demo_fp == NULL) {
@@ -64,18 +84,22 @@ namespace DemoParser {
 		time_t start_time, end_time;
 		time(&start_time);
 
+		// Aaaaaand go
 		parse_demo_header(demo_fp, parser_state, res_dict);
 		if (parser_state->FAILURE != 0) {
 			PyErr_Clear(); // Maybe integrate this error into parsererror if set?
 			return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
 		}
+		printf("starting line 2\n");
 		while (!parser_state->finished) {
 			packet_parse_any(demo_fp, parser_state, res_dict);
 			if (parser_state->FAILURE != 0) {
+				printf("!!! %d !!!\n", parser_state->FAILURE);
 				PyErr_Clear(); // Maybe integrate into parsererror if set
 				return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
 			}	
 		}
+		printf("starting line 3\n");
 
 		time(&end_time);
 		printf("Took %f seconds.\n", difftime(start_time, end_time));

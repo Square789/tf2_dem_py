@@ -1,6 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 
@@ -68,24 +69,20 @@ void SigOnState::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 
 
 void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
-	const char *str = caw->get_nulltrm_str();
 	PyObject *py_str;
 
-	if (caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ParserState_ERR.CAW;
-		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-		free(&str);
-		return;
-	}
-
-	py_str = PyUnicode_FromString(str);
-	free(&str);
+	py_str = PyUnicode_FromCAWNulltrm(caw);
 	if (py_str == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		if (caw->ERRORLEVEL != 0) {
+			parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
+			parser_state->FAILURE |= ParserState_ERR.CAW;
+		}
 		return;
 	}
 
 	if (PyDict_SetItemString(root_dict, "printmsg", py_str) < 0) {
-		parser_state->FAILURE |= ParserState_ERR.UNKNOWN;
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
 	}
 
 	Py_DECREF(py_str);
@@ -105,13 +102,11 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 		"game", "map_name", "skybox", "server_name", "replay",
 	};
 	PyObject *sinfo_dict = PyDict_New();
-
 	if (sinfo_dict == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		return;
 	}
 
-	char *tmp_str[5];
 	PyObject *sinfo[16];
 
 	sinfo[0]  = PyLong_FromLong(caw->get_uint16());
@@ -120,24 +115,18 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 	sinfo[3]  = PyBool_FromLong(caw->get_bit());
 	sinfo[4]  = PyLong_FromLong(caw->get_uint32());
 	sinfo[5]  = PyLong_FromLong(caw->get_uint16());
-	tmp_str[0] = caw->get_chars(16);
-	sinfo[6]  = PyUnicode_FromStringAndSize(tmp_str[0], 16);
+	sinfo[6]  = PyUnicode_FromCAWLen(caw, 16);
 	sinfo[7]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[8]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[9]  = PyFloat_FromDouble(caw->get_flt());
 	sinfo[10] = PyLong_FromLong(caw->get_uint8());
-	tmp_str[1] = caw->get_nulltrm_str();
-	sinfo[11] = PyUnicode_FromString(tmp_str[1]);
-	tmp_str[2] = caw->get_nulltrm_str();
-	sinfo[12] = PyUnicode_FromString(tmp_str[2]);
-	tmp_str[3] = caw->get_nulltrm_str();
-	sinfo[13] = PyUnicode_FromString(tmp_str[3]);
-	tmp_str[4] = caw->get_nulltrm_str();
-	sinfo[14] = PyUnicode_FromString(tmp_str[4]);
+	sinfo[11] = PyUnicode_FromCAWNulltrm(caw);
+	sinfo[12] = PyUnicode_FromCAWNulltrm(caw);
+	sinfo[13] = PyUnicode_FromCAWNulltrm(caw);
+	sinfo[14] = PyUnicode_FromCAWNulltrm(caw);
 	sinfo[15] = PyBool_FromLong(caw->get_bit());
-	for (uint8_t i; i < 5; i++) { free(tmp_str[i]); }
 
-	for (uint8_t i; i < 16; i++) {
+	for (uint8_t i = 0; i < 16; i++) {
 		if (sinfo[i] == NULL) { // Python conversion failure, error raised already
 			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
 		} else {

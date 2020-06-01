@@ -1,6 +1,9 @@
 #ifndef GAME_EVENTS__HPP
 #define GAME_EVENTS__HPP
 
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include <stdint.h>
 
 // [length|ptr *]
@@ -11,7 +14,7 @@
 //
 
 typedef struct GameEventEntry {
-	char *name;
+	PyObject *name;
 	uint8_t type;
 } GameEventEntry;
 
@@ -19,7 +22,7 @@ typedef struct GameEventEntry {
  * event. */
 typedef struct GameEventDefinition {
 	uint16_t event_type;
-	char *name;
+	PyObject *name;
 	uint16_t entries_capacity;
 	uint16_t entries_length;
 	GameEventEntry *entries;

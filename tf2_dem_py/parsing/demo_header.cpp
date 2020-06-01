@@ -18,6 +18,7 @@ void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) 
 	if (header_caw->ERRORLEVEL != 0) {
 		p_state->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
 		p_state->FAILURE |= ParserState_ERR.CAW;
+		return;
 	}
 	PyObject *header_dict = PyDict_New();
 	if (header_dict == NULL) {
@@ -26,7 +27,6 @@ void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) 
 	}
 
 	// Load header values into header, already converted to PyObjects
-	char *tmpstr[5];
 	PyObject *header[11];
 
 	header[0]  = PyUnicode_FromCAWLen(header_caw, 8);

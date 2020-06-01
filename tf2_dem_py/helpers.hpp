@@ -28,10 +28,12 @@ inline PyObject *PyUnicode_FromCAWNulltrm(CharArrayWrapper *caw) {
 	PyObject *pystr;
 	char *str = caw->get_nulltrm_str();
 	if (str == NULL) {
+		printf("hä dumm\n");
 		return NULL;
 	}
 
 	pystr = PyUnicode_FromString(str);
+	printf("hä dummmmm : %s\n", str);
 	free(str);
 	return pystr;
 }

@@ -41,7 +41,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 		return;
 	}
 
-	// printf("Message packet, length %u\n", pkt_len);
+	printf("Message packet, length %u\n", pkt_len);
 
 	CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len);
 
@@ -53,7 +53,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 
 	while ((pkt_caw->remaining_bytes() > 1) || (pkt_caw->remaining_bits() > 6)) {
 		pkt_caw->read_raw(&msg_id, 0, 6);
-		// printf(" -Next message: %u, tick %u\n", msg_id, parser_state.tick)
+		printf(" -Next message: %u, tick %u\n", msg_id, parser_state->tick);
 		switch (msg_id)
 		{
 		case 0:

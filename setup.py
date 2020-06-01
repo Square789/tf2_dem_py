@@ -33,12 +33,12 @@ def deliver_sources(strpath):
 	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
 		#srcs.append(SRC_CJSON)
-		#srcs.append(SRC_FLAGS)
-		#srcs.append(SRC_GAME_EVENTS)
+		srcs.append(SRC_FLAGS)
+		srcs.append(SRC_GAME_EVENTS)
 		srcs.append(SRC_HEADER)
 		srcs.append(SRC_PARSER_STATE)
-		#srcs.extend(SRCS_MSG)
-		#srcs.extend(SRCS_PACKETS) ##
+		srcs.extend(SRCS_MSG)
+		srcs.extend(SRCS_PACKETS) ##
 	return srcs
 
 extensions = [

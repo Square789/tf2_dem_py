@@ -1,3 +1,5 @@
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 
 #include <stdlib.h>
 
@@ -8,10 +10,10 @@ void free_GameEventDefinitionArray(GameEventDefinitionArray *arrptr) {
 		return;
 	}
 	for (uint16_t i = 0; i < arrptr->length; i++) {
-		free((arrptr->ptr)[i].name); // Free name of GameEventDefinition
+		Py_DECREF((arrptr->ptr)[i].name); // Free name of GameEventDefinition
 		for (uint16_t j = 0; i < (arrptr->ptr)[i].entries_length; i++) {
 			// Free entries' names
-			free(((arrptr->ptr)[i].entries)[j].name);
+			Py_DECREF(((arrptr->ptr)[i].entries)[j].name);
 		}
 		free((arrptr->ptr)[i].entries); // Free Entries for that event
 	}

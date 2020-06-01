@@ -27,6 +27,7 @@ typedef struct ERR_s {
 	uint16_t MEMORY_ALLOCATION;
 	uint16_t UNKNOWN_GAME_EVENT;
 	uint16_t PYDICT;
+	uint16_t PYLIST;
 
 	uint16_t UNKNOWN;
 } ERR_s;

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
@@ -22,11 +23,13 @@ static const uint8_t ENTRIES_SIZE_BLOCK = 4;
 void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state,
 		GameEventDefinition *ged) {
 	uint8_t last_type = 0;
-	char *entry_name = NULL;
+	PyObject *entry_name;
 	GameEventEntry *tmp_new_entries = NULL;
 
 	caw->read_raw(&(ged->event_type), 1, 1);
-	ged->name = (char *)caw->get_nulltrm_str();
+	ged->name = PyUnicode_FromCAWNulltrm(caw);
+	if (ged->name == NULL) {
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
 	ged->entries_capacity = ENTRIES_SIZE_BLOCK;
 	ged->entries_length = 0;
 
@@ -39,7 +42,9 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 
 	caw->read_raw(&last_type, 0, 3);
 	while (last_type != 0) {
-		entry_name = (char *)caw->get_nulltrm_str();
+		entry_name = PyUnicode_FromCAWNulltrm(caw);
+		if (entry_name == NULL) {
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
 		(ged->entries_length) += 1; // Read entry's two attributes and bump length
@@ -77,9 +82,10 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject
 	CharArrayWrapper *ge_caw = caw->caw_from_caw_b((uint64_t)length);
 	uint16_t event_type = 0;
 	GameEventDefinition *event_def = NULL;
-	cJSON *ge_json = NULL;
-	cJSON *entry_json = NULL;
-	cJSON *event_name = NULL;
+	PyObject *ge_dict;
+	PyObject *entry_dict;
+	PyObject *root_dict_ge_list;
+	PyObject *tmp_entry_val = NULL;
 
 	if (ge_caw == NULL) {
 		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
@@ -100,16 +106,19 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject
 	} // Find event definition
 
 	if (event_def == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.UNKNOWN_GAME_EVENT;
 		goto cleanup_and_ret;
 	}
 
-	ge_json = cJSON_CreateObject();
-	entry_json = cJSON_CreateObject();
-	event_name = cJSON_CreateStringReference(event_def->name);
-	cJSON_AddItemToObject(ge_json, "type", event_name);
-	cJSON_AddNumberToObject(ge_json, "id", event_def->event_type);
-	if (ge_json == NULL || entry_json == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.UNKNOWN_GAME_EVENT;
+	ge_dict = PyDict_New();
+	entry_dict = PyDict_New();
+	if (ge_dict == NULL || entry_dict == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		goto cleanup_and_ret;
+	}
+	if (PyDict_SetItemString(ge_dict, "type", event_def->name) < 0 ||
+		PyDict_SetItemString(ge_dict, "id", PyLong_FromLong(event_def->event_type)) < 0) {
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
 		goto cleanup_and_ret;
 	}
 
@@ -118,45 +127,43 @@ void GameEvent::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject
 		case 0:
 			break;
 		case 1: // String
-			cJSON_AddVolatileStringRefToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_nulltrm_str());
-			break;
+			tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
 		case 2: // Float
-			cJSON_AddNumberToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_flt());
-			break;
+			tmp_entry_val = PyFloat_FromDouble(ge_caw->get_flt()); break;
 		case 3: // 32bInteger
-			cJSON_AddNumberToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_uint32());
-			break;
+			tmp_entry_val = PyLong_FromLong(ge_caw->get_uint32()); break;
 		case 4: // 16bInteger
-			cJSON_AddNumberToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_uint16());
-			break;
+			tmp_entry_val = PyLong_FromLong(ge_caw->get_uint16()); break;
 		case 5: // 8bInteger
-			cJSON_AddNumberToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_uint8());
-			break;
+			tmp_entry_val = PyLong_FromLong(ge_caw->get_uint8()); break;
 		case 6: // Bit
-			cJSON_AddNumberToObject(
-				entry_json, event_def->entries[i].name,
-				ge_caw->get_bit());
-			break;
+			tmp_entry_val = PyBool_FromLong(ge_caw->get_bit()); break;
 		case 7: // "Local" ?????
 			// No clue
 			break;
 		}
+		if (event_def->entries[i].type == 7) {
+			continue;
+		}
+		if (tmp_entry_val == NULL) {
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+			goto cleanup_and_ret;
+		}
+		PyDict_SetItem(entry_dict, event_def->entries[i].name, tmp_entry_val);
+		Py_DECREF(tmp_entry_val);
 	}
-	cJSON_AddItemToObject(ge_json, "fields", entry_json);
-	cJSON_AddItemToArray(
-		cJSON_GetObjectItemCaseSensitive(root_dict, "game_events"),
-		ge_json
-	);
+	if (PyDict_SetItemString(ge_dict, "fields", entry_dict) < 0) {
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+	}
+	root_dict_ge_list = PyDict_GetItemString(root_dict, "game_events");
+	if (root_dict_ge_list == NULL) {
+		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+		parser_state->FAILURE |= ParserState_ERR.UNKNOWN;
+		goto cleanup_and_ret;
+	}
+	if (PyList_Append(root_dict_ge_list, ge_dict) < 0) {
+		parser_state->FAILURE |= ParserState_ERR.PYLIST;
+	}
 cleanup_and_ret:
 	delete ge_caw;
 	return;

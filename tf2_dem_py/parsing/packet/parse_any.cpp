@@ -25,7 +25,7 @@ void packet_parse_any(FILE *stream, ParserState *parser_state, PyObject *root_di
 	uint8_t packet_type;
 	fread(&packet_type, sizeof(packet_type), 1, stream);
 
-	// printf("Next packet type: %u @%u\n", packet_type, ftell(stream))
+	printf("Next packet type: %u @%u\n", packet_type, ftell(stream));
 	switch (packet_type)
 	{
 	case 1:
