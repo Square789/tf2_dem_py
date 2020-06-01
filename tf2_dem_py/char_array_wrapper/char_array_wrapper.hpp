@@ -14,7 +14,7 @@ static const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
 class CharArrayWrapper {
 public:
 	// Pointer to the memory block the CharArrayWrapper works on.
-	char *mem_ptr;
+	uint8_t *mem_ptr;
 	// Length of the CharArrayWrapper's memory block.
 	size_t mem_len;
 	// Bitbuffer to store intermediate bit values.
@@ -33,7 +33,7 @@ public:
 	uint8_t ERRORLEVEL;
 	uint8_t free_on_dealloc;
 
-	CharArrayWrapper(char *mem_ptr, size_t mem_len);
+	CharArrayWrapper(uint8_t *mem_ptr, size_t mem_len);
 	~CharArrayWrapper();
 
 	/* Create a CharArrayWrapper from an existing CharArrayWrapper.

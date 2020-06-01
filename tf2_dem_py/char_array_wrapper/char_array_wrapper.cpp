@@ -15,15 +15,17 @@ CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
 	caw_ptr->mem_len = initbytes;
 	caw_ptr->free_on_dealloc = 1;
 
-	caw_ptr->mem_ptr = (char *)malloc(initbytes);
+	caw_ptr->mem_ptr = (uint8_t *)malloc(initbytes);
 	if (caw_ptr->mem_ptr == NULL) {
 		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_ALLOC;
+		return caw_ptr;
 	}
 
-	read_res = fread(caw_ptr->mem_ptr, sizeof(char), initbytes, fp);
+	read_res = fread(caw_ptr->mem_ptr, sizeof(uint8_t), initbytes, fp);
 	if (ferror(fp)) {
 		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_IO_READ;
 	}
+	//printf("[caw init]: read %d bytes: <%s>\n", read_res, caw_ptr->mem_ptr);
 	if (read_res != initbytes) {
 		caw_ptr->ERRORLEVEL |= CAW_ERR_INIT_ODD_IO_RESULT;
 	}
@@ -62,7 +64,7 @@ CharArrayWrapper *CharArrayWrapper::caw_from_caw_b(uint64_t bitlen) {
 	return user_message_caw;
 }
 
-CharArrayWrapper::CharArrayWrapper(char *mem_ptr, size_t mem_len):
+CharArrayWrapper::CharArrayWrapper(uint8_t *mem_ptr, size_t mem_len):
 	mem_ptr(mem_ptr),
 	mem_len(mem_len),
 	free_on_dealloc(1)

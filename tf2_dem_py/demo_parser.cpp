@@ -50,7 +50,13 @@ namespace DemoParser {
 		} // Does demo_path not need manual deallocation?
 
 		// Set up parsing/result storage facilities
+		parser_state->current_message_contains_senderless_chat = 0;
+		parser_state->FAILURE = 0;
+		parser_state->finished = 0;
 		parser_state->flags = self->flags;
+		parser_state->game_event_defs = NULL;
+		parser_state->RELAYED_CAW_ERR = 0;
+		parser_state->tick = 0;
 
 		res_dict = PyDict_New();
 		if (res_dict == NULL) {
@@ -90,7 +96,6 @@ namespace DemoParser {
 			PyErr_Clear(); // Maybe integrate this error into parsererror if set?
 			return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
 		}
-		printf("starting line 2\n");
 		while (!parser_state->finished) {
 			packet_parse_any(demo_fp, parser_state, res_dict);
 			if (parser_state->FAILURE != 0) {
@@ -99,7 +104,6 @@ namespace DemoParser {
 				return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
 			}	
 		}
-		printf("starting line 3\n");
 
 		time(&end_time);
 		printf("Took %f seconds.\n", difftime(start_time, end_time));

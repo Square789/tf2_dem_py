@@ -71,6 +71,7 @@ void SigOnState::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	PyObject *py_str;
 
+	printf("[printmsg parser]: CAW @%d\n", caw->get_pos_byte());
 	py_str = PyUnicode_FromCAWNulltrm(caw);
 	if (py_str == NULL) {
 		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
@@ -115,7 +116,7 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 	sinfo[3]  = PyBool_FromLong(caw->get_bit());
 	sinfo[4]  = PyLong_FromLong(caw->get_uint32());
 	sinfo[5]  = PyLong_FromLong(caw->get_uint16());
-	sinfo[6]  = PyUnicode_FromCAWLen(caw, 16);
+	sinfo[6]  = PyBytes_FromCAWLen(caw, 16);
 	sinfo[7]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[8]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[9]  = PyFloat_FromDouble(caw->get_flt());

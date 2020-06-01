@@ -12,7 +12,7 @@ import tf2_dem_py.demo_parser
 if len(sys.argv) > 1:
 	p = sys.argv[1]
 else:
-	p = os.path.join(os.environ["USERPROFILE"], "Documents", "demos", "autodemo2019-08-17_21-35-44.dem")
+	p = os.path.join(os.environ["USERPROFILE"], "Documents", "demos", "autodemo2019-08-18_12-54-56.dem")
 
 dp = tf2_dem_py.demo_parser.DemoParser(
 	(
