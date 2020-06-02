@@ -52,9 +52,13 @@ void SetConVar::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject
 
 void SetConVar::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t amt = caw->get_uint8();
+	char *tmp1, *tmp2;
 	for (uint16_t i = 0; i < amt; i++) {
-		caw->skip(caw->dist_until_null(), 0);
-		caw->skip(caw->dist_until_null(), 0);
+		tmp1 = caw->get_nulltrm_str();
+		tmp2 = caw->get_nulltrm_str();
+		printf("%s ||| %s\n", tmp1, tmp2);
+		//caw->skip(caw->dist_until_null(), 0);
+		//caw->skip(caw->dist_until_null(), 0);
 	}
 }
 
@@ -109,6 +113,7 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 	}
 
 	PyObject *sinfo[16];
+	PyObject *tmp;
 
 	sinfo[0]  = PyLong_FromLong(caw->get_uint16());
 	sinfo[1]  = PyLong_FromLong(caw->get_uint32());
@@ -116,7 +121,8 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 	sinfo[3]  = PyBool_FromLong(caw->get_bit());
 	sinfo[4]  = PyLong_FromLong(caw->get_uint32());
 	sinfo[5]  = PyLong_FromLong(caw->get_uint16());
-	sinfo[6]  = PyBytes_FromCAWLen(caw, 16);
+	tmp       = PyBytes_FromCAWLen(caw, 16);
+	sinfo[6]  = PyUnicode_FromEncodedObject(tmp, "cp437", NULL);
 	sinfo[7]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[8]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[9]  = PyFloat_FromDouble(caw->get_flt());

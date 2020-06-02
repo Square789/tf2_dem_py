@@ -41,10 +41,9 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 		return;
 	}
 
-	printf("Message packet, length %u, fptr @%d\n", pkt_len, ftell(stream));
+	//printf("Message packet, length %u, fptr @%d\n", pkt_len, ftell(stream));
 
 	CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len);
-	printf("fptr now @%d\n", ftell(stream));
 
 	if (pkt_caw->ERRORLEVEL != 0) {
 		parser_state->FAILURE |= ParserState_ERR.CAW;
@@ -54,7 +53,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 
 	while ((pkt_caw->remaining_bytes() > 1) || (pkt_caw->remaining_bits() > 6)) {
 		pkt_caw->read_raw(&msg_id, 0, 6);
-		printf(" -Next message: %u, tick %u\n", msg_id, parser_state->tick);
+		//printf(" -Next message: %u, tick %u, %d bytes in\n", msg_id, parser_state->tick, pkt_caw->get_pos_byte());
 		switch (msg_id)
 		{
 		case 0:

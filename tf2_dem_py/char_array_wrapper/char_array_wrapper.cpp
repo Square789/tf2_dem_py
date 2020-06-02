@@ -52,28 +52,30 @@ CharArrayWrapper *CharArrayWrapper::caw_from_caw(size_t len) {
 
 CharArrayWrapper *CharArrayWrapper::caw_from_caw_b(uint64_t bitlen) {
 	size_t req_bytelen = 0;
-	CharArrayWrapper *user_message_caw = this->caw_from_caw(req_bytelen);
+	CharArrayWrapper *new_caw;
 	bitlen += this->get_pos_bit();
 	if (bitlen % 8 == 0) {
 		req_bytelen = (bitlen / 8);
 	} else {
 		req_bytelen = (bitlen / 8) + 1;
 	}
+	new_caw = this->caw_from_caw(req_bytelen);
+	if (new_caw == NULL) {
+		return NULL;
+	}
 	bitlen -= this->get_pos_bit(); // Remove adjustment bits again
 	this->skip(bitlen / 8, bitlen % 8);
-	return user_message_caw;
+	return new_caw;
 }
 
 CharArrayWrapper::CharArrayWrapper(uint8_t *mem_ptr, size_t mem_len):
+	bitbuf(0),
+	bitbuf_len(0),
+	bytepos(0),
+	ERRORLEVEL(0),
+	free_on_dealloc(1),
 	mem_ptr(mem_ptr),
-	mem_len(mem_len),
-	free_on_dealloc(1)
-	{}
-	//this->bitbuf = 0
-	// this->bitbuf_len = 0;
-	// this->bytepos = 0;
-	// this->ERRORLEVEL = 0;
-	// this->free_on_dealloc = 1;
+	mem_len(mem_len) {}
 
 CharArrayWrapper::~CharArrayWrapper() {
 	if (this->free_on_dealloc != 0) {

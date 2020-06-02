@@ -15,6 +15,8 @@ void Usercmd_parse(FILE *stream, ParserState *p_state, PyObject *root_dict) {
 	// Read tick of packet data
 	fread(&tick, sizeof(tick), 1, stream);
 
+	fseek(stream, 4, SEEK_CUR); // Skip "sequence_out"
+
 	// Read length of packet data
 	fread(&pkt_len, sizeof(pkt_len), 1, stream);
 

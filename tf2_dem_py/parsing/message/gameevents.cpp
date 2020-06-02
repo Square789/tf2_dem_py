@@ -29,7 +29,8 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	caw->read_raw(&(ged->event_type), 1, 1);
 	ged->name = PyUnicode_FromCAWNulltrm(caw);
 	if (ged->name == NULL) {
-			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
+		printf("REEEEEEEEEE\n");
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
 	ged->entries_capacity = ENTRIES_SIZE_BLOCK;
 	ged->entries_length = 0;
 
@@ -197,6 +198,7 @@ void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, PyOb
 	for (uint16_t i = 0; i < amount; i++) {
 		read_game_event_definition(gel_caw, parser_state, game_event_defs + i);
 		if (parser_state->FAILURE != 0) {
+			printf("Failed at GED #%d\n", i);
 			return;
 		}
 	}

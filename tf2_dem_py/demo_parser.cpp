@@ -57,6 +57,7 @@ namespace DemoParser {
 		parser_state->game_event_defs = NULL;
 		parser_state->RELAYED_CAW_ERR = 0;
 		parser_state->tick = 0;
+		printf("flags are %u\n");
 
 		res_dict = PyDict_New();
 		if (res_dict == NULL) {
@@ -68,7 +69,7 @@ namespace DemoParser {
 				return PyErr_NoMemory();
 			}
 			PyDict_SetItemString(res_dict, "chat", tmp);
-			Py_DECREF(tmp);
+			//Py_DECREF(tmp);
 		}
 		if (self->flags & FLAGS.GAME_EVENTS) {
 			tmp = PyList_New(0);
@@ -76,7 +77,7 @@ namespace DemoParser {
 				return PyErr_NoMemory();
 			}
 			PyDict_SetItemString(res_dict, "game_events", tmp);
-			Py_DECREF(tmp);
+			//Py_DECREF(tmp);
 		}
 
 		// Open file
