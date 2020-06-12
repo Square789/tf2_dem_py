@@ -5,10 +5,101 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "tf2_dem_py/constants.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 #include "tf2_dem_py/parsing/demo_header.hpp"
 #include "tf2_dem_py/parsing/packet/parse_any.hpp"
+
+static PyObject *ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
+
+/* Builds a python error string from the FAILURE attribute
+ * of a ParserState, remember to DECREF that.
+ * Returns NULL on any sort of error, at that point just crash the program whatever
+ * */
+static PyObject *build_error_message(ParserState *parser_state) {
+	return CONSTANTS::EMPTY_STR;
+// 	PyObject *parser_list = PyList_New(0);
+// 	PyObject *caw_list = PyList_New(0);
+// 	PyObject *tmp_str0;
+// 	PyObject *tmp_str1;
+// 	PyObject *tmp_tup;
+// 	PyObject *final_str;
+// 	if (parser_list == NULL) goto error6;
+// 	if (caw_list == NULL) goto error5;
+// 	for (uint8_t i = 0; i < 16; i++) {
+// 		if ((1 << i) & parser_state->FAILURE) {
+// 			if (PyList_Append(parser_list, PARSER_ERRMSG[i]) < 0) {
+// 				goto error4;
+// 			}
+// 		}
+// 	}
+// 	if (parser_state->FAILURE & 1 == 1) { // CAW error
+// 		for (uint8_t i = 0; i < 8; i++) {
+// 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
+// 				if (PyList_Append(caw_list, CAW_ERRMSG[i]) < 0) {
+// 					goto error4;
+// 				}
+// 			}
+// 		}
+// 		tmp_str0 = PyUnicode_Join(ERROR_LINESEP, parser_list);
+// 		if (tmp_str1 == NULL) goto error3;
+// 		tmp_str1 = PyUnicode_Join(ERROR_LINESEP, caw_list);
+// 		if (tmp_str1 == NULL) goto error2;
+// 		tmp_tup = PyTuple_Pack(3, tmp_str0, CAW_ERROR_SEP, tmp_str1);
+// 		if (tmp_tup == NULL) goto error1;
+// 		final_str = PyUnicode_Join(EMPTY_STR, tmp_tup);
+// 		if (final_str == NULL) goto error0;
+// 		Py_DECREF(tmp_str0); Py_DECREF(tmp_str1); Py_DECREF(tmp_tup);
+// 	} else {
+// 		final_str = PyUnicode_Join(ERROR_LINESEP, parser_list);
+// 		if (final_str == NULL) goto error4;
+// 	}
+// 	Py_DECREF(parser_list); Py_DECREF(caw_list);
+// 	return final_str;
+// error0:
+// 	Py_DECREF(final_str);
+// error1:
+// 	Py_DECREF(tmp_tup);
+// error2:
+// 	Py_DECREF(tmp_str1);
+// error3:
+// 	Py_DECREF(tmp_str0);
+// error4:
+// 	Py_DECREF(caw_list);
+// error5:
+// 	Py_DECREF(parser_list);
+// error6:
+// 	return NULL;
+}
+
+/* Raise a ParserError from given parser state and python interpreter state.
+ * Will return a PyObject NULL pointer.
+ */
+static PyObject *raise_parser_error(ParserState *parser_state) {
+	PyObject *exc_type, *exc_value, *exc_traceback;
+	PyObject *new_exc_type, *new_exc_value, *new_exc_traceback;
+	PyObject *parser_error;
+	PyObject *err_str;
+	PyErr_Fetch(&exc_type, &exc_value, &exc_traceback);
+
+	err_str = build_error_message(parser_state);
+	if (err_str == NULL) {
+		return PyErr_NoMemory();
+	}
+
+	PyErr_SetObject(ParserError, err_str);
+	if (exc_type == NULL) {
+		PyErr_Fetch(&new_exc_type, &new_exc_value, &new_exc_traceback);
+		PyException_SetCause(new_exc_value, exc_value);
+		PyErr_Restore(new_exc_type, new_exc_value, new_exc_traceback);
+	} else {
+		Py_DECREF(exc_value);
+	}
+	Py_DECREF(exc_type); Py_DECREF(exc_traceback);
+
+	return NULL;
+}
 
 namespace DemoParser {
 	struct _struct {
@@ -44,6 +135,8 @@ namespace DemoParser {
 		PyObject *tmp;
 		char *demo_path;
 
+		PyObject *current_exception;
+
 		if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:parse", KWARGS,
 				&demo_path)) {
 			return NULL;
@@ -69,7 +162,6 @@ namespace DemoParser {
 				return PyErr_NoMemory();
 			}
 			PyDict_SetItemString(res_dict, "chat", tmp);
-			//Py_DECREF(tmp);
 		}
 		if (self->flags & FLAGS.GAME_EVENTS) {
 			tmp = PyList_New(0);
@@ -77,7 +169,6 @@ namespace DemoParser {
 				return PyErr_NoMemory();
 			}
 			PyDict_SetItemString(res_dict, "game_events", tmp);
-			//Py_DECREF(tmp);
 		}
 
 		// Open file
@@ -94,20 +185,17 @@ namespace DemoParser {
 		// Aaaaaand go
 		parse_demo_header(demo_fp, parser_state, res_dict);
 		if (parser_state->FAILURE != 0) {
-			PyErr_Clear(); // Maybe integrate this error into parsererror if set?
-			return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
+			return raise_parser_error(parser_state);
 		}
 		while (!parser_state->finished) {
 			packet_parse_any(demo_fp, parser_state, res_dict);
 			if (parser_state->FAILURE != 0) {
-				printf("!!! %d !!!\n", parser_state->FAILURE);
-				PyErr_Clear(); // Maybe integrate into parsererror if set
-				return PyErr_NoMemory(); // TODO: ADD CUSTOM MESSAGE HERE
+				return raise_parser_error(parser_state);
 			}	
 		}
 
 		time(&end_time);
-		printf("Took %f seconds.\n", difftime(start_time, end_time));
+		printf("Took %f seconds.\n", difftime(end_time, start_time));
 
 		fclose(demo_fp);
 
@@ -212,6 +300,8 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 	if (module == NULL) {
 		return NULL;
 	}
+
+	PyModule_AddObject(module, "ParserError", ParserError);
 
 	Py_INCREF(&DemoParser_Type);
 	if (PyModule_AddObject(module, "DemoParser", (PyObject *)&DemoParser_Type) < 0) {

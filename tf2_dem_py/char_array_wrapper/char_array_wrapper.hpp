@@ -107,6 +107,13 @@ public:
 	* on alloc error.
 	*/
 	char *get_nulltrm_str();
+	/* Returns a pointer to a nullterminated string capped at either the next
+	* nullbyte or - if none is encountered - up until len.
+	* The CAW will always be advanced by len bytes.
+	* Pointer has to be freed.
+	* Will return a Nullpointer and set ERRORLEVEL on errors.
+	*/
+	char *get_chars_up_to_null(size_t len);
 	/* Returns a var int from the stream. */
 	uint32_t get_var_int();
 	/* Returns a bitcoord from the stream, according to an obscure valve specification.  */

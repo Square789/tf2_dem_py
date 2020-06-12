@@ -69,13 +69,14 @@ CharArrayWrapper *CharArrayWrapper::caw_from_caw_b(uint64_t bitlen) {
 }
 
 CharArrayWrapper::CharArrayWrapper(uint8_t *mem_ptr, size_t mem_len):
+	mem_ptr(mem_ptr),
+	mem_len(mem_len),
 	bitbuf(0),
 	bitbuf_len(0),
 	bytepos(0),
 	ERRORLEVEL(0),
-	free_on_dealloc(1),
-	mem_ptr(mem_ptr),
-	mem_len(mem_len) {}
+	free_on_dealloc(1)
+	{}
 
 CharArrayWrapper::~CharArrayWrapper() {
 	if (this->free_on_dealloc != 0) {
@@ -131,7 +132,7 @@ void CharArrayWrapper::read_raw(void *target_ptr_, size_t req_bytes, uint8_t req
 		this->bytepos += req_bytes;
 		this->bitbuf = carry;
 		if (req_bits != 0) { // Otherwise done
-			// Throw extra char at tmp_ptr, change bitbuf_len, update bitbuf
+			// Throw extra char at target_ptr, change bitbuf_len, update bitbuf
 			if (req_bits <= this->bitbuf_len) { // Drain bitbuf of required bits
 				memset(target_ptr + req_bytes, this->bitbuf & ((1 << req_bits) - 1), 1);
 				this->bitbuf >>= req_bits;
@@ -251,13 +252,14 @@ size_t CharArrayWrapper::remaining_bytes() {
 }
 
 char *CharArrayWrapper::get_chars(size_t req_len) {
-	char *ptr = (char *)malloc(req_len);
-	if (ptr == NULL) {
+	char *res_ptr = (char *)malloc(req_len + 1);
+	if (res_ptr == NULL) {
 		this->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
-		return ptr;
+		return NULL;
 	}
-	this->read_raw(ptr, req_len, 0);
-	return ptr;
+	this->read_raw(res_ptr, req_len, 0);
+	res_ptr[req_len] = '\00';
+	return res_ptr;
 }
 
 char *CharArrayWrapper::get_nulltrm_str() {
@@ -272,6 +274,32 @@ char *CharArrayWrapper::get_nulltrm_str() {
 		return NULL;
 	}
 	this->read_raw(res_ptr, ntstr_ln, 0);
+	return res_ptr;
+}
+
+char *CharArrayWrapper::get_chars_up_to_null(size_t len) {
+	char *res_ptr;
+	size_t ntstr_ln = this->dist_until_null();
+	if (this->ERRORLEVEL & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
+		return NULL;
+	}
+	if (ntstr_ln < len) { // Pick the shorter one
+		res_ptr = (char *)malloc(ntstr_ln);
+		if (res_ptr == NULL) {
+			this->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+			return NULL;
+		}
+		this->read_raw(res_ptr, ntstr_ln, 0);
+		this->skip(len - ntstr_ln, 0);
+	} else {
+		res_ptr = (char *)malloc(len + 1);
+		if (res_ptr == NULL) {
+			this->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+			return NULL;
+		}
+		this->read_raw(res_ptr, len, 0);
+		res_ptr[len] = '\00';
+	}
 	return res_ptr;
 }
 

@@ -17,8 +17,9 @@ with open("tf2_dem_py/demo_parser.pyx") as h:
 if __version__ == None:
 	raise SyntaxError("Version not found.")
 
-SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.cpp"
+SRC_CJSON = "tf2_dem_py/cJSON/cJSON.c"
+SRC_CONSTAMTS = "tf2_dem_py/constants.cpp"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
 SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.cpp"
 SRC_HEADER = "tf2_dem_py/parsing/demo_header.cpp"
@@ -33,6 +34,7 @@ def deliver_sources(strpath):
 	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
 		#srcs.append(SRC_CJSON)
+		srcs.append(SRC_CONSTAMTS)
 		srcs.append(SRC_FLAGS)
 		srcs.append(SRC_GAME_EVENTS)
 		srcs.append(SRC_HEADER)

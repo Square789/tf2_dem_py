@@ -100,7 +100,7 @@ void Print::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 
 
 void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
-	static char *SINFO_NAMES[16] = {
+	static const char *SINFO_NAMES[16] = {
 		"version", "server_count", "stv", "dedicated",
 		"max_crc", "max_classes", "map_hash", "player_count",
 		"max_player_count", "interval_per_tick", "platform",
