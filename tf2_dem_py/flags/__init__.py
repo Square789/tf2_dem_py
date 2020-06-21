@@ -6,4 +6,3 @@ parser upon instantiation.
 class FLAGS:
 	CHAT = (1 << 0)
 	GAME_EVENTS = (1 << 1)
-
