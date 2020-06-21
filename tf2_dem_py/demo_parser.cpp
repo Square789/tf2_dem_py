@@ -5,72 +5,73 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "tf2_dem_py/constants.hpp"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/parsing/parser_state/parser_state.h"
 #include "tf2_dem_py/parsing/demo_header.hpp"
 #include "tf2_dem_py/parsing/packet/parse_any.hpp"
 
-static PyObject *ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
+static PyObject *ParserError;
+static PyObject *PARSER_ERRMSG[16];
+static PyObject *CAW_ERRMSG[8];
+static PyObject *EMPTY_STR;
+static PyObject *ERROR_LINESEP;
+static PyObject *CAW_ERROR_SEP;
 
 /* Builds a python error string from the FAILURE attribute
  * of a ParserState, remember to DECREF that.
  * Returns NULL on any sort of error, at that point just crash the program whatever
  * */
 static PyObject *build_error_message(ParserState *parser_state) {
-	return CONSTANTS::EMPTY_STR;
-// 	PyObject *parser_list = PyList_New(0);
-// 	PyObject *caw_list = PyList_New(0);
-// 	PyObject *tmp_str0;
-// 	PyObject *tmp_str1;
-// 	PyObject *tmp_tup;
-// 	PyObject *final_str;
-// 	if (parser_list == NULL) goto error6;
-// 	if (caw_list == NULL) goto error5;
-// 	for (uint8_t i = 0; i < 16; i++) {
-// 		if ((1 << i) & parser_state->FAILURE) {
-// 			if (PyList_Append(parser_list, PARSER_ERRMSG[i]) < 0) {
-// 				goto error4;
-// 			}
-// 		}
-// 	}
-// 	if (parser_state->FAILURE & 1 == 1) { // CAW error
-// 		for (uint8_t i = 0; i < 8; i++) {
-// 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
-// 				if (PyList_Append(caw_list, CAW_ERRMSG[i]) < 0) {
-// 					goto error4;
-// 				}
-// 			}
-// 		}
-// 		tmp_str0 = PyUnicode_Join(ERROR_LINESEP, parser_list);
-// 		if (tmp_str1 == NULL) goto error3;
-// 		tmp_str1 = PyUnicode_Join(ERROR_LINESEP, caw_list);
-// 		if (tmp_str1 == NULL) goto error2;
-// 		tmp_tup = PyTuple_Pack(3, tmp_str0, CAW_ERROR_SEP, tmp_str1);
-// 		if (tmp_tup == NULL) goto error1;
-// 		final_str = PyUnicode_Join(EMPTY_STR, tmp_tup);
-// 		if (final_str == NULL) goto error0;
-// 		Py_DECREF(tmp_str0); Py_DECREF(tmp_str1); Py_DECREF(tmp_tup);
-// 	} else {
-// 		final_str = PyUnicode_Join(ERROR_LINESEP, parser_list);
-// 		if (final_str == NULL) goto error4;
-// 	}
-// 	Py_DECREF(parser_list); Py_DECREF(caw_list);
-// 	return final_str;
-// error0:
-// 	Py_DECREF(final_str);
-// error1:
-// 	Py_DECREF(tmp_tup);
-// error2:
-// 	Py_DECREF(tmp_str1);
-// error3:
-// 	Py_DECREF(tmp_str0);
-// error4:
-// 	Py_DECREF(caw_list);
-// error5:
-// 	Py_DECREF(parser_list);
-// error6:
-// 	return NULL;
+	PyObject *parser_list = PyList_New(0);
+	PyObject *caw_list = PyList_New(0);
+	PyObject *tmp_str0;
+	PyObject *tmp_str1;
+	PyObject *tmp_tup;
+	PyObject *final_str;
+	if (parser_list == NULL) goto error5;
+	if (caw_list == NULL) goto error4;
+	for (uint8_t i = 0; i < 16; i++) {
+		if ((1 << i) & parser_state->FAILURE) {
+			if (PyList_Append(parser_list, PARSER_ERRMSG[i]) < 0) {
+				goto error4;
+			}
+		}
+	}
+	if (parser_state->FAILURE & 1) { // CAW error
+		for (uint8_t i = 0; i < 8; i++) {
+			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
+				if (PyList_Append(caw_list, CAW_ERRMSG[i]) < 0) {
+					goto error4;
+				}
+			}
+		}
+		tmp_str0 = PyUnicode_Join(ERROR_LINESEP, parser_list);
+		if (tmp_str0 == NULL) goto error3;
+		tmp_str1 = PyUnicode_Join(ERROR_LINESEP, caw_list);
+		if (tmp_str1 == NULL) goto error2;
+		tmp_tup = PyTuple_Pack(3, tmp_str0, CAW_ERROR_SEP, tmp_str1);
+		if (tmp_tup == NULL) goto error1;
+		final_str = PyUnicode_Join(EMPTY_STR, tmp_tup);
+		if (final_str == NULL) goto error0;
+		Py_DECREF(tmp_str0); Py_DECREF(tmp_str1); Py_DECREF(tmp_tup);
+	} else {
+		final_str = PyUnicode_Join(ERROR_LINESEP, parser_list);
+		if (final_str == NULL) goto error4;
+	}
+	Py_DECREF(parser_list); Py_DECREF(caw_list);
+	return final_str;
+error0:
+	Py_DECREF(tmp_tup);
+error1:
+	Py_DECREF(tmp_str1);
+error2:
+	Py_DECREF(tmp_str0);
+error3:
+	Py_DECREF(caw_list);
+error4:
+	Py_DECREF(parser_list);
+error5:
+	return NULL;
 }
 
 /* Raise a ParserError from given parser state and python interpreter state.
@@ -89,14 +90,14 @@ static PyObject *raise_parser_error(ParserState *parser_state) {
 	}
 
 	PyErr_SetObject(ParserError, err_str);
-	if (exc_type == NULL) {
+	if (exc_type != NULL) { // If a python exception was set beforehand
 		PyErr_Fetch(&new_exc_type, &new_exc_value, &new_exc_traceback);
+		PyErr_NormalizeException(&new_exc_type, &new_exc_value, &new_exc_traceback);
+		//PyException_SetContext(new_exc_value, exc_value);
 		PyException_SetCause(new_exc_value, exc_value);
 		PyErr_Restore(new_exc_type, new_exc_value, new_exc_traceback);
-	} else {
-		Py_DECREF(exc_value);
+		//Py_DECREF(exc_type); Py_DECREF(exc_traceback);
 	}
-	Py_DECREF(exc_type); Py_DECREF(exc_traceback);
 
 	return NULL;
 }
@@ -108,14 +109,21 @@ namespace DemoParser {
 	};
 
 	static PyObject *new_(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+		static char *KWARGS[] = {"flags", NULL};
 		DemoParser::_struct *self;
+		uint32_t flags;
+
+		if (!PyArg_ParseTupleAndKeywords(args, kwargs, "I:__new__", KWARGS, &flags)) {
+			return NULL;
+		}
+
 		self = (DemoParser::_struct *)type->tp_alloc(type, 0);
 		if (self == NULL) {
 			return NULL;
 		}
 
 		// Set up Type variables
-		self->flags = 0;
+		self->flags = flags;
 
 		return (PyObject *)self;
 	}
@@ -150,7 +158,6 @@ namespace DemoParser {
 		parser_state->game_event_defs = NULL;
 		parser_state->RELAYED_CAW_ERR = 0;
 		parser_state->tick = 0;
-		printf("flags are %u\n");
 
 		res_dict = PyDict_New();
 		if (res_dict == NULL) {
@@ -191,7 +198,7 @@ namespace DemoParser {
 			packet_parse_any(demo_fp, parser_state, res_dict);
 			if (parser_state->FAILURE != 0) {
 				return raise_parser_error(parser_state);
-			}	
+			}
 		}
 
 		time(&end_time);
@@ -300,6 +307,36 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 	if (module == NULL) {
 		return NULL;
 	}
+
+	// Initialize globals, no clue if this is the right way lol
+	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
+	PARSER_ERRMSG[0] = PyUnicode_FromString("CharArrayWrapper error, see below");
+	PARSER_ERRMSG[1] = PyUnicode_FromString("Unknown packet id encountered.");
+	PARSER_ERRMSG[2] = PyUnicode_FromString("I/O error.");
+	PARSER_ERRMSG[3] = PyUnicode_FromString("Unexpected end of file");
+	PARSER_ERRMSG[4] = PyUnicode_FromString("Unknown message id encountered.");
+	PARSER_ERRMSG[5] = PyUnicode_FromString("Memory allocation failure.");
+	PARSER_ERRMSG[6] = PyUnicode_FromString("Unknown game event encountered.");
+	PARSER_ERRMSG[7] = PyUnicode_FromString("Python dict error (Likely memory error)");
+	PARSER_ERRMSG[8] = PyUnicode_FromString("Python list error (Likely memory error)");
+	PARSER_ERRMSG[9] = PyUnicode_FromString("");
+	PARSER_ERRMSG[10] = PyUnicode_FromString("");
+	PARSER_ERRMSG[11] = PyUnicode_FromString("");
+	PARSER_ERRMSG[12] = PyUnicode_FromString("");
+	PARSER_ERRMSG[13] = PyUnicode_FromString("");
+	PARSER_ERRMSG[14] = PyUnicode_FromString("");
+	PARSER_ERRMSG[15] = PyUnicode_FromString("Unknown error.");
+	CAW_ERRMSG[0] = PyUnicode_FromString("Buffer too short.");
+	CAW_ERRMSG[1] = PyUnicode_FromString("Memory allocation failed.");
+	CAW_ERRMSG[2] = PyUnicode_FromString("I/O error when reading from file.");
+	CAW_ERRMSG[3] = PyUnicode_FromString("Initialization failed due to memory error.");
+	CAW_ERRMSG[4] = PyUnicode_FromString("Initialization failed due to odd file reading result (Premature EOF?)");
+	CAW_ERRMSG[5] = PyUnicode_FromString("");
+	CAW_ERRMSG[6] = PyUnicode_FromString("");
+	CAW_ERRMSG[7] = PyUnicode_FromString("");
+	EMPTY_STR = PyUnicode_FromString("");
+	ERROR_LINESEP = PyUnicode_FromString("\n    ");
+	CAW_ERROR_SEP = PyUnicode_FromString("\n     ===CharArrayWrapper errors:===\n    ");
 
 	PyModule_AddObject(module, "ParserError", ParserError);
 

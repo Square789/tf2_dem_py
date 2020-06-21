@@ -45,7 +45,7 @@ inline PyObject *PyUnicode_FromCAWUpToNull(CharArrayWrapper *caw, size_t len) {
 		return NULL;
 	}
 
-	pystr = PyUnicode_FromStringAndSize(str, len);
+	pystr = PyUnicode_FromString(str);
 	free(str);
 	return pystr;
 }
