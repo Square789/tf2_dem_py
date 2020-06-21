@@ -29,8 +29,9 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	caw->read_raw(&(ged->event_type), 1, 1);
 	ged->name = PyUnicode_FromCAWNulltrm(caw);
 	if (ged->name == NULL) {
-		printf("REEEEEEEEEE\n");
-		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
+		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		return;
+	}
 	ged->entries_capacity = ENTRIES_SIZE_BLOCK;
 	ged->entries_length = 0;
 
@@ -45,7 +46,9 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	while (last_type != 0) {
 		entry_name = PyUnicode_FromCAWNulltrm(caw);
 		if (entry_name == NULL) {
-			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION; return; }
+			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+			return;
+		}
 		(ged->entries + ged->entries_length)->type = last_type;
 		(ged->entries + ged->entries_length)->name = entry_name;
 		(ged->entries_length) += 1; // Read entry's two attributes and bump length
@@ -194,18 +197,17 @@ void GameEventList::parse(CharArrayWrapper *caw, ParserState *parser_state, PyOb
 		return;
 	}
 
-	printf("Reading %u GameEventDefs\n", amount);
 	for (uint16_t i = 0; i < amount; i++) {
 		read_game_event_definition(gel_caw, parser_state, game_event_defs + i);
 		if (parser_state->FAILURE != 0) {
-			printf("Failed at GED #%d\n", i);
-			return;
+			goto func_end;
 		}
 	}
 	ged_arr->length = amount;
 	ged_arr->ptr = game_event_defs;
 
 	parser_state->game_event_defs = ged_arr;
+func_end:
 	delete gel_caw;
 }
 

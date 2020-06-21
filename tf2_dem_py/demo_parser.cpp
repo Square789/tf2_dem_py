@@ -10,6 +10,10 @@
 #include "tf2_dem_py/parsing/demo_header.hpp"
 #include "tf2_dem_py/parsing/packet/parse_any.hpp"
 
+// setup.py will fail without this line
+#define _tf2_dem_py__version__ "0.0.1"
+
+static PyObject *__version__;
 static PyObject *ParserError;
 static PyObject *PARSER_ERRMSG[16];
 static PyObject *CAW_ERRMSG[8];
@@ -300,15 +304,16 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 	PyObject *module;
 
 	if (PyType_Ready(&DemoParser_Type) < 0) {
-		return NULL;
+		goto error0;
 	}
 
 	module = PyModule_Create(&DemoParser_ModuleDef);
 	if (module == NULL) {
-		return NULL;
+		goto error0;
 	}
 
 	// Initialize globals, no clue if this is the right way lol
+	__version__ = PyUnicode_FromString(_tf2_dem_py__version__);
 	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
 	PARSER_ERRMSG[0] = PyUnicode_FromString("CharArrayWrapper error, see below");
 	PARSER_ERRMSG[1] = PyUnicode_FromString("Unknown packet id encountered.");
@@ -338,13 +343,28 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 	ERROR_LINESEP = PyUnicode_FromString("\n    ");
 	CAW_ERROR_SEP = PyUnicode_FromString("\n     ===CharArrayWrapper errors:===\n    ");
 
-	PyModule_AddObject(module, "ParserError", ParserError);
+	if (PyModule_AddObject(module, "ParserError", ParserError) < 0) {
+		goto error1;
+	}
 
 	Py_INCREF(&DemoParser_Type);
 	if (PyModule_AddObject(module, "DemoParser", (PyObject *)&DemoParser_Type) < 0) {
-		Py_DECREF(&DemoParser_Type); Py_DECREF(module);
-		return NULL;
+		goto error2;
+	}
+
+	Py_INCREF(__version__);
+	if (PyModule_AddObject(module, "__version__", __version__) < 0) {
+		goto error3;
 	}
 
 	return module;
+error3:
+	Py_DECREF(__version__);
+error2:
+	Py_DECREF(&DemoParser_Type);
+error1:
+	Py_DECREF(ParserError);
+	Py_DECREF(module);
+error0:
+	return NULL;
 }

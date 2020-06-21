@@ -7,9 +7,9 @@
 #include <stdint.h>
 
 // [length|ptr *]
-//         |-> [event_type_id|event_type|name *|
-//              entries_capacity|entries_length|entries *] ...
-//                          [name *|type] ... <-|
+//          '-> [event_type_id|event_type|name *|
+//               entries_capacity|entries_length|entries *] ...
+//                              [name *|type] ... <-'
 // Where ... means the memory may repeat.
 //
 

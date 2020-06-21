@@ -1,20 +1,21 @@
-import ast
 import glob
 import os
+import re
 from pathlib import Path
 from setuptools import setup, Extension
 
 # Thanks: https://stackoverflow.com/questions/2058802/
 # 	how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
 __version__ = None
-with open("tf2_dem_py/demo_parser.pyx") as h:
+with open("tf2_dem_py/demo_parser.cpp") as h:
 	for line in h.readlines():
-		if line.startswith("__version__"):
-			__version__ = ast.parse(line).body[0].value.s
+		if line.startswith("#define _tf2_dem_py__version__"):
+			__version__ = re.search('"(.*)"', line) # very cheap but why would the version have multiple quotes in it?
 			break
 
 if __version__ == None:
 	raise SyntaxError("Version not found.")
+__version__ = __version__[1]
 
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.cpp"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
