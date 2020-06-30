@@ -136,6 +136,6 @@ public:
 * May return a Nullpointer on CharArrayWrapper allocation failure.
 * Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
 */
-CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes);
+CharArrayWrapper *caw_from_file(FILE *fp, size_t initbytes);
 
 #endif

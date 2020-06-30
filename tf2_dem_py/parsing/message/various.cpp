@@ -54,11 +54,11 @@ void SetConVar::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t amt = caw->get_uint8();
 	char *tmp1, *tmp2;
 	for (uint16_t i = 0; i < amt; i++) {
-		tmp1 = caw->get_nulltrm_str();
-		tmp2 = caw->get_nulltrm_str();
-		printf("%s ||| %s\n", tmp1, tmp2);
-		//caw->skip(caw->dist_until_null(), 0);
-		//caw->skip(caw->dist_until_null(), 0);
+		// tmp1 = caw->get_nulltrm_str();
+		// tmp2 = caw->get_nulltrm_str();
+		// printf("%s ||| %s\n", tmp1, tmp2);
+		caw->skip(caw->dist_until_null(), 0);
+		caw->skip(caw->dist_until_null(), 0);
 	}
 }
 
@@ -75,7 +75,6 @@ void SigOnState::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
 	PyObject *py_str;
 
-	printf("[printmsg parser]: CAW @%d\n", caw->get_pos_byte());
 	py_str = PyUnicode_FromCAWNulltrm(caw);
 	if (py_str == NULL) {
 		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;

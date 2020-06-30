@@ -43,7 +43,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 
 	//printf("Message packet, length %u, fptr @%d\n", pkt_len, ftell(stream));
 
-	CharArrayWrapper *pkt_caw = CAW_from_file(stream, pkt_len);
+	CharArrayWrapper *pkt_caw = caw_from_file(stream, pkt_len);
 
 	if (pkt_caw->ERRORLEVEL != 0) {
 		parser_state->FAILURE |= ParserState_ERR.CAW;

@@ -14,7 +14,7 @@ void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) 
 		"tick_count", "frame_count", "sigon",
 	};
 
-	CharArrayWrapper *header_caw = CAW_from_file(stream, 1072);
+	CharArrayWrapper *header_caw = caw_from_file(stream, 1072);
 	if (header_caw->ERRORLEVEL != 0) {
 		p_state->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
 		p_state->FAILURE |= ParserState_ERR.CAW;

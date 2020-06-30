@@ -6,7 +6,7 @@
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 
-CharArrayWrapper *CAW_from_file(FILE *fp, size_t initbytes) {
+CharArrayWrapper *caw_from_file(FILE *fp, size_t initbytes) {
 	CharArrayWrapper *caw_ptr = new CharArrayWrapper(NULL, 0);
 	size_t read_res;
 	if (caw_ptr == NULL) {
