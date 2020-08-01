@@ -6,17 +6,19 @@
 #include <math.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 #include "tf2_dem_py/parsing/message/voice.hpp"
 
+using ParserState::ParserState_c;
+
 namespace MessageParsers {
 
-void ParseSounds::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void ParseSounds::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void ParseSounds::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void ParseSounds::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	uint8_t reliable = caw->get_bit();
 	uint8_t num;
 	uint16_t length;
@@ -31,11 +33,11 @@ void ParseSounds::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void VoiceInit::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void VoiceInit::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void VoiceInit::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void VoiceInit::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(caw->dist_until_null(), 0);
 	if (caw->get_uint8() == 255) {
 		caw->skip(2, 0);
@@ -43,11 +45,11 @@ void VoiceInit::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void VoiceData::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void VoiceData::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void VoiceData::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void VoiceData::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	uint16_t len = 0;
 	caw->skip(2, 0);
 	caw->read_raw(&len, 2, 0);

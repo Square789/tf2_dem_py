@@ -12,14 +12,16 @@
 #include "tf2_dem_py/parsing/packet/consolecmd.hpp"
 #include "tf2_dem_py/parsing/packet/usercmd.hpp"
 
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
-void packet_parse_any(FILE *stream, ParserState *parser_state, PyObject *root_dict) {
+using ParserState::ParserState_c;
+
+void packet_parse_any(FILE *stream, ParserState_c *parser_state, PyObject *root_dict) {
 	/*
 	Read the next byte from stream and determine what packet to read from this id.
 
 	FILE *stream : Pointer to a FILE object, next byte must be valid packet id
-	ParserState *parser_state : Pointer to a ParserState, may be modified by this function.
+	ParserState_c *parser_state : Pointer to a ParserState_c instance, may be modified by this function.
 	PyObject *root_dict : Pointer to a python dict, packet parser result will be written there.
 	*/
 	uint8_t packet_type;
@@ -47,6 +49,6 @@ void packet_parse_any(FILE *stream, ParserState *parser_state, PyObject *root_di
 	case 8:
 		Stringtables_parse(stream, parser_state, root_dict); break;
 	default:
-		parser_state->FAILURE |= ParserState_ERR.UNKNOWN_PACKET_ID;
+		parser_state->FAILURE |= ParserState::ERRORS::UNKNOWN_PACKET_ID;
 	}
 }

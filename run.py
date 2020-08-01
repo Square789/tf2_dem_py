@@ -24,6 +24,6 @@ res = dp.parse(p)
 # pprint(res, sort_dicts = False, compact = True)
 
 with open("lastdemo.json", "w") as h:
-	json.dump(res, h)
+	json.dump(res, h, indent=4)
 
 # print(res)

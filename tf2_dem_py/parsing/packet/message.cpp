@@ -6,8 +6,10 @@
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 #include "tf2_dem_py/parsing/message/__init__.hpp"
+
+using ParserState::ParserState_c;
 
 inline uint8_t should_parse(uint8_t m_id, uint16_t flag) {
 	if (m_id == 25) {
@@ -17,7 +19,7 @@ inline uint8_t should_parse(uint8_t m_id, uint16_t flag) {
 	}
 }
 
-void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict) {
+void Message_parse(FILE *stream, ParserState_c *parser_state, PyObject *root_dict) {
 	uint32_t tick;
 	uint32_t pkt_len;
 	uint8_t msg_id = 0;
@@ -33,11 +35,11 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 	fread(&pkt_len, sizeof(pkt_len), 1, stream);
 
 	if (ferror(stream) != 0) {
-		parser_state->FAILURE |= ParserState_ERR.IO;
+		parser_state->FAILURE |= ParserState::ERRORS::IO;
 		return;
 	}
 	if (feof(stream) != 0) {
-		parser_state->FAILURE |= ParserState_ERR.UNEXPECTED_EOF;
+		parser_state->FAILURE |= ParserState::ERRORS::UNEXPECTED_EOF;
 		return;
 	}
 
@@ -46,13 +48,14 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 	CharArrayWrapper *pkt_caw = caw_from_file(stream, pkt_len);
 
 	if (pkt_caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ParserState_ERR.CAW;
+		parser_state->FAILURE |= ParserState::ERRORS::CAW;
 		parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
 		return;
 	}
 
 	while ((pkt_caw->remaining_bytes() > 1) || (pkt_caw->remaining_bits() > 6)) {
 		pkt_caw->read_raw(&msg_id, 0, 6);
+		parser_state->current_message = msg_id;
 		//printf(" -Next message: %u, tick %u, %d bytes in\n", msg_id, parser_state->tick, pkt_caw->get_pos_byte());
 		switch (msg_id)
 		{
@@ -107,7 +110,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 		case 31:
 			msg_parser = MessageParsers::cGetCvarValue; break;
 		default:
-			parser_state->FAILURE |= ParserState_ERR.UNKNOWN_MESSAGE_ID;
+			parser_state->FAILURE |= ParserState::ERRORS::UNKNOWN_MESSAGE_ID;
 			return;
 		}
 
@@ -118,7 +121,7 @@ void Message_parse(FILE *stream, ParserState *parser_state, PyObject *root_dict)
 		}
 
 		if (pkt_caw->ERRORLEVEL != 0) {
-			parser_state->FAILURE |= ParserState_ERR.CAW;
+			parser_state->FAILURE |= ParserState::ERRORS::CAW;
 			parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
 			return;
 		}

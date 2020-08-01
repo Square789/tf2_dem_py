@@ -5,9 +5,11 @@
 
 #include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
-void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) {
+using ParserState::ParserState_c;
+
+void parse_demo_header(FILE *stream, ParserState_c *p_state, PyObject *root_dict) {
 	static const char *HEADER_NAMES[] = {
 		"ident", "net_prot", "dem_prot", "host_addr",
 		"client_id", "map_name", "game_dir", "play_time",
@@ -17,12 +19,12 @@ void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) 
 	CharArrayWrapper *header_caw = caw_from_file(stream, 1072);
 	if (header_caw->ERRORLEVEL != 0) {
 		p_state->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
-		p_state->FAILURE |= ParserState_ERR.CAW;
+		p_state->FAILURE |= ParserState::ERRORS::CAW;
 		return;
 	}
 	PyObject *header_dict = PyDict_New();
 	if (header_dict == NULL) {
-		p_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		p_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -43,21 +45,21 @@ void parse_demo_header(FILE *stream, ParserState* p_state, PyObject *root_dict) 
 
 	for (uint8_t i = 0; i < 11; i++) {
 		if (header[i] == NULL) { // Python conversion failure, error raised already
-			p_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+			p_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		} else {
 			if (PyDict_SetItemString(header_dict, HEADER_NAMES[i], header[i]) < 0) {
-				p_state->FAILURE |= ParserState_ERR.PYDICT;
+				p_state->FAILURE |= ParserState::ERRORS::PYDICT;
 			}
 			Py_DECREF(header[i]);
 		}
 	}
 
 	if (PyDict_SetItemString(root_dict, "header", header_dict) < 0) {
-		p_state->FAILURE |= ParserState_ERR.PYDICT;
+		p_state->FAILURE |= ParserState::ERRORS::PYDICT;
 	}
 
 	if (header_caw->ERRORLEVEL != 0) {
-		p_state->FAILURE |= ParserState_ERR.CAW;
+		p_state->FAILURE |= ParserState::ERRORS::CAW;
 		p_state->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
 	}
 }

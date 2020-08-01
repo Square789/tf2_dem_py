@@ -9,13 +9,15 @@
 #include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/flags/flags.h"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 #include "tf2_dem_py/parsing/message/usermessage.hpp"
 
+using ParserState::ParserState_c;
+
 namespace MessageParsers {
 
-inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state, PyObject *chat_list) {
+inline void handle_say_text(CharArrayWrapper *um_caw, ParserState_c *parser_state, PyObject *chat_list) {
 	static const char *CHAT_DICT_NAMES[] = {"tick", "chat", "from", "message"};
 	uint8_t client;
 	uint8_t r;
@@ -36,7 +38,7 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	// Store read chat message in json
 	message_dict = PyDict_New();
 	if (message_dict == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -49,10 +51,10 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	}
 	for (uint8_t i = 0; i < 4; i++) {
 		if (chat[i] == NULL) { // Python conversion failure, error raised already
-			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+			parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		} else {
 			if (PyDict_SetItemString(message_dict, CHAT_DICT_NAMES[i], chat[i]) < 0) {
-				parser_state->FAILURE |= ParserState_ERR.PYDICT;
+				parser_state->FAILURE |= ParserState::ERRORS::PYDICT;
 			} // Move value into dict, then decrease refcount
 			Py_DECREF(chat[i]);
 		}
@@ -61,7 +63,7 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState *parser_state,
 	PyList_Append(chat_list, message_dict);
 }
 
-void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void UserMessage::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	uint8_t user_message_type;
 	uint16_t len = 0;
 	PyObject *message_list;
@@ -72,7 +74,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObje
 	// offset in mind.
 	CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
 	if (user_message_caw == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -81,7 +83,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObje
 			if (parser_state->flags & FLAGS.CHAT) {
 				message_list = PyDict_GetItemString(root_dict, "chat");
 				if (message_list == NULL) {
-					parser_state->FAILURE |= ParserState_ERR.PYLIST;
+					parser_state->FAILURE |= ParserState::ERRORS::PYLIST;
 					goto cleanup_and_ret;
 				}
 				handle_say_text(user_message_caw, parser_state, message_list);
@@ -91,7 +93,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObje
 			break;
 	}
 	if (user_message_caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ParserState_ERR.CAW;
+		parser_state->FAILURE |= ParserState::ERRORS::CAW;
 		parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
 		// This may be ambigous in really odd cases where there is a message
 		// length discrepancy and the inner caw sets the out of bounds flag.
@@ -100,7 +102,7 @@ cleanup_and_ret:
 	delete user_message_caw;
 }
 
-void UserMessage::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void UserMessage::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(1, 0);
 	uint16_t len;
 	caw->read_raw(&len, 1, 3);

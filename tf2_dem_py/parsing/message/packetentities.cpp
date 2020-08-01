@@ -6,17 +6,19 @@
 #include <math.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 #include "tf2_dem_py/parsing/message/packetentities.hpp"
 
+using ParserState::ParserState_c;
+
 namespace MessageParsers {
 
-void PacketEntities::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void PacketEntities::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void PacketEntities::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void PacketEntities::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(1, 3);
 	if (caw->get_bit() == 1) {
 		caw->skip(4, 0);
@@ -29,11 +31,11 @@ void PacketEntities::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void TempEntities::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void TempEntities::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void TempEntities::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void TempEntities::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(1, 0);
 	uint32_t length = caw->get_var_int();
 	caw->skip(length / 8, length % 8);

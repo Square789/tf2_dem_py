@@ -19,9 +19,8 @@ __version__ = __version__[1]
 
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.cpp"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
-SRC_GAME_EVENTS = "tf2_dem_py/parsing/game_events/game_events.cpp"
 SRC_HEADER = "tf2_dem_py/parsing/demo_header.cpp"
-SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.c"
+SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.cpp"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.cpp")
 SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packet/*.cpp")
 SRCS_USERMSG = glob.glob("tf2_dem_py/parsing/usermessage/*.cpp")
@@ -32,7 +31,6 @@ def deliver_sources(strpath):
 	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
 		srcs.append(SRC_FLAGS)
-		srcs.append(SRC_GAME_EVENTS)
 		srcs.append(SRC_HEADER)
 		srcs.append(SRC_PARSER_STATE)
 		srcs.extend(SRCS_MSG)
@@ -53,9 +51,13 @@ setup(
 	version = __version__,
 	author = "Square789",
 	packages = ["tf2_dem_py"],
-	include_dirs = [
-            "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0"
-            "/mingw64/x86_64-w64-mingw32/include",
+	include_dirs = [ # This is so incredibly hardcoded lmao
+            "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
+            	"/mingw64/x86_64-w64-mingw32/include",
+			"C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
+            	"/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++",
+			"C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/" \
+				"mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++/x86_64-w64-mingw32",
 			".",
 		],
 	ext_modules = extensions,

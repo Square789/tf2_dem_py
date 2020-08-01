@@ -3,28 +3,30 @@
 
 #include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 #include "tf2_dem_py/parsing/message/various.hpp"
 
+using ParserState::ParserState_c;
+
 namespace MessageParsers {
 
-void Empty::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {}
-void Empty::skip(CharArrayWrapper *caw, ParserState *parser_state) {}
+void Empty::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {}
+void Empty::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {}
 
 
-void File::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void File::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void File::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void File::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(4, 0);
 	caw->skip(caw->dist_until_null(), 0);
 	caw->skip(0, 1);
 }
 
 
-void NetTick::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void NetTick::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	uint32_t tick = caw->get_uint32();
 	uint16_t frame_time = caw->get_uint16();
 	uint16_t std_dev = caw->get_uint16();
@@ -32,25 +34,25 @@ void NetTick::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *
 	parser_state->tick = tick;
 }
 
-void NetTick::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void NetTick::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(8, 0);
 }
 
 
-void StringCommand::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void StringCommand::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void StringCommand::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void StringCommand::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(caw->dist_until_null(), 0);
 }
 
 
-void SetConVar::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void SetConVar::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void SetConVar::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void SetConVar::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	uint8_t amt = caw->get_uint8();
 	char *tmp1, *tmp2;
 	for (uint16_t i = 0; i < amt; i++) {
@@ -63,42 +65,42 @@ void SetConVar::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void SigOnState::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void SigOnState::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void SigOnState::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void SigOnState::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(5, 0);
 }
 
 
-void Print::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void Print::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	PyObject *py_str;
 
 	py_str = PyUnicode_FromCAWNulltrm(caw);
 	if (py_str == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		if (caw->ERRORLEVEL != 0) {
 			parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-			parser_state->FAILURE |= ParserState_ERR.CAW;
+			parser_state->FAILURE |= ParserState::ERRORS::CAW;
 		}
 		return;
 	}
 
 	if (PyDict_SetItemString(root_dict, "printmsg", py_str) < 0) {
-		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+		parser_state->FAILURE |= ParserState::ERRORS::PYDICT;
 	}
 
 	Py_DECREF(py_str);
 }
 
-void Print::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void Print::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	size_t dist = caw->dist_until_null();
 	caw->skip(dist, 0); // no error checks, occurs in message parsing loop
 }
 
 
-void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void ServerInfo::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	static const char *SINFO_NAMES[16] = {
 		"version", "server_count", "stv", "dedicated",
 		"max_crc", "max_classes", "map_hash", "player_count",
@@ -107,7 +109,7 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 	};
 	PyObject *sinfo_dict = PyDict_New();
 	if (sinfo_dict == NULL) {
-		parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+		parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		return;
 	}
 
@@ -134,26 +136,26 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObjec
 
 	for (uint8_t i = 0; i < 16; i++) {
 		if (sinfo[i] == NULL) { // Python conversion failure, error raised already
-			parser_state->FAILURE |= ParserState_ERR.MEMORY_ALLOCATION;
+			parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		} else {
 			if (PyDict_SetItemString(sinfo_dict, SINFO_NAMES[i], sinfo[i]) < 0) {
-				parser_state->FAILURE |= ParserState_ERR.PYDICT;
+				parser_state->FAILURE |= ParserState::ERRORS::PYDICT;
 			} // Move value into dict, then decrease refcount
 			Py_DECREF(sinfo[i]);
 		}
 	}
 
 	if (PyDict_SetItemString(root_dict, "server_info", sinfo_dict) < 0) {
-		parser_state->FAILURE |= ParserState_ERR.PYDICT;
+		parser_state->FAILURE |= ParserState::ERRORS::PYDICT;
 	}
 
 	if (caw->ERRORLEVEL != 0) {
-		parser_state->FAILURE |= ParserState_ERR.CAW;
+		parser_state->FAILURE |= ParserState::ERRORS::CAW;
 		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
 	}
 }
 
-void ServerInfo::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void ServerInfo::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(36, 2);
 	caw->skip(caw->dist_until_null(), 0);
 	caw->skip(caw->dist_until_null(), 0);
@@ -163,29 +165,29 @@ void ServerInfo::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void SetView::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void SetView::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void SetView::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void SetView::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(1, 3);
 }
 
 
-void FixAngle::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void FixAngle::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void FixAngle::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void FixAngle::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(6, 1);
 }
 
 
-void BspDecal::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void BspDecal::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void BspDecal::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void BspDecal::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	uint8_t existing_coords[3] = {0, 0, 0};
 	uint8_t i;
 	for (i = 0; i < 3; i++) {
@@ -204,11 +206,11 @@ void BspDecal::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void Entity::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void Entity::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void Entity::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void Entity::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(2, 4);
 	uint16_t length;
 	caw->read_raw(&length, 1, 3);
@@ -216,20 +218,20 @@ void Entity::skip(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 
-void PreFetch::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void PreFetch::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void PreFetch::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void PreFetch::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(1, 6);
 }
 
 
-void GetCvarValue::parse(CharArrayWrapper *caw, ParserState *parser_state, PyObject *root_dict) {
+void GetCvarValue::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	this->skip(caw, parser_state);
 }
 
-void GetCvarValue::skip(CharArrayWrapper *caw, ParserState *parser_state) {
+void GetCvarValue::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	caw->skip(4, 0);
 	caw->skip(caw->dist_until_null(), 0);
 }

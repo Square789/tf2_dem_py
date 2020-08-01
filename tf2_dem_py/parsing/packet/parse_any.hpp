@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
-void packet_parse_any(FILE *stream, ParserState *p_state, PyObject *root_json);
+using ParserState::ParserState_c;
+
+void packet_parse_any(FILE *stream, ParserState_c *p_state, PyObject *root_json);

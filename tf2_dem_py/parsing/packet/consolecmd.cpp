@@ -5,11 +5,13 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 #include "tf2_dem_py/parsing/packet/consolecmd.hpp"
 
-void Consolecmd_parse(FILE *stream, ParserState *p_state, PyObject *root_dict) {
+using ParserState::ParserState_c;
+
+void Consolecmd_parse(FILE *stream, ParserState_c *p_state, PyObject *root_dict) {
 	uint32_t tick;
 	uint32_t pkt_len;
 
@@ -20,11 +22,11 @@ void Consolecmd_parse(FILE *stream, ParserState *p_state, PyObject *root_dict) {
 	fread(&pkt_len, sizeof(pkt_len), 1, stream);
 
 	if (ferror(stream) != 0) {
-		p_state->FAILURE |= ParserState_ERR.IO;
+		p_state->FAILURE |= ParserState::ERRORS::IO;
 		return;
 	}
 	if (feof(stream) != 0) {
-		p_state->FAILURE |= ParserState_ERR.UNEXPECTED_EOF;
+		p_state->FAILURE |= ParserState::ERRORS::UNEXPECTED_EOF;
 		return;
 	}
 

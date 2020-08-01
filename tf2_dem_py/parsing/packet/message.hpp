@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
-#include "tf2_dem_py/parsing/parser_state/parser_state.h"
+#include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
-void Message_parse(FILE *stream, ParserState *p_state, PyObject *root_dict);
+using ParserState::ParserState_c;
+
+void Message_parse(FILE *stream, ParserState_c *p_state, PyObject *root_dict);
