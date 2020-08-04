@@ -16,10 +16,13 @@ using ParserState::ParserState_c;
 // setup.py will fail without this line
 #define _tf2_dem_py__version__ "0.0.1"
 
+#define demo_parser_PARSER_ERRMSG_SIZE 16
+#define demo_parser_CAW_ERRMSG_SIZE 8
+
 static PyObject *__version__;
 static PyObject *ParserError;
-static PyObject *PARSER_ERRMSG[16];
-static PyObject *CAW_ERRMSG[8];
+static PyObject *PARSER_ERRMSG[demo_parser_PARSER_ERRMSG_SIZE];
+static PyObject *CAW_ERRMSG[demo_parser_CAW_ERRMSG_SIZE];
 static PyObject *NEWLINE_STR;
 static PyObject *EMPTY_STR;
 static PyObject *ERROR_LINESEP;
@@ -34,21 +37,21 @@ static PyObject *ERROR_INIT2;
  * */
 static PyObject *build_error_message(FILE *fp, ParserState_c *parser_state) {
 	PyObject *builder_list = PyList_New(0);
-	PyObject *fppos_str, *lmsg_str;
+	PyObject *lmsg_str, *fppos_str;
 	PyObject *final_string = NULL;
 	if (builder_list == NULL) goto error0;
+	lmsg_str = PyUnicode_FromFormat("%u", (unsigned int)parser_state->current_message);
+	if (lmsg_str == NULL) goto error1;
 	fppos_str = PyUnicode_FromFormat("%li", ftell(fp));
-	if (fppos_str == NULL) goto error1;
-	lmsg_str = PyUnicode_FromFormat("%li", parser_state->current_message);
-	if (lmsg_str == NULL) goto error2;
+	if (fppos_str == NULL) goto error2;
 
 	if (PyList_Append(builder_list, ERROR_INIT0) < 0) goto error3;
-	if (PyList_Append(builder_list, fppos_str) < 0) goto error3;
-	if (PyList_Append(builder_list, ERROR_INIT1) < 0) goto error3;
 	if (PyList_Append(builder_list, lmsg_str) < 0) goto error3;
+	if (PyList_Append(builder_list, ERROR_INIT1) < 0) goto error3;
+	if (PyList_Append(builder_list, fppos_str) < 0) goto error3;
 	if (PyList_Append(builder_list, ERROR_INIT2) < 0) goto error3;
 	if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
 		if ((1 << i) & parser_state->FAILURE) {
 			if (PyList_Append(builder_list, PARSER_ERRMSG[i]) < 0) goto error3;
 			if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
@@ -56,7 +59,7 @@ static PyObject *build_error_message(FILE *fp, ParserState_c *parser_state) {
 	}
 	if (parser_state->FAILURE & 1) { // CAW Error
 		if (PyList_Append(builder_list, ERROR_SEP_CAW) < 0) goto error3;
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
 				if (PyList_Append(builder_list, CAW_ERRMSG[i]) < 0) goto error3;
 				if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
@@ -65,8 +68,8 @@ static PyObject *build_error_message(FILE *fp, ParserState_c *parser_state) {
 	}
 	final_string = PyUnicode_Join(EMPTY_STR, builder_list); // If this fails, NULL is returned anyways
 
-error3: Py_DECREF(lmsg_str);
-error2: Py_DECREF(fppos_str);
+error3: Py_DECREF(fppos_str);
+error2: Py_DECREF(lmsg_str);
 error1: Py_DECREF(builder_list);
 error0:
 	return final_string;
@@ -125,46 +128,48 @@ namespace DemoParser {
 		FILE *demo_fp;
 		PyObject *res_dict;
 		PyObject *tmp;
-		char *demo_path;
+		PyObject *demo_path;
 
+		if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&:parse", KWARGS,
+				PyUnicode_FSConverter, &demo_path
+		)) {
+			goto memerror0;
+		}
+
+		// Open file
+		demo_fp = fopen(PyBytes_AsString(demo_path), "rb");
+		if (demo_fp == NULL) {
+			goto file_not_found_error;
+		}
+
+		// Variable setup
 		try {
 			parser_state = new ParserState_c;
 		} catch (std::bad_alloc& ba) {
-			return PyErr_NoMemory();
+			goto memerror1;
 		}
 		parser_state->flags = self->flags;
 
-		if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:parse", KWARGS,
-				&demo_path)) {
-			return NULL;
-		} // Does demo_path not need manual deallocation?
-
 		res_dict = PyDict_New();
-		if (res_dict == NULL) {
-			return PyErr_NoMemory();
-		}
+		if (res_dict == NULL) goto memerror2;
+
 		if (self->flags & FLAGS.CHAT) {
 			tmp = PyList_New(0);
-			if (tmp == NULL) {
-				return PyErr_NoMemory();
+			if (tmp == NULL) goto memerror3;
+			if (PyDict_SetItemString(res_dict, "chat", tmp) < 0) {
+				Py_DECREF(tmp);
+				goto memerror3;
 			}
-			PyDict_SetItemString(res_dict, "chat", tmp);
 			Py_DECREF(tmp);
 		}
 		if (self->flags & FLAGS.GAME_EVENTS) {
 			tmp = PyList_New(0);
-			if (tmp == NULL) {
-				return PyErr_NoMemory();
+			if (tmp == NULL) goto memerror3;
+			if (PyDict_SetItemString(res_dict, "game_events", tmp) < 0) {
+				Py_DECREF(tmp);
+				goto memerror3;
 			}
-			PyDict_SetItemString(res_dict, "game_events", tmp);
 			Py_DECREF(tmp);
-		}
-
-		// Open file
-		demo_fp = fopen(demo_path, "rb");
-		if (demo_fp == NULL) {
-			PyErr_SetString(PyExc_FileNotFoundError, "Demo does not exist.");
-			return NULL;
 		}
 
 		start_time = std::chrono::steady_clock::now();
@@ -172,36 +177,54 @@ namespace DemoParser {
 		// Aaaaaand go
 		parse_demo_header(demo_fp, parser_state, res_dict);
 		if (parser_state->FAILURE != 0) {
-			raise_parser_error(demo_fp, parser_state);
-			goto error;
+			goto parser_error;
 		}
 		while (!parser_state->finished) {
 			packet_parse_any(demo_fp, parser_state, res_dict);
 			if (parser_state->FAILURE != 0) {
-				raise_parser_error(demo_fp, parser_state);
-				goto error;
+				goto parser_error;
 			}
 		}
-		end_time = std::chrono::steady_clock::now();
+		// Done
 
-		printf("Took %i microsecs.\n", std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count());
+		end_time = std::chrono::steady_clock::now();
+		printf("Parsing successful, took %i microsecs.\n",
+			std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count());
 
 		fclose(demo_fp);
+		delete parser_state;
+		Py_DECREF(demo_path);
 
 		return res_dict;
-error:
-	Py_DECREF(res_dict);
-	return NULL;
+
+	file_not_found_error:
+		Py_DECREF(demo_path);
+		PyErr_SetString(PyExc_FileNotFoundError, "Demo does not exist.");
+		return NULL;
+
+	parser_error:
+		raise_parser_error(demo_fp, parser_state);
+		fclose(demo_fp);
+		Py_DECREF(res_dict);
+		delete parser_state;
+		Py_DECREF(demo_path);
+		return NULL;
+
+	memerror3: Py_DECREF(res_dict);
+	memerror2: delete parser_state;
+	memerror1: Py_DECREF(demo_path);
+	memerror0:
+		return PyErr_NoMemory();
 }
 
-	// End of DemoParser specific methods; MethodDefTable below
+	// === End of DemoParser specific methods; MethodDefTable below === //
 
 	static PyMethodDef MethodDefs[] = {
 		{
 			"parse",
 			(PyCFunction)(PyCFunctionWithKeywords)DemoParser::parse,
 			METH_VARARGS | METH_KEYWORDS,
-			NULL
+			NULL,
 		},
 		{NULL, NULL, 0, NULL},
 	};
@@ -259,12 +282,32 @@ static PyTypeObject DemoParser_Type {
 	NULL,                                    // tp_finalize
 };
 
+void m_free_demo_parser() {
+	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+		Py_DECREF(PARSER_ERRMSG[i]);
+	}
+	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+		Py_DECREF(CAW_ERRMSG[i]);
+	}
+	Py_DECREF(EMPTY_STR);
+	Py_DECREF(NEWLINE_STR);
+	Py_DECREF(ERROR_LINESEP);
+	Py_DECREF(ERROR_SEP_CAW);
+	Py_DECREF(ERROR_INIT0);
+	Py_DECREF(ERROR_INIT1);
+	Py_DECREF(ERROR_INIT2);
+}
 
 static PyModuleDef DemoParser_ModuleDef {
 	PyModuleDef_HEAD_INIT,
-	.m_name = "tf2_dem_py.demo_parser",
-	.m_doc = NULL,
-	.m_size = -1,
+	"tf2_dem_py.demo_parser",      // m_name
+	NULL,                          // m_doc
+	-1,                            // m_size
+	NULL,                          // m_methods
+	NULL,                          // m_slots
+	NULL,                          // m_traverse
+	NULL,                          // m_clear
+	(freefunc)m_free_demo_parser,  // m_free
 };
 
 

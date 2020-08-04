@@ -10,6 +10,7 @@ extern "C" {
 typedef struct FLAGS_s {
 	uint32_t CHAT;
 	uint32_t GAME_EVENTS;
+	uint32_t COMPACT_GAME_EVENTS;
 } FLAGS_s;
 
 extern const FLAGS_s FLAGS;
