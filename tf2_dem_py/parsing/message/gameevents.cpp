@@ -199,7 +199,7 @@ void GameEventList::parse(CharArrayWrapper *caw, ParserState_c *parser_state, Py
 		return;
 	}
 
-	printf("Preparing to parse GameEventList: %u event defs", amount);
+	printf("Preparing to parse GameEventList: %u event defs\n", amount);
 
 	CharArrayWrapper *gel_caw = caw->caw_from_caw_b(length);
 	if (gel_caw == NULL) {

@@ -9,7 +9,6 @@
 namespace ParserState {
 
 struct ParserState_c {
-	uint8_t current_message_contains_senderless_chat;
 	uint8_t current_message;
 	uint32_t flags;
 	uint8_t finished;
@@ -20,7 +19,6 @@ struct ParserState_c {
 	GameEvents::GameEventDefinition *game_event_defs;
 
 	ParserState_c():
-		current_message_contains_senderless_chat(0),
 		current_message(255),
 		flags(0),
 		finished(0),
@@ -30,6 +28,12 @@ struct ParserState_c {
 		game_event_def_amount(0),
 		game_event_defs(NULL)
 		{}
+
+	~ParserState_c() {
+		if (game_event_defs != NULL) {
+			delete[] game_event_defs;
+		}
+	}
 };
 
 namespace ERRORS {

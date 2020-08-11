@@ -132,5 +132,4 @@ void Message_parse(FILE *stream, ParserState_c *parser_state, PyObject *root_dic
 	}
 
 	delete pkt_caw;
-	parser_state->current_message_contains_senderless_chat = 0;
 }

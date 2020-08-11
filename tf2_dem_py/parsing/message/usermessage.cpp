@@ -2,9 +2,10 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+
+#include <array>
 
 #include "tf2_dem_py/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
@@ -15,25 +16,25 @@
 
 using ParserState::ParserState_c;
 
-namespace MessageParsers {
+// === UserMessage handlers, maybe outsource those idk ===
 
-inline void handle_say_text(CharArrayWrapper *um_caw, ParserState_c *parser_state, PyObject *chat_list) {
-	static const char *CHAT_DICT_NAMES[] = {"tick", "chat", "from", "message"};
-	uint8_t client;
-	uint8_t r;
-	uint8_t is_senderless;
-	PyObject *message_dict;
-	PyObject *chat[4];
+void handle_SayText(CharArrayWrapper *um_caw, ParserState_c parser_state, PyObject *chat_list) {
 
-	client = um_caw->get_uint8();
-	r = um_caw->get_uint8();
-	is_senderless = um_caw->get_uint8();
-	if (is_senderless == 1 || parser_state->current_message_contains_senderless_chat == 1) {
-		// purely speculative and highly likely the false way to do this.
-		parser_state->current_message_contains_senderless_chat = 1;
-		return;
-	}
-	um_caw->set_pos(um_caw->get_pos_byte() - 1, um_caw->get_pos_bit());
+}
+
+void handle_SayText2(CharArrayWrapper *um_caw, ParserState_c *parser_state, PyObject *chat_list) {
+	std::array<const char *, 9> DICT_NAMES_NORMAL = {"normal", "tick", "sender_entidx",
+		"bChat", "channel", "param1", "param2", "param3", "param4"};
+	std::array<const char *, 5> DICT_NAMES_FORMAT = {"normal", "tick",
+		"sender_entidx", "bChat", "message"};
+	const char **chosen_array;
+	size_t chosen_size;
+
+	std::array<PyObject *, 9> chat;
+	uint8_t sender;
+	uint8_t b_chat;
+	PyObject *message_dict, *tmp0, *tmp1;
+
 
 	// Store read chat message in json
 	message_dict = PyDict_New();
@@ -42,26 +43,90 @@ inline void handle_say_text(CharArrayWrapper *um_caw, ParserState_c *parser_stat
 		return;
 	}
 
-	chat[0] = PyLong_FromLong(parser_state->tick);
-	chat[1] = PyUnicode_FromCAWNulltrm(um_caw);
-	chat[2] = PyUnicode_FromCAWNulltrm(um_caw);
-	chat[3] = PyUnicode_FromCAWNulltrm(um_caw);
-	if (um_caw->ERRORLEVEL != 0) {
-		return; // Will be taken care of by p_UserMessage.
+	sender = um_caw->get_uint8();
+	b_chat = um_caw->get_uint8(); //whatever that means
+
+	// Debug string dumper (Unclean reference management)
+	 // PyObject *bytes, *strrep;
+	 // size_t temp_by;
+	 // uint8_t temp_bi;
+	 // const char *str;
+ 
+	 // temp_by = um_caw->get_pos_byte();
+	 // temp_bi = um_caw->get_pos_bit();
+	 // bytes = PyBytes_FromCAWLen(um_caw, um_caw->dist_until_null());
+	 // if (bytes == NULL) {
+	 // 	return;
+	 // }
+	 // strrep = PyObject_Repr(bytes);
+	 // if (strrep == NULL) {
+	 // 	return;
+	 // }
+	 // str = PyUnicode_AsUTF8(strrep);
+	 // printf("Sender: % 3u; bChat: %u; %s\n", sender, b_chat, str);
+	 // Py_DECREF(strrep); Py_DECREF(bytes);
+	 // um_caw->set_pos(temp_by, temp_bi);
+	// Debug string dumper end
+
+	chat[1] = PyLong_FromLong(parser_state->tick); // Param0
+	chat[2] = PyLong_FromLong(sender); // sender
+	chat[3] = PyBool_FromLong(b_chat); // bChat
+
+	if (um_caw->get_uint8() < 16) {
+		// Strange message that doesn't conform to what SayText2 actually should be and only
+		// contains a single string with formatting symbols sprinkled in
+		chosen_array = DICT_NAMES_FORMAT.data();
+		chosen_size = DICT_NAMES_FORMAT.size();
+
+		Py_INCREF(Py_False);
+		chat[0] = Py_False;
+		chat[4] = NULL;
+
+		tmp0 = PyBytes_FromCAWLen(um_caw, um_caw->dist_until_null());
+		if (tmp0 == NULL) goto write_to_dict;
+		tmp1 = PyObject_Repr(tmp0);
+		Py_DECREF(tmp0);
+
+		if (tmp1 == NULL) goto write_to_dict;
+		chat[4] = PyUnicode_Substring(tmp1, 2, PyUnicode_GetLength(tmp1) - 1);
+		Py_DECREF(tmp1);
+
+	} else {
+		um_caw->set_pos(um_caw->get_pos_byte() - 1, um_caw->get_pos_bit());
+		chosen_array = DICT_NAMES_NORMAL.data();
+		chosen_size = DICT_NAMES_NORMAL.size();
+
+		Py_INCREF(Py_True);
+		chat[0] = Py_True;
+		chat[4] = PyUnicode_FromCAWNulltrm(um_caw); // Messagename / Channel
+		chat[5] = PyUnicode_FromCAWNulltrm(um_caw); // Param1
+		chat[6] = PyUnicode_FromCAWNulltrm(um_caw); // Param2
+		chat[7] = PyUnicode_FromCAWNulltrm(um_caw); // Param3
+		chat[8] = PyUnicode_FromCAWNulltrm(um_caw); // Param4
 	}
-	for (uint8_t i = 0; i < 4; i++) {
+	write_to_dict:
+
+	for (uint8_t i = 0; i < chosen_size; i++) {
 		if (chat[i] == NULL) { // Python conversion failure, error raised already
 			parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		} else {
-			if (PyDict_SetItemString(message_dict, CHAT_DICT_NAMES[i], chat[i]) < 0) {
+			if (PyDict_SetItemString(message_dict, chosen_array[i], chat[i]) < 0) {
 				parser_state->FAILURE |= ParserState::ERRORS::PYDICT;
 			} // Move value into dict, then decrease refcount
 			Py_DECREF(chat[i]);
 		}
 	}
 
-	PyList_Append(chat_list, message_dict);
+	if (PyList_Append(chat_list, message_dict) < 0) {
+		parser_state->FAILURE |= ParserState::ERRORS::PYLIST;
+	}
+
+	Py_DECREF(message_dict);
 }
+
+// === End of UserMessage handlers ===
+
+namespace MessageParsers {
 
 void UserMessage::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	uint8_t user_message_type;
@@ -70,8 +135,6 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyOb
 
 	user_message_type = caw->get_uint8();
 	caw->read_raw(&len, 1, 3);
-	// Calculate the length (in bytes) for the new CAW, the base CAW's bit
-	// offset in mind.
 	CharArrayWrapper *user_message_caw = caw->caw_from_caw_b(len);
 	if (user_message_caw == NULL) {
 		parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
@@ -86,7 +149,7 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyOb
 					parser_state->FAILURE |= ParserState::ERRORS::PYLIST;
 					goto cleanup_and_ret;
 				}
-				handle_say_text(user_message_caw, parser_state, message_list);
+				handle_SayText2(user_message_caw, parser_state, message_list);
 			}
 			break;
 		default:

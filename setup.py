@@ -34,7 +34,8 @@ def deliver_sources(strpath):
 		srcs.append(SRC_HEADER)
 		srcs.append(SRC_PARSER_STATE)
 		srcs.extend(SRCS_MSG)
-		srcs.extend(SRCS_PACKETS) ##
+		srcs.extend(SRCS_PACKETS)
+		srcs.extend(SRCS_USERMSG)
 	return srcs
 
 extensions = [

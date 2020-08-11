@@ -28,8 +28,10 @@ void File::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 
 void NetTick::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObject *root_dict) {
 	uint32_t tick = caw->get_uint32();
-	uint16_t frame_time = caw->get_uint16();
-	uint16_t std_dev = caw->get_uint16();
+	//uint16_t frame_time = caw->get_uint16();
+	caw->skip(2, 0);
+	//uint16_t std_dev = caw->get_uint16();
+	caw->skip(2, 0);
 
 	parser_state->tick = tick;
 }
@@ -54,7 +56,7 @@ void SetConVar::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObje
 
 void SetConVar::skip(CharArrayWrapper *caw, ParserState_c *parser_state) {
 	uint8_t amt = caw->get_uint8();
-	char *tmp1, *tmp2;
+	//char *tmp1, *tmp2;
 	for (uint16_t i = 0; i < amt; i++) {
 		// tmp1 = caw->get_nulltrm_str();
 		// tmp2 = caw->get_nulltrm_str();
@@ -123,7 +125,7 @@ void ServerInfo::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyObj
 	sinfo[4]  = PyLong_FromLong(caw->get_uint32());
 	sinfo[5]  = PyLong_FromLong(caw->get_uint16());
 	tmp       = PyBytes_FromCAWLen(caw, 16);
-	sinfo[6]  = PyUnicode_FromEncodedObject(tmp, "cp437", NULL);
+	sinfo[6]  = PyUnicode_FromEncodedObject(tmp, "cp437", NULL); Py_XDECREF(tmp);
 	sinfo[7]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[8]  = PyLong_FromLong(caw->get_uint8());
 	sinfo[9]  = PyFloat_FromDouble(caw->get_flt());

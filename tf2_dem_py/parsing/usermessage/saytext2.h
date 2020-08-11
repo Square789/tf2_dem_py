@@ -1,4 +1,0 @@
-#ifndef USERMESSAGE_SAYTEXT2__HPP
-#define USERMESSAGE_SAYTEXT2__HPP
-
-#endif
