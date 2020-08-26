@@ -10,13 +10,6 @@
 
 namespace GameEvents {
 
-// [length|ptr *]
-//          '-> [event_type_id|event_type|name *|
-//               entries_capacity|entries_length|entries *] ...
-//                              [name *|type] ... <-'
-// Where ... means the memory may repeat.
-//
-
 struct GameEventEntry {
 	PyObject *name;
 	uint8_t type;
@@ -30,7 +23,9 @@ struct GameEventDefinition {
 	uint16_t event_type;
 	PyObject *name;
 	std::vector<GameEventEntry> entries;
-};
+	GameEventDefinition():
+		event_type(1 << 15), name(NULL) {};
+}; // When parsing, a large array of these is created to hold all relevant GameEvents
 
 }
 

@@ -6,10 +6,12 @@
 
 #include <chrono>
 
-#include "tf2_dem_py/flags/flags.h"
+#include "tf2_dem_py/flags/flags.hpp"
+#include "tf2_dem_py/constants.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 #include "tf2_dem_py/parsing/demo_header.hpp"
 #include "tf2_dem_py/parsing/packet/parse_any.hpp"
+#include "tf2_dem_py/parsing/helpers.hpp"
 
 using ParserState::ParserState_c;
 
@@ -75,7 +77,7 @@ error0:
 	return final_string;
 }
 
-/* Raise a ParserError from given parser state and python interpreter state.
+/* Raise a ParserError from given parser state.
  * Will return a PyObject NULL pointer.
  */
 static PyObject *raise_parser_error(FILE *fp, ParserState_c *parser_state) {
@@ -142,7 +144,8 @@ namespace DemoParser {
 			goto file_not_found_error;
 		}
 
-		// Variable setup
+		// - Variable setup - //
+		// - Create and setup ParserState
 		try {
 			parser_state = new ParserState_c;
 		} catch (std::bad_alloc& ba) {
@@ -150,26 +153,43 @@ namespace DemoParser {
 		}
 		parser_state->flags = self->flags;
 
+		// - Create top result dict
 		res_dict = PyDict_New();
 		if (res_dict == NULL) goto memerror2;
 
-		if (self->flags & FLAGS.CHAT) {
-			tmp = PyList_New(0);
-			if (tmp == NULL) goto memerror3;
-			if (PyDict_SetItemString(res_dict, "chat", tmp) < 0) {
-				Py_DECREF(tmp);
-				goto memerror3;
+		// - Setup chat container
+		if (self->flags & FLAGS::CHAT) {
+			if (self->flags & FLAGS::COMPACT_CHAT) {
+				parser_state->chat_container = CompactTuple_Create();
+			} else {
+				parser_state->chat_container = PyList_New(0);
 			}
-			Py_DECREF(tmp);
 		}
-		if (self->flags & FLAGS.GAME_EVENTS) {
-			tmp = PyList_New(0);
-			if (tmp == NULL) goto memerror3;
-			if (PyDict_SetItemString(res_dict, "game_events", tmp) < 0) {
-				Py_DECREF(tmp);
+		if (parser_state->chat_container == NULL) {
+			goto memerror3;
+		}
+		if (self->flags & FLAGS::COMPACT_CHAT) {
+			PyTuple_SET_ITEM(
+				parser_state->chat_container,
+				CONSTANTS::COMPACT_TUPLE_FIELD_NAMES_IDX,
+				CONSTANTS::DICT_NAMES_SayText2->create_PyTuple()
+			);
+			if (parser_state->chat_container == NULL) {
 				goto memerror3;
 			}
-			Py_DECREF(tmp);
+		}
+
+		// - Setup game event container
+		if (self->flags & FLAGS::GAME_EVENTS) {
+			if (self->flags & FLAGS::COMPACT_GAME_EVENTS) {
+				parser_state->game_event_container = CompactTuple_Create();
+
+			} else {
+				parser_state->game_event_container = PyList_New(0);
+			}
+		}
+		if (parser_state->chat_container == NULL) {
+			goto memerror3;
 		}
 
 		start_time = std::chrono::steady_clock::now();
@@ -186,6 +206,20 @@ namespace DemoParser {
 			}
 		}
 		// Done
+
+		// Set chat container as attribute of result dict
+		if (parser_state->flags & FLAGS::COMPACT_CHAT) {
+			parser_state->chat_container = CompactTuple_Finalize(parser_state->chat_container);
+			if (parser_state->chat_container == NULL) goto memerror3;
+		}
+		if (PyDict_SetItemString(res_dict, "chat", parser_state->chat_container) < 0) goto memerror3;
+
+		// Set game event container as attribute of result dict
+		if (parser_state->flags & FLAGS::COMPACT_GAME_EVENTS) {
+			parser_state->game_event_container = CompactTuple_Finalize(parser_state->game_event_container);
+			if (parser_state->game_event_container == NULL) goto memerror3;
+		}
+		if (PyDict_SetItemString(res_dict, "game_events", parser_state->game_event_container) < 0) goto memerror3;
 
 		end_time = std::chrono::steady_clock::now();
 		printf("Parsing successful, took %i microsecs.\n",
@@ -282,6 +316,7 @@ static PyTypeObject DemoParser_Type {
 	NULL,                                    // tp_finalize
 };
 
+/* DECREFs all constants, local to this file and global ones. */
 void m_free_demo_parser() {
 	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
 		Py_DECREF(PARSER_ERRMSG[i]);
@@ -296,6 +331,78 @@ void m_free_demo_parser() {
 	Py_DECREF(ERROR_INIT0);
 	Py_DECREF(ERROR_INIT1);
 	Py_DECREF(ERROR_INIT2);
+	CONSTANTS::deallocate();
+}
+
+/* Uses Py_XDECREF for removal of only local constants, in case some
+ * of them may have not been initialized after a failure. */
+void free_demo_parser_safe() {
+	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+		Py_XDECREF(PARSER_ERRMSG[i]);
+	}
+	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+		Py_XDECREF(CAW_ERRMSG[i]);
+	}
+	Py_XDECREF(EMPTY_STR);
+	Py_XDECREF(NEWLINE_STR);
+	Py_XDECREF(ERROR_LINESEP);
+	Py_XDECREF(ERROR_SEP_CAW);
+	Py_XDECREF(ERROR_INIT0);
+	Py_XDECREF(ERROR_INIT1);
+	Py_XDECREF(ERROR_INIT2);
+}
+
+/* Initializes local constants; returns 0 on success, -1 on failure. */
+int initialize_local_constants() {
+	__version__ = PyUnicode_FromString(_tf2_dem_py__version__);
+	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
+	EMPTY_STR = PyUnicode_FromStringAndSize("", 0);
+	PARSER_ERRMSG[0] = PyUnicode_FromStringAndSize("CharArrayWrapper error, see below.", 34);
+	PARSER_ERRMSG[1] = PyUnicode_FromStringAndSize("Unknown packet id encountered.", 30);
+	PARSER_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error.", 10);
+	PARSER_ERRMSG[3] = PyUnicode_FromStringAndSize("Unexpected end of file.", 23);
+	PARSER_ERRMSG[4] = PyUnicode_FromStringAndSize("Unknown message id encountered.", 31);
+	PARSER_ERRMSG[5] = PyUnicode_FromStringAndSize("Memory allocation failure.", 26);
+	PARSER_ERRMSG[6] = PyUnicode_FromStringAndSize("Unknown game event encountered.", 31);
+	PARSER_ERRMSG[7] = PyUnicode_FromStringAndSize("Python dict error (Likely memory error).", 40);
+	PARSER_ERRMSG[8] = PyUnicode_FromStringAndSize("Python list error (Likely memory error).", 40);
+	PARSER_ERRMSG[9] = PyUnicode_FromStringAndSize("Game event index higher than size of game event array.", 54);
+	for (uint32_t i = 10; i < 15; i++) {
+		Py_XINCREF(EMPTY_STR);
+		PARSER_ERRMSG[i] = EMPTY_STR;
+	}
+	PARSER_ERRMSG[15] = PyUnicode_FromStringAndSize("Unknown error.", 14);
+	CAW_ERRMSG[0] = PyUnicode_FromStringAndSize("Buffer too short.", 17);
+	CAW_ERRMSG[1] = PyUnicode_FromStringAndSize("Memory allocation failed.", 25);
+	CAW_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error when reading from file.", 33);
+	CAW_ERRMSG[3] = PyUnicode_FromStringAndSize("Initialization failed due to memory error.", 42);
+	CAW_ERRMSG[4] = PyUnicode_FromStringAndSize("Initialization failed due to odd file reading result (Premature EOF?)", 69);
+	for (uint32_t i = 5; i < 8; i++) {
+		Py_INCREF(EMPTY_STR);
+		CAW_ERRMSG[i] = EMPTY_STR;
+	}
+	NEWLINE_STR = PyUnicode_FromStringAndSize("\n", 1);
+	ERROR_LINESEP = PyUnicode_FromStringAndSize("\n    ", 5);
+	ERROR_SEP_CAW = PyUnicode_FromStringAndSize("\n  ===CharArrayWrapper errors:===\n    ", 38);
+	ERROR_INIT0 = PyUnicode_FromStringAndSize("Last message id: ", 17);
+	ERROR_INIT1 = PyUnicode_FromStringAndSize(", File handle offset ", 21);
+	ERROR_INIT2 = PyUnicode_FromStringAndSize(" bytes. Errors:", 15);
+
+	// Check if something failed
+	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+		if (PARSER_ERRMSG[i] == NULL) return -1;
+	}
+	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+		if (CAW_ERRMSG[i] == NULL) return -1;
+	}
+	if (__version__ == NULL || ParserError == NULL || EMPTY_STR == NULL || NEWLINE_STR == NULL ||
+		ERROR_LINESEP == NULL || ERROR_SEP_CAW == NULL || ERROR_INIT0 == NULL || ERROR_INIT1 == NULL ||
+		ERROR_INIT2 == NULL
+	) {
+		return -1;
+	} 
+
+	return 0;
 }
 
 static PyModuleDef DemoParser_ModuleDef {
@@ -310,6 +417,7 @@ static PyModuleDef DemoParser_ModuleDef {
 	(freefunc)m_free_demo_parser,  // m_free
 };
 
+// === PyInit === //
 
 PyMODINIT_FUNC PyInit_demo_parser() {
 	PyObject *module;
@@ -323,64 +431,43 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 		goto error0;
 	}
 
-	// Initialize globals, no clue if this is the right way lol
-	__version__ = PyUnicode_FromString(_tf2_dem_py__version__);
-	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
-	PARSER_ERRMSG[0] = PyUnicode_FromString("CharArrayWrapper error, see below");
-	PARSER_ERRMSG[1] = PyUnicode_FromString("Unknown packet id encountered.");
-	PARSER_ERRMSG[2] = PyUnicode_FromString("I/O error.");
-	PARSER_ERRMSG[3] = PyUnicode_FromString("Unexpected end of file");
-	PARSER_ERRMSG[4] = PyUnicode_FromString("Unknown message id encountered.");
-	PARSER_ERRMSG[5] = PyUnicode_FromString("Memory allocation failure.");
-	PARSER_ERRMSG[6] = PyUnicode_FromString("Unknown game event encountered.");
-	PARSER_ERRMSG[7] = PyUnicode_FromString("Python dict error (Likely memory error)");
-	PARSER_ERRMSG[8] = PyUnicode_FromString("Python list error (Likely memory error)");
-	PARSER_ERRMSG[9] = PyUnicode_FromString("");
-	PARSER_ERRMSG[10] = PyUnicode_FromString("");
-	PARSER_ERRMSG[11] = PyUnicode_FromString("");
-	PARSER_ERRMSG[12] = PyUnicode_FromString("");
-	PARSER_ERRMSG[13] = PyUnicode_FromString("");
-	PARSER_ERRMSG[14] = PyUnicode_FromString("");
-	PARSER_ERRMSG[15] = PyUnicode_FromString("Unknown error.");
-	CAW_ERRMSG[0] = PyUnicode_FromString("Buffer too short.");
-	CAW_ERRMSG[1] = PyUnicode_FromString("Memory allocation failed.");
-	CAW_ERRMSG[2] = PyUnicode_FromString("I/O error when reading from file.");
-	CAW_ERRMSG[3] = PyUnicode_FromString("Initialization failed due to memory error.");
-	CAW_ERRMSG[4] = PyUnicode_FromString("Initialization failed due to odd file reading result (Premature EOF?)");
-	CAW_ERRMSG[5] = PyUnicode_FromString("");
-	CAW_ERRMSG[6] = PyUnicode_FromString("");
-	CAW_ERRMSG[7] = PyUnicode_FromString("");
-	EMPTY_STR = PyUnicode_FromString("");
-	NEWLINE_STR = PyUnicode_FromString("\n");
-	ERROR_LINESEP = PyUnicode_FromString("\n    ");
-	ERROR_SEP_CAW = PyUnicode_FromString("\n  ===CharArrayWrapper errors:===\n    ");
-	ERROR_INIT0 = PyUnicode_FromString("Last message id: ");
-	ERROR_INIT1 = PyUnicode_FromString(", File handle offset ");
-	ERROR_INIT2 = PyUnicode_FromString(" bytes. Errors:");
+	// Init global constants
+	if (CONSTANTS::initialize() < 0) {
+		goto error1;
+	}
+
+	// Init local constants
+	if (initialize_local_constants() < 0) {
+		goto error2;
+	}
 
 	if (PyModule_AddObject(module, "ParserError", ParserError) < 0) {
-		goto error1;
+		goto error3;
 	}
 
 	Py_INCREF(&DemoParser_Type);
 	if (PyModule_AddObject(module, "DemoParser", (PyObject *)&DemoParser_Type) < 0) {
-		goto error2;
+		goto error4;
 	}
 
 	Py_INCREF(__version__);
 	if (PyModule_AddObject(module, "__version__", __version__) < 0) {
-		goto error3;
+		goto error5;
 	}
 
 	return module;
 
-error3:
+error5:
 	Py_DECREF(__version__);
-error2:
+error4:
 	Py_DECREF(&DemoParser_Type);
-error1:
+error3:
 	Py_DECREF(ParserError);
 	Py_DECREF(module);
+error2:
+	free_demo_parser_safe();
+error1:
+	CONSTANTS::deallocate_safe();
 error0:
 	return NULL;
 }

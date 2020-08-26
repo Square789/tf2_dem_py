@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
-#include "tf2_dem_py/flags/flags.h"
+#include "tf2_dem_py/flags/flags.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 #include "tf2_dem_py/parsing/message/__init__.hpp"
 
@@ -13,7 +13,7 @@ using ParserState::ParserState_c;
 
 inline uint8_t should_parse(uint8_t m_id, uint16_t flag) {
 	if (m_id == 25) {
-		return (flag & FLAGS.GAME_EVENTS);
+		return (flag & FLAGS::GAME_EVENTS);
 	} else {
 		return 1;
 	}

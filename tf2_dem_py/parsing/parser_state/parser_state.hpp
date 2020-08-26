@@ -15,6 +15,8 @@ struct ParserState_c {
 	uint8_t FAILURE;
 	uint8_t RELAYED_CAW_ERR;
 	uint32_t tick;
+	PyObject *chat_container; // Those may be list of dicts or a primitive "compact" tuple
+	PyObject *game_event_container; // which needs to be rearranged when parsing has finished; FLAGS::COMPACT_*
 	uint32_t game_event_def_amount;
 	GameEvents::GameEventDefinition *game_event_defs;
 
@@ -25,14 +27,18 @@ struct ParserState_c {
 		FAILURE(0),
 		RELAYED_CAW_ERR(0),
 		tick(0),
+		chat_container(NULL),
+		game_event_container(NULL),
 		game_event_def_amount(0),
 		game_event_defs(NULL)
 		{}
 
 	~ParserState_c() {
-		if (game_event_defs != NULL) {
-			delete[] game_event_defs;
+		if (this->game_event_defs != NULL) {
+			delete[] this->game_event_defs;
 		}
+		Py_XDECREF(this->chat_container);
+		Py_XDECREF(this->game_event_container);
 	}
 };
 
@@ -46,6 +52,7 @@ namespace ERRORS {
 	extern const uint16_t UNKNOWN_GAME_EVENT;
 	extern const uint16_t PYDICT;
 	extern const uint16_t PYLIST;
+	extern const uint16_t GAME_EVENT_INDEX_OUTBOUND;
 	extern const uint16_t UNKNOWN;
 }
 

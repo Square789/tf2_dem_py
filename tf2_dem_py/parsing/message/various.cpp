@@ -1,7 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#include "tf2_dem_py/helpers.hpp"
+#include "tf2_dem_py/parsing/helpers.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 

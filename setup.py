@@ -18,8 +18,10 @@ if __version__ == None:
 __version__ = __version__[1]
 
 SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.cpp"
-SRC_FLAGS = "tf2_dem_py/flags/flags.c"
+SRC_CONSTANTS = "tf2_dem_py/constants.cpp"
+SRC_FLAGS = "tf2_dem_py/flags/flags.cpp"
 SRC_HEADER = "tf2_dem_py/parsing/demo_header.cpp"
+SRC_HELPERS = "tf2_dem_py/parsing/helpers.cpp"
 SRC_PARSER_STATE = "tf2_dem_py/parsing/parser_state/parser_state.cpp"
 SRCS_MSG = glob.glob("tf2_dem_py/parsing/message/*.cpp")
 SRCS_PACKETS = glob.glob("tf2_dem_py/parsing/packet/*.cpp")
@@ -30,8 +32,10 @@ def deliver_sources(strpath):
 	path = Path(strpath)
 	if path.match("tf2_dem_py/demo_parser.cpp"):
 		srcs.append(SRC_CAW)
+		srcs.append(SRC_CONSTANTS)
 		srcs.append(SRC_FLAGS)
 		srcs.append(SRC_HEADER)
+		srcs.append(SRC_HELPERS)
 		srcs.append(SRC_PARSER_STATE)
 		srcs.extend(SRCS_MSG)
 		srcs.extend(SRCS_PACKETS)
@@ -42,7 +46,7 @@ extensions = [
 	Extension(
 		"tf2_dem_py.demo_parser",
 		sources = deliver_sources("tf2_dem_py/demo_parser.cpp"),
-		extra_compile_args = ["-DMS_WIN64"],
+		extra_compile_args = ["-DMS_WIN64", "-g"],
 		extra_link_args = ["-static", "-static-libgcc", "-static-libstdc++"],
 	)
 ]

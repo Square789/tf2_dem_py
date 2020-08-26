@@ -23,6 +23,8 @@ dp = tf2_dem_py.demo_parser.DemoParser(
 res = dp.parse(p)
 # pprint(res, sort_dicts = False, compact = True)
 
+print("Parsing successful, returning to python")
+
 with open("lastdemo.json", "w") as h:
 	json.dump(res, h, indent=4)
 

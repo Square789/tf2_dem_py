@@ -3,19 +3,14 @@
 
 #include <stdio.h>
 
-#include "tf2_dem_py/helpers.hpp"
+#include "tf2_dem_py/parsing/helpers.hpp"
+#include "tf2_dem_py/constants.hpp"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 #include "tf2_dem_py/parsing/parser_state/parser_state.hpp"
 
 using ParserState::ParserState_c;
 
 void parse_demo_header(FILE *stream, ParserState_c *p_state, PyObject *root_dict) {
-	static const char *HEADER_NAMES[] = {
-		"ident", "net_prot", "dem_prot", "host_addr",
-		"client_id", "map_name", "game_dir", "play_time",
-		"tick_count", "frame_count", "sigon",
-	};
-
 	CharArrayWrapper *header_caw = caw_from_file(stream, 1072);
 	if (header_caw->ERRORLEVEL != 0) {
 		p_state->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
@@ -47,7 +42,7 @@ void parse_demo_header(FILE *stream, ParserState_c *p_state, PyObject *root_dict
 		if (header[i] == NULL) { // Python conversion failure, error raised already
 			p_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION;
 		} else {
-			if (PyDict_SetItemString(header_dict, HEADER_NAMES[i], header[i]) < 0) {
+			if (PyDict_SetItem(header_dict, CONSTANTS::DICT_NAMES_header->py_strings[i], header[i]) < 0) {
 				p_state->FAILURE |= ParserState::ERRORS::PYDICT;
 			}
 			Py_DECREF(header[i]);

@@ -16,6 +16,7 @@ const uint16_t MEMORY_ALLOCATION = 1 << 5;
 const uint16_t UNKNOWN_GAME_EVENT = 1 << 6;
 const uint16_t PYDICT = 1 << 7;
 const uint16_t PYLIST = 1 << 8;
+const uint16_t GAME_EVENT_INDEX_OUTBOUND = 1 << 9;
 const uint16_t UNKNOWN = 1 << 15;
 	
 }

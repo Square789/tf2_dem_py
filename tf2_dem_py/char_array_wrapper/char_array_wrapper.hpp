@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
-static const uint16_t CAW_ERR_BUFFER_TOO_SHORT   = (1 << 0);
-static const uint16_t CAW_ERR_MEMORY_ALLOCATION  = (1 << 1);
-static const uint16_t CAW_ERR_INIT_IO_READ       = (1 << 2);
-static const uint16_t CAW_ERR_INIT_ALLOC         = (1 << 3);
-static const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
+extern const uint16_t CAW_ERR_BUFFER_TOO_SHORT;
+extern const uint16_t CAW_ERR_MEMORY_ALLOCATION;
+extern const uint16_t CAW_ERR_INIT_IO_READ;
+extern const uint16_t CAW_ERR_INIT_ALLOC;
+extern const uint16_t CAW_ERR_INIT_ODD_IO_RESUL;
 
 class CharArrayWrapper {
 public:
@@ -126,8 +126,12 @@ public:
 	uint8_t get_uint8();
 	/* Returns the next 16 bits interpreted as an unsigned integer. */
 	uint16_t get_uint16();
+	/* Returns the next 16 bits interpreted as a signed integer. */
+	uint16_t get_int16();
 	/* Returns the next 32 bits interpreted as an unsigned integer. */
 	uint32_t get_uint32();
+	/* Returns the next 32 bits interpreted as a signed integer. */
+	uint32_t get_int32();
 	/* Returns error number from a CharArrayWrapper. Used for cython integration, as -> is not supported. */
 	uint8_t get_errorlevel();
 };

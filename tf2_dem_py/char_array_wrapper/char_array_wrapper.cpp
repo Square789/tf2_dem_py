@@ -6,6 +6,12 @@
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.hpp"
 
+const uint16_t CAW_ERR_BUFFER_TOO_SHORT   = (1 << 0);
+const uint16_t CAW_ERR_MEMORY_ALLOCATION  = (1 << 1);
+const uint16_t CAW_ERR_INIT_IO_READ       = (1 << 2);
+const uint16_t CAW_ERR_INIT_ALLOC         = (1 << 3);
+const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
+
 CharArrayWrapper *caw_from_file(FILE *fp, size_t initbytes) {
 	CharArrayWrapper *caw_ptr = new CharArrayWrapper(NULL, 0);
 	size_t read_res;
@@ -365,8 +371,20 @@ uint16_t CharArrayWrapper::get_uint16() {
 	return i;
 }
 
+uint16_t CharArrayWrapper::get_int16() {
+	int16_t i;
+	this->read_raw(&i, 2, 0);
+	return i;
+}
+
 uint32_t CharArrayWrapper::get_uint32() {
 	uint32_t i;
+	this->read_raw(&i, 4, 0);
+	return i;
+}
+
+uint32_t CharArrayWrapper::get_int32() {
+	int32_t i;
 	this->read_raw(&i, 4, 0);
 	return i;
 }
