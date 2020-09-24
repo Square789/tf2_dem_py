@@ -36,16 +36,25 @@ PyObject *PyTuple_FromArrayTransfer(Py_ssize_t size, PyObject **array);
 PyObject *CreateDict_Strings(PyObject **keys, PyObject **values, size_t length) ;
 
 /* Create a "compact" tuple, which is a faster temporary way of accessing
- * a field name list and a data list. Intended goal is to not repeat the same
- * string over and over and over again in thousands of dicts and reduce them
- * to a "field_names" list and a "data" list, where every sublist of "data"
- * corresponds to the names in "field_names" length- and contentwise.
+ * a field name list and a data list. Intended goal is to not access the same
+ * dict entry over and over again during data accumulation, speeding up writing.
+ * The last entry will be a list, the others Py_None.
  * Returns NULL on failure. */
-PyObject *CompactTuple_Create();
+PyObject *CompactTuple2_Create();
 
-/* Convert the compact tuple to a dict with the names "field_names* and "data",
+/* Create a compact tuple just like CompactTuple2_Create, only containing three entries.
+ * The last one will be a list, the others Py_None.
+ * Returns NULL on failure. */
+PyObject *CompactTuple3_Create();
+
+/* Convert the compact tuple to a dict with the names "field_names" and "data",
  * then return it. Will DECREF input tuple in any case.
  * Returns NULL on failure. */
-PyObject *CompactTuple_Finalize(PyObject *comptup);
+PyObject *CompactTuple2_Finalize(PyObject *comptup);
+
+/* Convert the compact tuple to a dict with the names "name", "field_names" and "data",
+ * then return it. Will DECREF input tuple in any case.
+ * Returns NULL on failure. */
+PyObject *CompactTuple3_Finalize(PyObject *comptup);
 
 #endif

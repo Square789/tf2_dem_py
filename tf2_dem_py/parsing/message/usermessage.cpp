@@ -134,9 +134,11 @@ void UserMessage::parse(CharArrayWrapper *caw, ParserState_c *parser_state, PyOb
 				}
 
 				if (PyList_Append(message_list, parsed_message) < 0) {
+					Py_DECREF(parsed_message);
 					parser_state->FAILURE |= ParserState::ERRORS::PYLIST;
 					goto cleanup_and_ret;
 				}
+				Py_DECREF(parsed_message);
 
 			}
 			break;

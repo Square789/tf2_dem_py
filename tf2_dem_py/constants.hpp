@@ -34,10 +34,14 @@ void deallocate();
 void deallocate_safe();
 
 extern uint16_t MAX_GAME_EVENT_AMOUNT;
-extern Py_ssize_t COMPACT_TUPLE_FIELD_NAMES_IDX;
-
-extern PyObject *FIELD_NAMES_STR;
-extern PyObject *DATA_STR;
+extern Py_ssize_t COMPACT_TUPLE2_FIELD_NAMES_IDX;
+extern Py_ssize_t COMPACT_TUPLE2_DATA_IDX;
+extern Py_ssize_t COMPACT_TUPLE3_FIELD_NAMES_IDX;
+extern Py_ssize_t COMPACT_TUPLE3_NAME_IDX;
+extern Py_ssize_t COMPACT_TUPLE3_DATA_IDX;
+extern PyObject *PYSTR_FIELD_NAMES;
+extern PyObject *PYSTR_DATA;
+extern PyObject *PYSTR_NAME;
 
 extern PyStringHolder *DICT_NAMES_SayText2;
 extern PyStringHolder *DICT_NAMES_GameEvent;

@@ -371,7 +371,7 @@ uint16_t CharArrayWrapper::get_uint16() {
 	return i;
 }
 
-uint16_t CharArrayWrapper::get_int16() {
+int16_t CharArrayWrapper::get_int16() {
 	int16_t i;
 	this->read_raw(&i, 2, 0);
 	return i;
@@ -383,7 +383,7 @@ uint32_t CharArrayWrapper::get_uint32() {
 	return i;
 }
 
-uint32_t CharArrayWrapper::get_int32() {
+int32_t CharArrayWrapper::get_int32() {
 	int32_t i;
 	this->read_raw(&i, 4, 0);
 	return i;

@@ -16,8 +16,7 @@ else:
 
 dp = tf2_dem_py.demo_parser.DemoParser(
 	(
-		FLAGS.CHAT |
-		FLAGS.GAME_EVENTS
+		0
 	)
 )
 res = dp.parse(p)

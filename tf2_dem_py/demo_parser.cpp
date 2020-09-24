@@ -160,36 +160,28 @@ namespace DemoParser {
 		// - Setup chat container
 		if (self->flags & FLAGS::CHAT) {
 			if (self->flags & FLAGS::COMPACT_CHAT) {
-				parser_state->chat_container = CompactTuple_Create();
+				parser_state->chat_container = CompactTuple2_Create();
 			} else {
 				parser_state->chat_container = PyList_New(0);
 			}
-		}
-		if (parser_state->chat_container == NULL) {
-			goto memerror3;
+			if (parser_state->chat_container == NULL) { goto memerror3; }
 		}
 		if (self->flags & FLAGS::COMPACT_CHAT) {
 			PyTuple_SET_ITEM(
 				parser_state->chat_container,
-				CONSTANTS::COMPACT_TUPLE_FIELD_NAMES_IDX,
+				CONSTANTS::COMPACT_TUPLE2_FIELD_NAMES_IDX,
 				CONSTANTS::DICT_NAMES_SayText2->create_PyTuple()
 			);
-			if (parser_state->chat_container == NULL) {
-				goto memerror3;
-			}
 		}
 
 		// - Setup game event container
 		if (self->flags & FLAGS::GAME_EVENTS) {
 			if (self->flags & FLAGS::COMPACT_GAME_EVENTS) {
-				parser_state->game_event_container = CompactTuple_Create();
-
+				parser_state->game_event_container = PyDict_New();
 			} else {
 				parser_state->game_event_container = PyList_New(0);
 			}
-		}
-		if (parser_state->chat_container == NULL) {
-			goto memerror3;
+			if (parser_state->game_event_container == NULL) { goto memerror3; }
 		}
 
 		start_time = std::chrono::steady_clock::now();
@@ -207,25 +199,45 @@ namespace DemoParser {
 		}
 		// Done
 
+		fclose(demo_fp);
+
 		// Set chat container as attribute of result dict
-		if (parser_state->flags & FLAGS::COMPACT_CHAT) {
-			parser_state->chat_container = CompactTuple_Finalize(parser_state->chat_container);
-			if (parser_state->chat_container == NULL) goto memerror3;
+		if (parser_state->flags & FLAGS::CHAT) {
+			if (parser_state->flags & FLAGS::COMPACT_CHAT) {
+				parser_state->chat_container = CompactTuple2_Finalize(parser_state->chat_container);
+				if (parser_state->chat_container == NULL) goto memerror3;
+			}
+			if (PyDict_SetItemString(res_dict, "chat", parser_state->chat_container) < 0) goto memerror3;
 		}
-		if (PyDict_SetItemString(res_dict, "chat", parser_state->chat_container) < 0) goto memerror3;
 
 		// Set game event container as attribute of result dict
-		if (parser_state->flags & FLAGS::COMPACT_GAME_EVENTS) {
-			parser_state->game_event_container = CompactTuple_Finalize(parser_state->game_event_container);
-			if (parser_state->game_event_container == NULL) goto memerror3;
+		// If compact, finalize the comptups inside.
+		if (parser_state->flags & FLAGS::GAME_EVENTS) {
+			if (parser_state->flags & FLAGS::COMPACT_GAME_EVENTS) {
+				Py_ssize_t pos = 0;
+				PyObject *key, *value, *finalized_dict;
+				while (PyDict_Next(parser_state->game_event_container, &pos, &key, &value)) {
+					if (key == NULL || value == NULL) {
+						parser_state->FAILURE |= ParserState::ERRORS::PYDICT | ParserState::ERRORS::MEMORY_ALLOCATION;
+						goto memerror3;
+					}
+					Py_INCREF(value);
+					finalized_dict = CompactTuple3_Finalize(value);
+					if (finalized_dict == NULL) { parser_state->FAILURE |= ParserState::ERRORS::MEMORY_ALLOCATION; goto memerror3; }
+					if (PyDict_SetItem(parser_state->game_event_container, key, finalized_dict) < 0) {
+						Py_DECREF(finalized_dict);
+						goto memerror3;
+					}
+					Py_DECREF(finalized_dict);
+				}
+			}
+			if (PyDict_SetItemString(res_dict, "game_events", parser_state->game_event_container) < 0) goto memerror3;
 		}
-		if (PyDict_SetItemString(res_dict, "game_events", parser_state->game_event_container) < 0) goto memerror3;
 
 		end_time = std::chrono::steady_clock::now();
 		printf("Parsing successful, took %i microsecs.\n",
 			std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count());
 
-		fclose(demo_fp);
 		delete parser_state;
 		Py_DECREF(demo_path);
 

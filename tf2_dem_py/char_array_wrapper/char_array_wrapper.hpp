@@ -127,11 +127,11 @@ public:
 	/* Returns the next 16 bits interpreted as an unsigned integer. */
 	uint16_t get_uint16();
 	/* Returns the next 16 bits interpreted as a signed integer. */
-	uint16_t get_int16();
+	int16_t get_int16();
 	/* Returns the next 32 bits interpreted as an unsigned integer. */
 	uint32_t get_uint32();
 	/* Returns the next 32 bits interpreted as a signed integer. */
-	uint32_t get_int32();
+	int32_t get_int32();
 	/* Returns error number from a CharArrayWrapper. Used for cython integration, as -> is not supported. */
 	uint8_t get_errorlevel();
 };
