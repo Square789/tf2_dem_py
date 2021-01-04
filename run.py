@@ -16,9 +16,10 @@ else:
 
 dp = tf2_dem_py.demo_parser.DemoParser(
 	(
-		0
+		FLAGS.GAME_EVENTS
 	)
 )
+print("Demo parser constructed and it didn't segfault!")
 res = dp.parse(p)
 # pprint(res, sort_dicts = False, compact = True)
 
