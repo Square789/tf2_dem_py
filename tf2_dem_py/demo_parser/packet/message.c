@@ -33,27 +33,27 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 
 	if (ferror(stream) != 0) {
 		parser_state->failure |= ParserState_ERR_IO;
-		return;
+		goto error0;
 	}
 	if (feof(stream) != 0) {
 		parser_state->failure |= ParserState_ERR_UNEXPECTED_EOF;
-		return;
+		goto error0;
 	}
 
-	//printf("Message packet, length %u, fptr @%d\n", pkt_len, ftell(stream));
+	// printf("Message packet, length %u, fptr @%d\n", pkt_len, ftell(stream));
 
 	CharArrayWrapper *pkt_caw = CharArrayWrapper_from_file(stream, pkt_len);
 
 	if (pkt_caw->ERRORLEVEL != 0) {
 		parser_state->failure |= ParserState_ERR_CAW;
 		parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
-		return;
+		goto error1;
 	}
 
 	while ((CharArrayWrapper_remaining_bytes(pkt_caw) > 1) || (CharArrayWrapper_remaining_bits(pkt_caw) > 6)) {
 		CharArrayWrapper_read_raw(pkt_caw, &msg_id, 0, 6);
 		parser_state->current_message = msg_id;
-		//printf(" -Next message: %u, tick %u, %d bytes in\n", msg_id, parser_state->tick, pkt_caw->get_pos_byte());
+		// printf(" -Next message: %u, tick %u, %d bytes in\n", msg_id, parser_state->tick, CharArrayWrapper_get_pos_byte(pkt_caw));
 		switch (msg_id)
 		{
 		case 0:
@@ -108,7 +108,7 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 			msg_parser = &MsgParser_GetCvarValue; break;
 		default:
 			parser_state->failure |= ParserState_ERR_UNKNOWN_MESSAGE_ID;
-			return;
+			goto error1;
 		}
 
 		if (should_parse(msg_id, parser_state->flags)) {
@@ -120,13 +120,15 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 		if (pkt_caw->ERRORLEVEL != 0) {
 			parser_state->failure |= ParserState_ERR_CAW;
 			parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
-			return;
+			goto error1;
 		}
 
 		if (parser_state->failure != 0) { // Set by message parser
-			return;
+			goto error1;
 		}
 	}
 
-	CharArrayWrapper_destroy(pkt_caw);
+error1: CharArrayWrapper_destroy(pkt_caw);
+error0:
+	return;
 }

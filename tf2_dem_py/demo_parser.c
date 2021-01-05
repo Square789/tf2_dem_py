@@ -198,21 +198,22 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	// 	if (parser_state->game_event_container == NULL) { goto memerror3; }
 	// }
 
-	Py_BEGIN_ALLOW_THREADS
+	PyThreadState *_save;
+	Py_UNBLOCK_THREADS
 
 	start_time = last_gil_acq = clock();
 
 	ParserState_read_DemoHeader(parser_state, demo_fp);
-	if (parser_state->failure != 0) { goto parser_error; }
+	if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
 	while (!parser_state->finished) {
 		packet_parse_any(demo_fp, parser_state);
-		if (parser_state->failure != 0) { goto parser_error; }
+		if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
 	}
 	// Done
 
 	fclose(demo_fp);
 
-	Py_END_ALLOW_THREADS
+	Py_BLOCK_THREADS
 
 	res_dict = build_result_dict_from_parser_state_and_flags(parser_state, self->flags);
 	if (res_dict == NULL) {
@@ -253,7 +254,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	// }
 
 	end_time = clock();
-	printf("Parsing successful, took %d microsecs.\n", (int32_t)((end_time - start_time) / (CLOCKS_PER_SEC * 1000000)));
+	printf("Parsing successful, took %f secs.\n", ((float)(end_time - start_time) / (float)CLOCKS_PER_SEC));
 
 	ParserState_destroy(parser_state);
 	Py_DECREF(demo_path);

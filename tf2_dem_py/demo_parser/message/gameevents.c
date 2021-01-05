@@ -117,7 +117,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	CharArrayWrapper_read_raw(ge_caw, &event_type, 1, 1);
 
 	if (!should_read_game_event(event_type)) {
-		goto ret;
+		goto do_not_read;
 	}
 
 	if (event_type > parser_state->game_event_def_amount) {
@@ -306,9 +306,9 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	// 	goto error2; // As entry_dict is then decrefed by gameevent_holder
 	// }
 
+do_not_read:
 	CharArrayWrapper_destroy(ge_caw);
 
-ret:
 	return;
 
 error2: GameEvent_destroy(game_event);

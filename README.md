@@ -1,5 +1,5 @@
 # tf2_dem_py
-TF2 demo parser with python interfacing, written in C++ and C.
+TF2 demo parser with python interfacing, written in C.
 
 _(This project is under development, no built distribution packages as of yet.)_
 
