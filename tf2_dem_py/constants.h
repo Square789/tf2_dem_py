@@ -13,7 +13,8 @@ typedef struct {
 PyStringHolder *PyStringHolder_new(const char **strings, Py_ssize_t size);
 void PyStringHolder_destroy(PyStringHolder *self);
 
-// TODO: Cache tuples? Behavior? Think, dude, thinK!
+// Get all the StringHolder's strings in a tuple, you own this reference.
+// Returns NULL on any sort of failure.
 PyObject *PyStringHolder_getPyTuple(PyStringHolder *self);
 
 // Initialize PyObjects and StringHolders, only call this when a python
@@ -31,7 +32,6 @@ void CONSTANTS_deallocate_safe();
 
 // === Constant declarations === //
 
-extern uint16_t CONSTANTS_MAX_GAME_EVENT_AMOUNT;
 extern Py_ssize_t CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX;
 extern Py_ssize_t CONSTANTS_COMPACT_TUPLE2_DATA_IDX;
 extern Py_ssize_t CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX;

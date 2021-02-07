@@ -52,7 +52,6 @@ PyObject *PyStringHolder_getPyTuple(PyStringHolder *self) {
 
 // === Simple constants === //
 
-uint16_t CONSTANTS_MAX_GAME_EVENT_AMOUNT = 1 << 9;
 Py_ssize_t CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX = 0;
 Py_ssize_t CONSTANTS_COMPACT_TUPLE2_DATA_IDX = 1;
 Py_ssize_t CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX = 1;

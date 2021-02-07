@@ -22,7 +22,7 @@ typedef struct {
 	uint8_t bitbuf_len;
 	// Byteposition in the CharArrayWrapper; mem_ptr[bytepos] is the next unread byte.
 	size_t bytepos;
-	//	0b 0 0 0 0 0 0 0 0
+	//  0b 0 0 0 0 0 0 0 0
 	//           | | | | \\ Buffer too short to perform requested read operation.
 	//           | | | \\ Memory allocation failure.
 	//           | | \\ Instantiation failure, read error.

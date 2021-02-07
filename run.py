@@ -16,14 +16,14 @@ else:
 
 dp = tf2_dem_py.demo_parser.DemoParser(
 	(
-		FLAGS.GAME_EVENTS
+		FLAGS.GAME_EVENTS | FLAGS.COMPACT_GAME_EVENTS 
 	)
 )
 print("Demo parser constructed and it didn't segfault!")
 res = dp.parse(p)
-# pprint(res, sort_dicts = False, compact = True)
-
 print("Parsing successful, returning to python")
+
+pprint(res, sort_dicts = False, compact = True)
 
 with open("lastdemo.json", "w") as h:
 	json.dump(res, h, indent=4)

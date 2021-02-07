@@ -9,12 +9,16 @@
 ParserState *ParserState_new() {
 	ParserState *self = (ParserState *)malloc(sizeof(ParserState));
 	if (self == NULL) {
-		return NULL;
+		goto fail0;
 	}
 	if (ParserState_init(self) != 0) {
-		return NULL;
+		goto fail1;
 	};
 	return self;
+
+fail1: free(self);
+fail0:
+	return NULL;
 }
 
 uint8_t ParserState_init(ParserState *self) {

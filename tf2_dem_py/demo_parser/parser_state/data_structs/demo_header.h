@@ -22,6 +22,7 @@ typedef struct {
 } DemoHeader;
 
 DemoHeader *DemoHeader_new();
+void DemoHeader_init(DemoHeader *self);
 void DemoHeader_destroy(DemoHeader *self);
 
 // Create a Python dict from a Demo Header and return it.

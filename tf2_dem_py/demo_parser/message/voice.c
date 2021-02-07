@@ -12,13 +12,14 @@ void ParseSounds_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 
 void ParseSounds_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t reliable = CharArrayWrapper_get_bit(caw);
-	uint8_t num;
+	// uint8_t num;
 	uint16_t length;
 	if (reliable == 1) {
-		num = 1;
+		// num = 1;
 		length = (uint16_t)CharArrayWrapper_get_uint8(caw);
 	} else {
-		num = CharArrayWrapper_get_uint8(caw);
+		// num = CharArrayWrapper_get_uint8(caw);
+		CharArrayWrapper_skip(caw, 1, 0);
 		length = CharArrayWrapper_get_uint16(caw);
 	}
 	CharArrayWrapper_skip(caw, length / 8, length % 8);

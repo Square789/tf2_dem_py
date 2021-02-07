@@ -1,21 +1,23 @@
 #include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/demo_parser/parser_state/data_structs/game_events.h"
 
-GameEventEntry *GameEventEntry_new(uint8_t *name, uint8_t type) {
-	GameEventEntry *self = (GameEventEntry *)malloc(sizeof(GameEventEntry));
-	if (self == NULL) {
-		return NULL;
-	}
-	self->name = name;
-	self->type = type;
-	return self;
+//GameEventEntry *GameEventEntry_new(uint8_t *name, uint8_t type) {
+//	GameEventEntry *self = (GameEventEntry *)malloc(sizeof(GameEventEntry));
+//		return NULL;
+//	}
+//	self->name = name;
+//	self->type = type;
+//	return self;
+//}
+
+void GameEventEntry_free(GameEventEntry *self) {
+	free(self->name);
 }
 
-void GameEventEntry_destroy(GameEventEntry *self) {
-	free(self->name);
-	// free(self); // Same as GameEventDefinition here, only laid out in a direct array, never
-	// introduced to malloc & Co.
-}
+//void GameEventEntry_destroy(GameEventEntry *self) {
+// 	GameEventEntry_free(self);
+// 	free(self);
+//}
 
 
 GameEventDefinition *GameEventDefinition_new() {
@@ -38,7 +40,7 @@ void GameEventDefinition_init(GameEventDefinition *self) {
 void GameEventDefinition_destroy(GameEventDefinition *self) {
 	if (self->entries != NULL) {
 		for (uint16_t i = 0; i < self->entries_len; i++) {
-			GameEventEntry_destroy(self->entries + i);
+			GameEventEntry_free(self->entries + i);
 		}
 	}
 	free(self->name);
@@ -48,13 +50,30 @@ void GameEventDefinition_destroy(GameEventDefinition *self) {
 }
 
 uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, uint8_t *name, uint8_t type) {
-	MACRO_ARRAYLIST_APPEND(GameEventDefinition, self->entries, self->entries_capacity, self->entries_len)
+	MACRO_ARRAYLIST_APPEND(GameEventEntry, self->entries, self->entries_capacity, self->entries_len)
 	self->entries[self->entries_len].name = name;
 	self->entries[self->entries_len].type = type;
 	self->entries_len += 1;
 	return 0;
 }
 
+PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self) {
+	PyObject *tup = PyTuple_New(self->entries_len);
+	PyObject *tmpstr;
+	if (tup == NULL) {
+		return NULL;
+	}
+	for (size_t i = 0; i < self->entries_len; i++) {
+		tmpstr = PyUnicode_FromString(self->entries[i].name);
+		if (tmpstr == NULL) {
+			Py_DECREF(tup);
+			return NULL;
+		}
+		PyTuple_SET_ITEM(tup, i, tmpstr);
+		// No decref; SET_ITEM steals reference.
+	}
+	return tup;
+}
 
 GameEvent *GameEvent_new() {
 	GameEvent *self = (GameEvent *)malloc(sizeof(GameEvent));
@@ -67,10 +86,119 @@ GameEvent *GameEvent_new() {
 
 void GameEvent_init(GameEvent *self) {
 	self->data = NULL;
+	self->data_len = 0;
 	self->event_type = 0;
 }
 
 void GameEvent_destroy(GameEvent *self) {
 	free(self->data);
 	free(self);
+}
+
+PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
+	PyObject *tmp_entry_val;
+	PyObject *entry_dict;
+
+	CharArrayWrapper *ge_caw;
+
+	ge_caw = CharArrayWrapper_new();
+	if (ge_caw == NULL) {
+		goto error0;
+	}
+	ge_caw->mem_ptr = self->data;
+	ge_caw->mem_len = self->data_len;
+	ge_caw->free_on_dealloc = 0;
+
+	entry_dict = PyDict_New();
+	if (entry_dict == NULL) {
+		goto error1;
+	}
+
+	// Fill game_event dict
+	for (uint16_t i = 0; i < event_def->entries_len; i++) {
+		switch (event_def->entries[i].type) {
+		case 0:
+			break;
+		case 1: // String
+			tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
+		case 2: // Float
+			tmp_entry_val = PyFloat_FromDouble(CharArrayWrapper_get_flt(ge_caw)); break;
+		case 3: // 32bInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int32(ge_caw)); break;
+		case 4: // 16bInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int16(ge_caw)); break;
+		case 5: // 8buInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_uint8(ge_caw)); break;
+		case 6: // Bit
+			tmp_entry_val = PyBool_FromLong(CharArrayWrapper_get_bit(ge_caw)); break;
+		case 7: // "Local" ?????
+			// No clue
+			Py_INCREF(Py_None);
+			tmp_entry_val = Py_None;
+			continue;
+		}
+		if (tmp_entry_val == NULL) {
+			goto error2;
+		}
+		if (PyDict_SetItemString(entry_dict, event_def->entries[i].name, tmp_entry_val) < 0) {
+			Py_DECREF(tmp_entry_val);
+			goto error2;
+		}
+		Py_DECREF(tmp_entry_val);
+	}
+	CharArrayWrapper_destroy(ge_caw);
+	return entry_dict;
+
+error2: Py_DECREF(entry_dict);
+error1: CharArrayWrapper_destroy(ge_caw);
+error0:
+	return NULL;
+}
+
+PyObject *GameEvent_to_compact_PyTuple(GameEvent *self, GameEventDefinition *event_def) {
+	PyObject *tmp_entry_val;
+	PyObject *event_tup;
+
+	CharArrayWrapper *ge_caw;
+
+	ge_caw = CharArrayWrapper_new();
+	if (ge_caw == NULL) { goto error0; }
+	ge_caw->mem_ptr = self->data;
+	ge_caw->mem_len = self->data_len;
+	ge_caw->free_on_dealloc = 0;
+	event_tup = PyTuple_New(event_def->entries_len);
+	if (event_tup == NULL) { goto error1; }
+
+	// Fill tuple
+	for (uint16_t i = 0; i < event_def->entries_len; i++) {
+		switch (event_def->entries[i].type) {
+		case 0:
+			break;
+		case 1: // String
+			tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
+		case 2: // Float
+			tmp_entry_val = PyFloat_FromDouble(CharArrayWrapper_get_flt(ge_caw)); break;
+		case 3: // 32bInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int32(ge_caw)); break;
+		case 4: // 16bInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int16(ge_caw)); break;
+		case 5: // 8buInteger
+			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_uint8(ge_caw)); break;
+		case 6: // Bit
+			tmp_entry_val = PyBool_FromLong(CharArrayWrapper_get_bit(ge_caw)); break;
+		case 7: // "Local" ?????
+			// No clue
+			tmp_entry_val = NULL;
+			continue;
+		}
+		if (tmp_entry_val == NULL) { goto error2; }
+		PyTuple_SET_ITEM(event_tup, i, tmp_entry_val);
+	}
+	CharArrayWrapper_destroy(ge_caw);
+	return event_tup;
+
+error2: Py_DECREF(event_tup);
+error1: CharArrayWrapper_destroy(ge_caw);
+error0:
+	return NULL;
 }

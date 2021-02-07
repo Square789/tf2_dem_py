@@ -103,11 +103,6 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	CharArrayWrapper *ge_caw = CharArrayWrapper_from_caw_b(caw, (uint64_t)length);
 	uint16_t event_type = 0;
 	GameEventDefinition *event_def;
-	PyObject *tmp, *tmp1;
-	PyObject *game_event_container;
-	PyObject *gameevent_holder = NULL;
-	PyObject *entry_dict = NULL;
-	PyObject *tmp_entry_val = NULL;
 
 	if (ge_caw == NULL) {
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
@@ -131,61 +126,6 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		parser_state->failure |= ParserState_ERR_UNKNOWN_GAME_EVENT;
 		goto error1;
 	}
-
-	// Get either root.game_events or root.game_events.${eventId}.data into game_event_container
-	// if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
-	// 	tmp = PyLong_FromLong(event_def->event_type);
-	// 	if (tmp == NULL) { parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION; goto error1; }
-	// 	tmp1 = PyDict_GetItem(parser_state->game_event_container, tmp);
-	// 	Py_DECREF(tmp);
-	// 	if (tmp1 == NULL) { parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION; goto error1; }
-	// 	game_event_container = PyTuple_GetItem(tmp1, CONSTANTS_COMPACT_TUPLE3_DATA_IDX);
-	// } else {
-	// 	game_event_container = parser_state->game_event_container;
-	// }
-	// if (game_event_container == NULL) {
-	// 	parser_state->failure |= ParserState_ERR_UNKNOWN;
-	// 	goto error1;
-	// }
-
-	// // Create either tuple (compact) or dict to hold this event's data
-	// if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
-	// 	gameevent_holder = PyTuple_New(event_def->entries_len);
-	// } else {
-	// 	gameevent_holder = PyDict_New();
-	// }
-	// if (gameevent_holder == NULL) {
-	// 	parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 	goto error1;
-	// }
-
-	// // Create no fields dict when ge compact mode is enabled
-	// if (!(parser_state->flags & FLAGS_COMPACT_GAME_EVENTS)) {
-	// 	entry_dict = PyDict_New();
-	// 	if (entry_dict == NULL) {
-	// 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 		goto error2;
-	// 	}
-
-	// 	// Set id field
-	// 	tmp = PyLong_FromLong(event_def->event_type);
-	// 	if (tmp == NULL) {
-	// 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 		goto error3;
-	// 	}
-	// 	if (PyDict_SetItem(gameevent_holder, CONSTANTS_DICT_NAMES_GameEvent->py_strings[0], tmp) < 0) {
-	// 		Py_DECREF(tmp);
-	// 		parser_state->failure |= ParserState_ERR_PYDICT;
-	// 		goto error3;
-	// 	}
-	// 	Py_DECREF(tmp);
-
-	// 	// Set name field
-	// 	if (PyDict_SetItem(gameevent_holder, CONSTANTS_DICT_NAMES_GameEvent->py_strings[1], event_def->name) < 0) {
-	// 		parser_state->failure |= ParserState_ERR_PYDICT;
-	// 		goto error3;
-	// 	}
-	// }
 
 	size_t orig_bytepos, new_bytepos;
 	uint8_t orig_bitpos, new_bitpos;
@@ -248,6 +188,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	}
 
 	game_event->data = event_data;
+	game_event->data_len = event_data_len;
 	game_event->event_type = event_type;
 
 	if (ParserState_append_game_event(parser_state, game_event) != 0) {
@@ -255,60 +196,8 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		goto error2;
 	}
 
-	// // Fill game_event dict
-	// for (uint16_t i = 0; i < event_def->entries_len; i++) {
-	// 	switch (event_def->entries[i].type) {
-	// 	case 0:
-	// 		break;
-	// 	case 1: // String
-	// 		tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
-	// 	case 2: // Float
-	// 		tmp_entry_val = PyFloat_FromDouble(CharArrayWrapper_get_flt(ge_caw)); break;
-	// 	case 3: // 32bInteger
-	// 		tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int32(ge_caw)); break;
-	// 	case 4: // 16bInteger
-	// 		tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_int16(ge_caw)); break;
-	// 	case 5: // 8buInteger
-	// 		tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_uint8(ge_caw)); break;
-	// 	case 6: // Bit
-	// 		tmp_entry_val = PyBool_FromLong(CharArrayWrapper_get_bit(ge_caw)); break;
-	// 	case 7: // "Local" ?????
-	// 		// No clue
-	// 		continue;
-	// 	}
-	// 	if (tmp_entry_val == NULL) {
-	// 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 		goto error3;
-	// 	}
-	// 	if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
-	// 		Py_INCREF(tmp_entry_val);
-	// 		PyTuple_SET_ITEM(gameevent_holder, i, tmp_entry_val);
-	// 	} else {
-	// 		if (PyDict_SetItem(entry_dict, event_def->entries[i].name, tmp_entry_val) < 0) {
-	// 			parser_state->failure |= ParserState_ERR_PYDICT;
-	// 			Py_DECREF(tmp_entry_val);
-	// 			goto error3;
-	// 		}
-	// 	}
-	// 	Py_DECREF(tmp_entry_val);
-	// }
-
-	// // Set entries dict
-	// if (!(parser_state->flags & FLAGS_COMPACT_GAME_EVENTS)) {
-	// 	if (PyDict_SetItem(gameevent_holder, CONSTANTS_DICT_NAMES_GameEvent->py_strings[2], entry_dict) < 0) {
-	// 		parser_state->failure |= ParserState_ERR_PYDICT;
-	// 		goto error3;
-	// 	}
-	// }
-	// // Attach game event holder to container
-	// if (PyList_Append(game_event_container, gameevent_holder) < 0) {
-	// 	parser_state->failure |= ParserState_ERR_PYLIST;
-	// 	goto error2; // As entry_dict is then decrefed by gameevent_holder
-	// }
-
 do_not_read:
 	CharArrayWrapper_destroy(ge_caw);
-
 	return;
 
 error2: GameEvent_destroy(game_event);

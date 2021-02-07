@@ -72,6 +72,9 @@ CharArrayWrapper *CharArrayWrapper_from_caw_b(CharArrayWrapper *self, uint64_t b
 
 CharArrayWrapper *CharArrayWrapper_new() {
 	CharArrayWrapper *ptr = (CharArrayWrapper *)malloc(sizeof(CharArrayWrapper));
+	if (ptr == NULL) {
+		return NULL;
+	}
 	ptr->mem_ptr = NULL;
 	ptr->mem_len = 0;
 	ptr->bitbuf = 0;

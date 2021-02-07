@@ -11,11 +11,10 @@
 #include "tf2_dem_py/demo_parser/packet/usercmd.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 
-//Read the next byte from stream and determine what packet to read from this id.
+//Read the next byte from stream, determine what packet to read from this id and parse it.
 // 
-// FILE *stream : Pointer to a FILE object, next byte must be valid packet id
-// ParserState *parser_state : Pointer to a ParserState_c instance, may be modified by this function.
-// PyObject *root_dict : Pointer to a python dict, packet parser result will be written there.
+// FILE *stream : Pointer to a FILE struct, next byte must be valid packet id
+// ParserState *parser_state : Pointer to a ParserState instance, will be modified by this function.
 void packet_parse_any(FILE *stream, ParserState *parser_state) {
 
 	uint8_t packet_type;
