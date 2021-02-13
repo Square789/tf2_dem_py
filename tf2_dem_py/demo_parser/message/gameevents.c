@@ -55,43 +55,6 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		}
 		CharArrayWrapper_read_raw(caw, &last_type, 0, 3);
 	}
-
-	// Create compact shell for game event
-	// Not used anymore since python is removed from parsing //
-// 	if ((parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) && should_read_game_event(event_id)) {
-// 		PyObject *fieldnames_tuple, *comptup, *game_event_id;
-// 		fieldnames_tuple = PyTuple_New(ged->entries_len);
-// 		if (fieldnames_tuple == NULL) { goto error0; }
-// 		comptup = CompactTuple3_Create();
-// 		if (comptup == NULL) { goto error1; }
-
-// 		// Fill field_names tuple
-// 		for (uint16_t i = 0; i < ged->entries_len; i++) {
-// 			Py_INCREF(ged->entries[i].name);
-// 			PyTuple_SET_ITEM(fieldnames_tuple, i, ged->entries[i].name);
-// 		}
-
-// 		// Add game event name
-// 		Py_INCREF(ged->name);
-// 		PyTuple_SET_ITEM(comptup, CONSTANTS_COMPACT_TUPLE3_NAME_IDX, ged->name);
-// 		// Add tuple
-// 		PyTuple_SET_ITEM(comptup, CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX, fieldnames_tuple);
-// 		// Add comptup to container
-// 		game_event_id = PyLong_FromLong(ged->event_type);
-// 		if (game_event_id == NULL) { goto error2; }
-// 		if (PyDict_SetItem(parser_state->game_event_container, game_event_id, comptup) < 0) {
-// 			Py_DECREF(game_event_id);
-// 			goto error2;
-// 		}
-// 		Py_DECREF(game_event_id); Py_DECREF(comptup);
-
-// 		return;
-
-// error2: Py_DECREF(comptup); goto error0; // Skip fieldnames_tuple decref, will be done by comptup
-// error1: Py_DECREF(fieldnames_tuple); // Tuple dealloc decrefs everything inside
-// error0:
-// 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-// 	}
 }
 
 void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
@@ -157,10 +120,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	new_bytepos = CharArrayWrapper_get_pos_byte(ge_caw);
 	new_bitpos = CharArrayWrapper_get_pos_bit(ge_caw);
 
-	size_t event_data_len = new_bytepos - orig_bytepos;
-	if (new_bitpos > orig_bitpos) {
-		event_data_len += 1;
-	}
+	size_t event_data_len = new_bytepos - orig_bytepos + (new_bitpos > orig_bitpos);
 
 	// Rewind
 	CharArrayWrapper_set_pos(ge_caw, orig_bytepos, orig_bitpos);
@@ -176,7 +136,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	CharArrayWrapper_read_raw(
 		ge_caw,
 		event_data,
-		new_bytepos - orig_bytepos,
+		new_bytepos - orig_bytepos - (new_bitpos < orig_bitpos),
 		(new_bitpos >= orig_bitpos) ? new_bitpos - orig_bitpos : (8 - (orig_bitpos - new_bitpos))
 	);
 

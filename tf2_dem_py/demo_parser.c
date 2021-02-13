@@ -19,23 +19,26 @@
 
 static PyObject *__version__;
 static PyObject *ParserError;
+static PyObject *PyConversionError;
 // Python strings corresponding to the ParserState error bits.
 static PyObject *PARSER_ERRMSG[demo_parser_PARSER_ERRMSG_SIZE];
 // Python strings corresponding to the CharArrayWrapper error bits.
 static PyObject *CAW_ERRMSG[demo_parser_CAW_ERRMSG_SIZE];
 // Python string: "\n"
-static PyObject *NEWLINE_STR;
+static PyObject *PYSTR_NEWLINE;
 // Python string: ""
-static PyObject *EMPTY_STR;
-static PyObject *ERROR_LINESEP;
-static PyObject *ERROR_SEP_CAW;
-static PyObject *ERROR_INIT0;
-static PyObject *ERROR_INIT1;
-static PyObject *ERROR_INIT2;
+static PyObject *PYSTR_EMPTY;
+static PyObject *PYSTR_ERROR_LINESEP;
+static PyObject *PYSTR_ERROR_SEP_CAW;
+static PyObject *PYSTR_ERROR_INIT0;
+static PyObject *PYSTR_ERROR_INIT1;
+static PyObject *PYSTR_ERROR_INIT2;
 // Python string: "data"
-static PyObject *DATA_STR;
+static PyObject *PYSTR_DATA;
+// Python string for python conversion error
+static PyObject *PYSTR_CONV_ERR;
 
-// Builds a python error string from the FAILURE attribute
+// Builds a python error string from the failure attribute
 // of a ParserState, remember to DECREF that.
 // Returns NULL on any sort of error, at that point just crash the program whatever
 static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
@@ -50,41 +53,77 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	fppos_str = PyUnicode_FromFormat("%li", ftell(fp));
 	if (fppos_str == NULL) goto error2;
 
-	if (PyList_Append(builder_list, ERROR_INIT0) < 0) goto error3;
+	if (PyList_Append(builder_list, PYSTR_ERROR_INIT0) < 0) goto error3;
 	if (PyList_Append(builder_list, lmsg_str) < 0) goto error3;
-	if (PyList_Append(builder_list, ERROR_INIT1) < 0) goto error3;
+	if (PyList_Append(builder_list, PYSTR_ERROR_INIT1) < 0) goto error3;
 	if (PyList_Append(builder_list, fppos_str) < 0) goto error3;
-	if (PyList_Append(builder_list, ERROR_INIT2) < 0) goto error3;
-	if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
+	if (PyList_Append(builder_list, PYSTR_ERROR_INIT2) < 0) goto error3;
+	if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 
 	// Add standard parser errors
 	for (int i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
 		if ((1 << i) & parser_state->failure) {
 			if (PyList_Append(builder_list, PARSER_ERRMSG[i]) < 0) goto error3;
-			if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
+			if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 		}
 	}
 	if (PyList_SetSlice(builder_list, PyList_Size(builder_list) - 1, PyList_Size(builder_list), NULL) < 0) goto error3;
 
 	// Add additional CAW error info
 	if (parser_state->failure & 1) { // CAW Error
-		if (PyList_Append(builder_list, ERROR_SEP_CAW) < 0) goto error3;
+		if (PyList_Append(builder_list, PYSTR_ERROR_SEP_CAW) < 0) goto error3;
 		for (int i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
 				if (PyList_Append(builder_list, CAW_ERRMSG[i]) < 0) goto error3;
-				if (PyList_Append(builder_list, ERROR_LINESEP) < 0) goto error3;
+				if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 			}
 		}
 		if (PyList_SetSlice(builder_list, PyList_Size(builder_list) - 1, PyList_Size(builder_list), NULL) < 0) goto error3;
 	}
 
-	final_string = PyUnicode_Join(EMPTY_STR, builder_list); // If this fails, NULL is returned anyways
+	final_string = PyUnicode_Join(PYSTR_EMPTY, builder_list); // If this fails, NULL is returned anyways
 
 error3: Py_DECREF(fppos_str);
 error2: Py_DECREF(lmsg_str);
 error1: Py_DECREF(builder_list);
 error0:
 	return final_string;
+}
+
+static void raise_with_set_cause(PyObject *exc, PyObject *err_str) {
+	PyObject *old_exc_type, *old_exc_value, *old_exc_traceback;
+	PyObject *new_exc_type, *new_exc_value, *new_exc_traceback;
+	PyErr_Fetch(&old_exc_type, &old_exc_value, &old_exc_traceback);
+	PyErr_NormalizeException(&old_exc_type, &old_exc_value, &old_exc_traceback);
+
+	Py_XDECREF(old_exc_type); Py_XDECREF(old_exc_traceback);
+
+	PyErr_SetObject(exc, err_str);
+	if (old_exc_value != NULL) { // If a python exception was set beforehand
+		PyErr_Fetch(&new_exc_type, &new_exc_value, &new_exc_traceback);
+		PyErr_NormalizeException(&new_exc_type, &new_exc_value, &new_exc_traceback);
+		PyException_SetCause(new_exc_value, old_exc_value);
+		PyErr_Restore(new_exc_type, new_exc_value, new_exc_traceback);
+	}
+}
+
+// Raise a ParserError from given parser state.
+// Will return NULL.
+static PyObject *raise_parser_error(FILE *fp, ParserState *parser_state) {
+	PyObject *err_str = build_error_message(fp, parser_state);
+	if (err_str == NULL) {
+		return PyErr_NoMemory();
+	}
+
+	raise_with_set_cause(ParserError, err_str);
+	Py_DECREF(err_str);
+
+	return NULL;
+}
+
+static PyObject *raise_converter_error() {
+	raise_with_set_cause(PyConversionError, PYSTR_CONV_ERR);
+	return NULL;
 }
 
 // Builds the dict skeleton of a compact game event type like so:
@@ -136,7 +175,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
-	if (PyDict_SetItem(event_dict, DATA_STR, event_data_list) < 0) {
+	if (PyDict_SetItem(event_dict, PYSTR_DATA, event_data_list) < 0) {
 		Py_DECREF(event_dict); Py_DECREF(event_data_list);
 		parser_state->failure |= ParserState_ERR_PYDICT | ParserState_ERR_UNKNOWN;
 		return NULL;
@@ -148,17 +187,19 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 // Builds the object that should be attached to the final result dict's "game_events" key, if present.
 // Returns NULL and modifies ParserState's failure attribute  on any sort of failure.
 static PyObject *build_game_event_container(ParserState *parser_state) {
-	//Non-Compact:
-	// [
-	//     {"event_type": 26, "name": "foo", "info": 42}, {...}, ...
-	// ]
+	PyObject *game_event_container;
 
 	// Compact:
 	// {
 	//     26: {"fields": ["name", "info"], "data": [["foo", 42], ...]},
 	//     27: ...,
 	// }
-	PyObject *game_event_container;
+
+	//Non-Compact:
+	// [
+	//     {"event_type": 26, "name": "foo", "info": 42}, {...}, ...
+	// ]
+
 	if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
 		// For compact mode, create a dict as above, "fields" already filled.
 		PyObject *event_id;
@@ -213,7 +254,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				parser_state->game_events[ge_idx],
 				parser_state->game_event_defs + parser_state->game_events[ge_idx]->event_type
 			);
-			if (game_event_python_repr == NULL) { goto error1_mem; }
+			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
 			// Dig through the compact structure
 			event_id = PyLong_FromLong(parser_state->game_events[ge_idx]->event_type);
 			if (event_id == NULL) {
@@ -227,12 +268,13 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				goto error1;
 			}
 			Py_DECREF(event_id);
-			final_container = PyDict_GetItem(final_container, DATA_STR);
+			final_container = PyDict_GetItem(final_container, PYSTR_DATA);
 			if (final_container == NULL) {
 				Py_DECREF(game_event_python_repr);
 				parser_state->failure |= ParserState_ERR_PYDICT | ParserState_ERR_UNKNOWN;
 				goto error1;
 			}
+
 			if (PyList_Append(final_container, game_event_python_repr) < 0) {
 				Py_DECREF(game_event_python_repr);
 				goto error1_mem;
@@ -244,14 +286,9 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				parser_state->game_events[ge_idx],
 				parser_state->game_event_defs + parser_state->game_events[ge_idx]->event_type
 			);
-			if (game_event_python_repr == NULL) {
-				parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-				goto error1;
-			}
+			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
 			// Don't decref game_event_python_repr
-			if (PyList_SET_ITEM(final_container, ge_idx, game_event_python_repr) < 0) {
-				goto error1_mem;
-			}
+			PyList_SET_ITEM(final_container, ge_idx, game_event_python_repr);
 		}
 	}
 	return game_event_container;
@@ -264,7 +301,7 @@ error0:
 
 // Build a result dict from a parser state which should contain a valid combination
 // of parsed data and flags.
-// Returns NULL on any sort of failure. Assume MemoryError.
+// Returns NULL on any sort of failure. Assume MemoryError if no Python exception is set.
 static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *parser_state, uint32_t flags) {
 	PyObject *key, *value, *finalized_dict;
 	PyObject *res_dict = PyDict_New();
@@ -295,18 +332,6 @@ static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *pars
 
 error1: Py_DECREF(res_dict);
 error0:
-	return NULL;
-}
-
-// Raise a ParserError from given parser state.
-// Will return NULL.
-static PyObject *raise_parser_error(FILE *fp, ParserState *parser_state) {
-	PyObject *err_str = build_error_message(fp, parser_state);
-	if (err_str == NULL) {
-		return PyErr_NoMemory();
-	}
-
-	PyErr_SetObject(ParserError, err_str); // Sets potentially existing exceptions as cause of this one, which is lovely
 	return NULL;
 }
 
@@ -390,6 +415,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	res_dict = build_result_dict_from_parser_state_and_flags(parser_state, self->flags);
 	if (res_dict == NULL) {
+		raise_converter_error();
 		goto memerror2;
 	}
 
@@ -490,14 +516,18 @@ void m_demo_parser_free() {
 	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 		Py_DECREF(CAW_ERRMSG[i]);
 	}
-	Py_DECREF(EMPTY_STR);
-	Py_DECREF(NEWLINE_STR);
-	Py_DECREF(ERROR_LINESEP);
-	Py_DECREF(ERROR_SEP_CAW);
-	Py_DECREF(ERROR_INIT0);
-	Py_DECREF(ERROR_INIT1);
-	Py_DECREF(ERROR_INIT2);
-	Py_DECREF(DATA_STR);
+	Py_DECREF(__version__);
+	Py_DECREF(ParserError);
+	Py_DECREF(PyConversionError);
+	Py_DECREF(PYSTR_EMPTY);
+	Py_DECREF(PYSTR_NEWLINE);
+	Py_DECREF(PYSTR_ERROR_LINESEP);
+	Py_DECREF(PYSTR_ERROR_SEP_CAW);
+	Py_DECREF(PYSTR_ERROR_INIT0);
+	Py_DECREF(PYSTR_ERROR_INIT1);
+	Py_DECREF(PYSTR_ERROR_INIT2);
+	Py_DECREF(PYSTR_DATA);
+	Py_DECREF(PYSTR_CONV_ERR);
 	CONSTANTS_deallocate();
 }
 
@@ -510,21 +540,26 @@ void m_demo_parser_free_safe() {
 	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 		Py_XDECREF(CAW_ERRMSG[i]);
 	}
-	Py_XDECREF(EMPTY_STR);
-	Py_XDECREF(NEWLINE_STR);
-	Py_XDECREF(ERROR_LINESEP);
-	Py_XDECREF(ERROR_SEP_CAW);
-	Py_XDECREF(ERROR_INIT0);
-	Py_XDECREF(ERROR_INIT1);
-	Py_XDECREF(ERROR_INIT2);
-	Py_XDECREF(DATA_STR);
+	Py_XDECREF(__version__);
+	Py_XDECREF(ParserError);
+	Py_XDECREF(PyConversionError);
+	Py_XDECREF(PYSTR_EMPTY);
+	Py_XDECREF(PYSTR_NEWLINE);
+	Py_XDECREF(PYSTR_ERROR_LINESEP);
+	Py_XDECREF(PYSTR_ERROR_SEP_CAW);
+	Py_XDECREF(PYSTR_ERROR_INIT0);
+	Py_XDECREF(PYSTR_ERROR_INIT1);
+	Py_XDECREF(PYSTR_ERROR_INIT2);
+	Py_XDECREF(PYSTR_DATA);
+	Py_XDECREF(PYSTR_CONV_ERR);
 }
 
 // Initializes local constants; returns 0 on success, 1 on failure.
 uint8_t initialize_local_constants() {
 	__version__ = PyUnicode_FromString(_tf2_dem_py__version__);
 	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
-	EMPTY_STR = PyUnicode_FromStringAndSize("", 0);
+	PyConversionError = PyErr_NewException("demo_parser.PyConversionError", NULL, NULL);
+	PYSTR_EMPTY = PyUnicode_FromStringAndSize("", 0);
 	PARSER_ERRMSG[0] = PyUnicode_FromStringAndSize("CharArrayWrapper error, see below.", 34);
 	PARSER_ERRMSG[1] = PyUnicode_FromStringAndSize("Unknown packet id encountered.", 30);
 	PARSER_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error.", 10);
@@ -536,8 +571,8 @@ uint8_t initialize_local_constants() {
 	PARSER_ERRMSG[8] = PyUnicode_FromStringAndSize("Python list error (Likely memory error).", 40);
 	PARSER_ERRMSG[9] = PyUnicode_FromStringAndSize("Game event index higher than size of game event array.", 54);
 	for (uint32_t i = 10; i < 15; i++) {
-		Py_XINCREF(EMPTY_STR);
-		PARSER_ERRMSG[i] = EMPTY_STR;
+		Py_XINCREF(PYSTR_EMPTY);
+		PARSER_ERRMSG[i] = PYSTR_EMPTY;
 	}
 	PARSER_ERRMSG[15] = PyUnicode_FromStringAndSize("Unknown error.", 14);
 	CAW_ERRMSG[0] = PyUnicode_FromStringAndSize("Buffer too short.", 17);
@@ -546,16 +581,17 @@ uint8_t initialize_local_constants() {
 	CAW_ERRMSG[3] = PyUnicode_FromStringAndSize("Initialization failed due to memory error.", 42);
 	CAW_ERRMSG[4] = PyUnicode_FromStringAndSize("Initialization failed due to odd file reading result (Premature EOF?)", 69);
 	for (uint32_t i = 5; i < 8; i++) {
-		Py_XINCREF(EMPTY_STR);
-		CAW_ERRMSG[i] = EMPTY_STR;
+		Py_XINCREF(PYSTR_EMPTY);
+		CAW_ERRMSG[i] = PYSTR_EMPTY;
 	}
-	NEWLINE_STR = PyUnicode_FromStringAndSize("\n", 1);
-	ERROR_LINESEP = PyUnicode_FromStringAndSize("\n    ", 5);
-	ERROR_SEP_CAW = PyUnicode_FromStringAndSize("\n  ===CharArrayWrapper errors:===\n    ", 38);
-	ERROR_INIT0 = PyUnicode_FromStringAndSize("Last message id: ", 17);
-	ERROR_INIT1 = PyUnicode_FromStringAndSize(", File handle offset ", 21);
-	ERROR_INIT2 = PyUnicode_FromStringAndSize(" bytes. Errors:", 15);
-	DATA_STR = PyUnicode_FromStringAndSize("data", 4);
+	PYSTR_NEWLINE = PyUnicode_FromStringAndSize("\n", 1);
+	PYSTR_ERROR_LINESEP = PyUnicode_FromStringAndSize("\n    ", 5);
+	PYSTR_ERROR_SEP_CAW = PyUnicode_FromStringAndSize("\n  ===CharArrayWrapper errors:===\n    ", 38);
+	PYSTR_ERROR_INIT0 = PyUnicode_FromStringAndSize("Last message id: ", 17);
+	PYSTR_ERROR_INIT1 = PyUnicode_FromStringAndSize(", File handle offset ", 21);
+	PYSTR_ERROR_INIT2 = PyUnicode_FromStringAndSize(" bytes. Errors:", 15);
+	PYSTR_DATA = PyUnicode_FromStringAndSize("data", 4);
+	PYSTR_CONV_ERR = PyUnicode_FromStringAndSize("Failed to convert extracted data to Python objects.", 51);
 
 	// Check if something failed
 	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
@@ -564,9 +600,9 @@ uint8_t initialize_local_constants() {
 	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 		if (CAW_ERRMSG[i] == NULL) { return 1; }
 	}
-	if (__version__ == NULL || ParserError == NULL || EMPTY_STR == NULL || NEWLINE_STR == NULL ||
-		ERROR_LINESEP == NULL || ERROR_SEP_CAW == NULL || ERROR_INIT0 == NULL || ERROR_INIT1 == NULL ||
-		ERROR_INIT2 == NULL || DATA_STR == NULL
+	if (__version__ == NULL || ParserError == NULL || PYSTR_EMPTY == NULL || PYSTR_NEWLINE == NULL ||
+		PYSTR_ERROR_LINESEP == NULL || PYSTR_ERROR_SEP_CAW == NULL || PYSTR_ERROR_INIT0 == NULL || PYSTR_ERROR_INIT1 == NULL ||
+		PYSTR_ERROR_INIT2 == NULL || PYSTR_DATA == NULL || PYSTR_CONV_ERR == NULL
 	) {
 		return 1;
 	} 

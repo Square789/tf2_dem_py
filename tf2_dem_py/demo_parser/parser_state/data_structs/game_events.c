@@ -95,6 +95,8 @@ void GameEvent_destroy(GameEvent *self) {
 	free(self);
 }
 
+// Convert a GameEvent to a Python dict.
+// Returns NULL on any sort of failure, may or may not raise a python error.
 PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	PyObject *tmp_entry_val;
 	PyObject *entry_dict;
@@ -194,6 +196,7 @@ PyObject *GameEvent_to_compact_PyTuple(GameEvent *self, GameEventDefinition *eve
 		if (tmp_entry_val == NULL) { goto error2; }
 		PyTuple_SET_ITEM(event_tup, i, tmp_entry_val);
 	}
+	//printf("%s\n", PyUnicode_AsUTF8(PyObject_Repr(event_tup)));
 	CharArrayWrapper_destroy(ge_caw);
 	return event_tup;
 

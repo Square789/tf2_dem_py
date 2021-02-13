@@ -119,11 +119,7 @@ void CharArrayWrapper_read_raw(CharArrayWrapper *self, void *target_ptr_, size_t
 		memcpy(target_ptr, (void *)(self->mem_ptr + self->bytepos), req_bytes);
 		self->bytepos += req_bytes;
 		if (req_bits != 0) {
-			memset(
-				target_ptr + req_bytes,
-				self->mem_ptr[self->bytepos] & ((1 << req_bits) - 1),
-				1
-			);
+			*(target_ptr + req_bytes) = self->mem_ptr[self->bytepos] & ((1 << req_bits) - 1);
 			self->bitbuf = self->mem_ptr[self->bytepos] >> req_bits;
 			self->bitbuf_len = (8 - req_bits);
 			self->bytepos += 1;
@@ -131,32 +127,25 @@ void CharArrayWrapper_read_raw(CharArrayWrapper *self, void *target_ptr_, size_t
 	} else { // Offset on bitlevel, shifting required
 		carry = self->bitbuf;
 		for (i = 0; i < req_bytes; i++) {
-			memset(
-				target_ptr + i,
-				carry | (self->mem_ptr[self->bytepos + i] << self->bitbuf_len),
-				1
-			);
+			*(target_ptr + i) = carry | (self->mem_ptr[self->bytepos + i] << self->bitbuf_len);
 			carry = self->mem_ptr[self->bytepos + i] >> (8 - self->bitbuf_len);
 		}
 		self->bytepos += req_bytes;
 		self->bitbuf = carry;
 		if (req_bits != 0) { // Otherwise done
 			// Throw extra char at target_ptr, change bitbuf_len, update bitbuf
-			if (req_bits <= self->bitbuf_len) { // Drain bitbuf of required bits
-				memset(target_ptr + req_bytes, self->bitbuf & ((1 << req_bits) - 1), 1);
+			if (req_bits <= self->bitbuf_len) {
+				// Drain bitbuf of required bits
+				*(target_ptr + req_bytes) = self->bitbuf & ((1 << req_bits) - 1);
 				self->bitbuf >>= req_bits;
 				self->bitbuf_len -= req_bits;
-			} else { // "Read" another byte from chararray
-				// i. e. [0b[00000]100, 3], but i want 4 bits
-				// so read the next byte into carry: i.e. 10010001
-				// using fancy ops 2 lines below: [0000]1100
+			} else {
+				// "Read" another byte from chararray i. e. [0b[00000]100, 3],
+				// but i want 4 bits so read the next byte into carry:
+				// i.e. 10010001 using fancy ops 2 lines below: [0000]1100
 				// then save [0b[0]1001000, 7] as new bitbuf
 				carry = self->mem_ptr[self->bytepos];
-				memset(
-					target_ptr + req_bytes,
-					self->bitbuf | ((carry << self->bitbuf_len) & ((1 << req_bits) - 1)),
-					1
-				);
+				*(target_ptr + req_bytes) = self->bitbuf | ((carry << self->bitbuf_len) & ((1 << req_bits) - 1));
 				// Ok because req_bits > bitbuf_len in this else block
 				self->bitbuf = carry >> (req_bits - self->bitbuf_len);
 				self->bitbuf_len = (8 - (req_bits - self->bitbuf_len));
@@ -179,7 +168,7 @@ void CharArrayWrapper_skip(CharArrayWrapper *self, size_t bytes, uint8_t bits) {
 	}
 
 	if (bits != 0) {
-		if (bits <= self->bitbuf_len) { // Shorten bitbuf
+		if (bits <= self->bitbuf_len) { // Drain bitbuf
 			self->bitbuf >>= bits;
 			self->bitbuf_len -= bits;
 		} else { // "Read" next byte from chararray
