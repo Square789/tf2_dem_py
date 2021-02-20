@@ -34,6 +34,8 @@ uint8_t ParserState_init(ParserState *self) {
 	self->game_events_amount = 0;
 	self->game_events_capacity = 0;
 	self->demo_header = DemoHeader_new();
+	self->print_msg = NULL;
+	self->server_info = NULL;
 	if (self->demo_header == NULL) { goto error0; }
 
 	return 0;
@@ -73,7 +75,10 @@ void ParserState_free_game_events(ParserState *self) {
 }
 
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent *ge) {
-	MACRO_ARRAYLIST_APPEND(GameEvent *, self->game_events, self->game_events_capacity, self->game_events_amount)
+	if (_generic_arraylist_size_check(sizeof(GameEvent *), &self->game_events, &self->game_events_capacity,
+			&self->game_events_amount) != 0) {
+		return 1;
+	}
 	self->game_events[self->game_events_amount] = ge;
 	// printf("Inserted game event %u @ %p\n", self->game_events_amount, self->game_events + self->game_events_amount);
 	self->game_events_amount += 1;

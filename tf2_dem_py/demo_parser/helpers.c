@@ -2,7 +2,27 @@
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/constants.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+
+uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *array_cap, size_t *array_len) {
+	void *tmp_ptr;
+	if (*array == NULL) {
+		*array = malloc(type_size * 2);
+		if (*array == NULL) {
+			return 1;
+		}
+		*array_cap = 2;
+		*array_len = 0;
+	}
+	if (*array_cap == *array_len) {
+		tmp_ptr = realloc(*array, type_size * (*array_cap) * 2);
+		if (tmp_ptr == NULL) {
+			return 1;
+		}
+		*array = tmp_ptr;
+		*array_cap = (*array_cap) * 2;
+	}
+	return 0;
+}
 
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
@@ -99,97 +119,4 @@ PyObject *CreateDict_Strings(PyObject **keys, PyObject **values, size_t length) 
 	}
 	if (failed) return NULL;
 	return dict;
-}
-
-PyObject *CompactTuple2_Create() {
-	PyObject *last_list, *tuple;
-	last_list = PyList_New(0);
-	if (last_list == NULL) {
-		goto error0;
-	}
-	tuple = PyTuple_New(2);
-	if (tuple == NULL) {
-		goto error1;
-	}
-	Py_INCREF(Py_None);
-	PyTuple_SET_ITEM(tuple, CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX, Py_None);
-	PyTuple_SET_ITEM(tuple, CONSTANTS_COMPACT_TUPLE2_DATA_IDX, last_list); // Steals ref
-
-	return tuple;
-
-error1: Py_DECREF(last_list);
-error0:
-	return NULL;
-}
-
-PyObject *CompactTuple3_Create() {
-	PyObject *last_list, *tuple;
-	last_list = PyList_New(0);
-	if (last_list == NULL) {
-		goto error0;
-	}
-	tuple = PyTuple_New(3);
-	if (tuple == NULL) {
-		goto error1;
-	}
-	Py_INCREF(Py_None);
-	PyTuple_SET_ITEM(tuple, CONSTANTS_COMPACT_TUPLE3_NAME_IDX, Py_None);
-	Py_INCREF(Py_None);
-	PyTuple_SET_ITEM(tuple, CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX, Py_None);
-	PyTuple_SET_ITEM(tuple, CONSTANTS_COMPACT_TUPLE3_DATA_IDX, last_list); // Steals ref
-
-	return tuple;
-
-error1: Py_DECREF(last_list);
-error0:
-	return NULL;
-}
-
-PyObject *CompactTuple2_Finalize(PyObject *comptup) {
-	PyObject *dict = PyDict_New();
-	if (dict == NULL) {
-		goto error0;
-	}
-	if (PyTuple_Size(comptup) != 2) {
-		goto error1;
-	}
-	if (PyDict_SetItem(dict, CONSTANTS_PYSTR_FIELD_NAMES, PyTuple_GetItem(comptup, CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX)) < 0) {
-		goto error1;
-	}
-	if (PyDict_SetItem(dict, CONSTANTS_PYSTR_DATA, PyTuple_GetItem(comptup, CONSTANTS_COMPACT_TUPLE2_DATA_IDX)) < 0) {
-		goto error1;
-	}
-	Py_DECREF(comptup);
-	return dict;
-
-error1: Py_DECREF(dict);
-error0:
-	Py_DECREF(comptup);
-	return NULL;
-}
-
-PyObject *CompactTuple3_Finalize(PyObject *comptup) {
-	PyObject *dict = PyDict_New();
-	if (dict == NULL) {
-		goto error0;
-	}
-	if (PyTuple_Size(comptup) != 3) {
-		goto error1;
-	}
-	if (PyDict_SetItem(dict, CONSTANTS_PYSTR_NAME, PyTuple_GetItem(comptup, CONSTANTS_COMPACT_TUPLE3_NAME_IDX)) < 0) {
-		goto error1;
-	}
-	if (PyDict_SetItem(dict, CONSTANTS_PYSTR_FIELD_NAMES, PyTuple_GetItem(comptup, CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX)) < 0) {
-		goto error1;
-	}
-	if (PyDict_SetItem(dict, CONSTANTS_PYSTR_DATA, PyTuple_GetItem(comptup, CONSTANTS_COMPACT_TUPLE3_DATA_IDX)) < 0) {
-		goto error1;
-	}
-	Py_DECREF(comptup);
-	return dict;
-
-error1: Py_DECREF(dict);
-error0:
-	Py_DECREF(comptup);
-	return NULL;
 }

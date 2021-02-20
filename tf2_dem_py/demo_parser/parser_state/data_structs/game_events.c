@@ -50,7 +50,10 @@ void GameEventDefinition_destroy(GameEventDefinition *self) {
 }
 
 uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, uint8_t *name, uint8_t type) {
-	MACRO_ARRAYLIST_APPEND(GameEventEntry, self->entries, self->entries_capacity, self->entries_len)
+	if (_generic_arraylist_size_check(sizeof(GameEventEntry), &self->entries, &self->entries_capacity,
+			&self->entries_len) != 0) {
+		return 1;
+	}
 	self->entries[self->entries_len].name = name;
 	self->entries[self->entries_len].type = type;
 	self->entries_len += 1;

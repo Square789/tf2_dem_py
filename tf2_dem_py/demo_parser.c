@@ -35,6 +35,10 @@ static PyObject *PYSTR_ERROR_INIT1;
 static PyObject *PYSTR_ERROR_INIT2;
 // Python string: "data"
 static PyObject *PYSTR_DATA;
+// Python string: "name"
+static PyObject *PYSTR_NAME;
+// Python string: "fields"
+static PyObject *PYSTR_FIELDS;
 // Python string for python conversion error
 static PyObject *PYSTR_CONV_ERR;
 
@@ -147,7 +151,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
-	if (PyDict_SetItemString(event_dict, "name", event_name) < 0) {
+	if (PyDict_SetItem(event_dict, PYSTR_NAME, event_name) < 0) {
 		Py_DECREF(event_dict); Py_DECREF(event_name);
 		parser_state->failure |= ParserState_ERR_PYDICT | ParserState_ERR_UNKNOWN;
 		return NULL;
@@ -162,7 +166,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
-	if (PyDict_SetItemString(event_dict, "fields", event_fields_tuple) < 0) {
+	if (PyDict_SetItem(event_dict, PYSTR_FIELDS, event_fields_tuple) < 0) {
 		Py_DECREF(event_dict); Py_DECREF(event_fields_tuple);
 		parser_state->failure |= ParserState_ERR_PYDICT | ParserState_ERR_UNKNOWN;
 		return NULL;
@@ -303,7 +307,6 @@ error0:
 // of parsed data and flags.
 // Returns NULL on any sort of failure. Assume MemoryError if no Python exception is set.
 static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *parser_state, uint32_t flags) {
-	PyObject *key, *value, *finalized_dict;
 	PyObject *res_dict = PyDict_New();
 	PyObject *tmp;
 	if (res_dict == NULL) {
@@ -527,6 +530,8 @@ void m_demo_parser_free() {
 	Py_DECREF(PYSTR_ERROR_INIT1);
 	Py_DECREF(PYSTR_ERROR_INIT2);
 	Py_DECREF(PYSTR_DATA);
+	Py_DECREF(PYSTR_NAME);
+	Py_DECREF(PYSTR_FIELDS);
 	Py_DECREF(PYSTR_CONV_ERR);
 	CONSTANTS_deallocate();
 }
@@ -551,6 +556,8 @@ void m_demo_parser_free_safe() {
 	Py_XDECREF(PYSTR_ERROR_INIT1);
 	Py_XDECREF(PYSTR_ERROR_INIT2);
 	Py_XDECREF(PYSTR_DATA);
+	Py_XDECREF(PYSTR_NAME);
+	Py_XDECREF(PYSTR_FIELDS);
 	Py_XDECREF(PYSTR_CONV_ERR);
 }
 
@@ -591,6 +598,8 @@ uint8_t initialize_local_constants() {
 	PYSTR_ERROR_INIT1 = PyUnicode_FromStringAndSize(", File handle offset ", 21);
 	PYSTR_ERROR_INIT2 = PyUnicode_FromStringAndSize(" bytes. Errors:", 15);
 	PYSTR_DATA = PyUnicode_FromStringAndSize("data", 4);
+	PYSTR_NAME = PyUnicode_FromStringAndSize("name", 4);
+	PYSTR_FIELDS = PyUnicode_FromStringAndSize("fields", 6);
 	PYSTR_CONV_ERR = PyUnicode_FromStringAndSize("Failed to convert extracted data to Python objects.", 51);
 
 	// Check if something failed
@@ -600,12 +609,11 @@ uint8_t initialize_local_constants() {
 	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 		if (CAW_ERRMSG[i] == NULL) { return 1; }
 	}
-	if (__version__ == NULL || ParserError == NULL || PYSTR_EMPTY == NULL || PYSTR_NEWLINE == NULL ||
-		PYSTR_ERROR_LINESEP == NULL || PYSTR_ERROR_SEP_CAW == NULL || PYSTR_ERROR_INIT0 == NULL || PYSTR_ERROR_INIT1 == NULL ||
-		PYSTR_ERROR_INIT2 == NULL || PYSTR_DATA == NULL || PYSTR_CONV_ERR == NULL
-	) {
-		return 1;
-	} 
+	if (__version__ == NULL || ParserError == NULL || PyConversionError == NULL || PYSTR_EMPTY == NULL ||
+		PYSTR_NEWLINE == NULL || PYSTR_ERROR_LINESEP == NULL || PYSTR_ERROR_SEP_CAW == NULL ||
+		PYSTR_ERROR_INIT0 == NULL || PYSTR_ERROR_INIT1 == NULL || PYSTR_ERROR_INIT2 == NULL || PYSTR_DATA == NULL ||
+		PYSTR_NAME == NULL || PYSTR_FIELDS == NULL || PYSTR_CONV_ERR == NULL
+	) { return 1; }
 
 	return 0;
 }
@@ -650,28 +658,34 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 		goto error3;
 	}
 
+	if (PyModule_AddObject(module, "PyConversionError", PyConversionError) < 0) {
+		goto error4;
+	}
+
 	Py_INCREF(&DemoParser_Type);
 	if (PyModule_AddObject(module, "DemoParser", (PyObject *)&DemoParser_Type) < 0) {
-		goto error4;
+		goto error5;
 	}
 
 	Py_INCREF(__version__);
 	if (PyModule_AddObject(module, "__version__", __version__) < 0) {
-		goto error5;
+		goto error6;
 	}
 
 	return module;
 
-error5:
+error6:
 	Py_DECREF(__version__);
-error4:
+error5:
 	Py_DECREF(&DemoParser_Type);
+error4:
+	Py_DECREF(PyConversionError);
 error3:
 	Py_DECREF(ParserError);
 error2:
 	m_demo_parser_free_safe();
 error1:
-	CONSTANTS_deallocate_safe();
+	CONSTANTS_deallocate();
 	Py_DECREF(module);
 error0:
 	return NULL;

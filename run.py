@@ -18,7 +18,7 @@ else:
 	)
 
 dp = tf2_dem_py.demo_parser.DemoParser(
-	FLAGS.GAME_EVENTS | FLAGS.COMPACT_GAME_EVENTS
+	FLAGS.GAME_EVENTS
 )
 print("Demo parser constructed and it didn't segfault!")
 res = dp.parse(p)

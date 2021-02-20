@@ -155,10 +155,9 @@ void ServerInfo_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 
 void ServerInfo_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	CharArrayWrapper_skip(caw, 36, 2);
-	CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
-	CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
-	CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
-	CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0); // Less overhead than a loop i guess
+	for (uint8_t _ = 0; _ < 4; _++) {
+		CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
+	}
 	CharArrayWrapper_skip(caw, 0, 1);
 }
 

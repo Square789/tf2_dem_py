@@ -22,24 +22,10 @@ PyObject *PyStringHolder_getPyTuple(PyStringHolder *self);
 // more complex constants will be NULL.
 int CONSTANTS_initialize();
 
-void CONSTANTS__deallocate_stringholders();
-
-// Deallocate and DECREF constants and StringHolders.
+// Deallocate and XDECREF constants and StringHolders.
 void CONSTANTS_deallocate();
 
-// Deallocate and XDECREF constants and StringHolders.
-void CONSTANTS_deallocate_safe();
-
 // === Constant declarations === //
-
-extern Py_ssize_t CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX;
-extern Py_ssize_t CONSTANTS_COMPACT_TUPLE2_DATA_IDX;
-extern Py_ssize_t CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX;
-extern Py_ssize_t CONSTANTS_COMPACT_TUPLE3_NAME_IDX;
-extern Py_ssize_t CONSTANTS_COMPACT_TUPLE3_DATA_IDX;
-extern PyObject *CONSTANTS_PYSTR_FIELD_NAMES;
-extern PyObject *CONSTANTS_PYSTR_DATA;
-extern PyObject *CONSTANTS_PYSTR_NAME;
 
 extern PyStringHolder *CONSTANTS_DICT_NAMES_SayText2;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_GameEvent;

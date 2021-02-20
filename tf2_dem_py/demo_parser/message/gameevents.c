@@ -197,8 +197,8 @@ void GameEventList_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	}
 	parser_state->game_event_def_amount = amount;
 
-	//printf("Preparing to parse GameEventList: %u event defs\n", amount);
-	//printf("maincaw:%uB%ub, ca_len:%u\n", caw->get_pos_byte(), caw->get_pos_bit(), caw->mem_len);
+	// printf("Preparing to parse GameEventList: %u event defs\n", amount);
+	// printf("maincaw:%uB%ub, ca_len:%u\n", CharArrayWrapper_get_pos_byte(caw), CharArrayWrapper_get_pos_bit(caw), caw->mem_len);
 
 	CharArrayWrapper *gel_caw = CharArrayWrapper_from_caw_b(caw, length);
 	if (gel_caw == NULL) {

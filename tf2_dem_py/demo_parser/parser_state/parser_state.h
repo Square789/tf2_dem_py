@@ -30,9 +30,10 @@ typedef struct {
 	size_t game_events_amount;
 	// Demo header
 	DemoHeader *demo_header;
-	// Printmsg; Will be the string of the first found Print message (there should only be one)
-
-	// ServerInfo; Will be the string of the first found ServerInfo message (there should only be one)
+	// The string of the first found Print message (there should only be one) or NULL
+	uint8_t *print_msg;
+	// The string of the first found ServerInfo message (there should only be one) or NULL
+	uint8_t *server_info;
 } ParserState;
 
 ParserState *ParserState_new();

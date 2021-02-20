@@ -19,8 +19,8 @@ typedef struct {
 typedef struct {
 	uint16_t event_type;
 	uint8_t *name;
-	uint16_t entries_capacity;
-	uint16_t entries_len;
+	size_t entries_capacity;
+	size_t entries_len;
 	GameEventEntry *entries;
 } GameEventDefinition;
 

@@ -52,20 +52,9 @@ PyObject *PyStringHolder_getPyTuple(PyStringHolder *self) {
 	return tuple;
 }
 
-// === Simple constants === //
-
-Py_ssize_t CONSTANTS_COMPACT_TUPLE2_FIELD_NAMES_IDX = 0;
-Py_ssize_t CONSTANTS_COMPACT_TUPLE2_DATA_IDX = 1;
-Py_ssize_t CONSTANTS_COMPACT_TUPLE3_FIELD_NAMES_IDX = 1;
-Py_ssize_t CONSTANTS_COMPACT_TUPLE3_NAME_IDX = 0;
-Py_ssize_t CONSTANTS_COMPACT_TUPLE3_DATA_IDX = 2;
-
 // === Python constants === //
 // DO NOT USE THEM IN THIS STATE, call CONSTANTS_initialize first!
-PyObject
-	*CONSTANTS_PYSTR_FIELD_NAMES = NULL,
-	*CONSTANTS_PYSTR_DATA = NULL,
-	*CONSTANTS_PYSTR_NAME = NULL;
+
 PyStringHolder
 	*CONSTANTS_DICT_NAMES_SayText2 = NULL,
 	*CONSTANTS_DICT_NAMES_GameEvent = NULL,
@@ -80,24 +69,12 @@ int CONSTANTS_initialize() {
 		"client_id", "map_name", "game_dir", "play_time", "tick_count",
 		"frame_count", "sigon"};
 
-	// Setting solo strings
-	CONSTANTS_PYSTR_FIELD_NAMES = PyUnicode_FromStringAndSize("field_names", 11);
-	CONSTANTS_PYSTR_DATA = PyUnicode_FromStringAndSize("data", 4);
-	CONSTANTS_PYSTR_NAME = PyUnicode_FromStringAndSize("name", 4);
-
-	// Checking solo strings
-	if (
-		CONSTANTS_PYSTR_FIELD_NAMES == NULL ||
-		CONSTANTS_PYSTR_DATA == NULL ||
-		CONSTANTS_PYSTR_NAME == NULL
-	) { return -1; }
-
 	// Setting StringHolders
 	CONSTANTS_DICT_NAMES_SayText2 = PyStringHolder_new(_arr_SayText2, 9);
 	CONSTANTS_DICT_NAMES_GameEvent = PyStringHolder_new(_arr_GameEvent, 3);
 	CONSTANTS_DICT_NAMES_header = PyStringHolder_new(_arr_header, 11);
 
-	// Checking solo strings
+	// Checking StringHolders
 	if (
 		CONSTANTS_DICT_NAMES_SayText2 == NULL ||
 		CONSTANTS_DICT_NAMES_GameEvent == NULL ||
@@ -107,23 +84,8 @@ int CONSTANTS_initialize() {
 	return 0;
 }
 
-void CONSTANTS__deallocate_stringholders() {
-	PyStringHolder_destroy(CONSTANTS_DICT_NAMES_SayText2);
-	PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEvent);
-	PyStringHolder_destroy(CONSTANTS_DICT_NAMES_header);
-}
-
 void CONSTANTS_deallocate() {
-	Py_DECREF(CONSTANTS_PYSTR_FIELD_NAMES);
-	Py_DECREF(CONSTANTS_PYSTR_DATA);
-	Py_DECREF(CONSTANTS_PYSTR_NAME);
-	CONSTANTS__deallocate_stringholders();
+	if (CONSTANTS_DICT_NAMES_SayText2  != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_SayText2);  }
+	if (CONSTANTS_DICT_NAMES_GameEvent != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEvent); }
+	if (CONSTANTS_DICT_NAMES_header    != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_header);    }
 }
-
-void CONSTANTS_deallocate_safe() {
-	Py_XDECREF(CONSTANTS_PYSTR_FIELD_NAMES);
-	Py_XDECREF(CONSTANTS_PYSTR_DATA);
-	Py_XDECREF(CONSTANTS_PYSTR_NAME);
-	CONSTANTS__deallocate_stringholders();
-}
-
