@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/demo_header.h"
+#include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 
 #include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/constants.h"
@@ -37,6 +37,33 @@ void DemoHeader_destroy(DemoHeader *self) {
 	free(self->ident);
 	free(self->map_name);
 	free(self);
+}
+
+uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, uint8_t *caw_error) {
+	CharArrayWrapper *header_caw = CharArrayWrapper_from_file(stream, 1072);
+	if (header_caw == NULL) {
+		return 1;
+	}
+
+	self->ident = CharArrayWrapper_get_chars(header_caw, 8);
+	self->net_prot = CharArrayWrapper_get_uint32(header_caw);
+	self->dem_prot = CharArrayWrapper_get_uint32(header_caw);
+	self->host_addr = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
+	self->client_id = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
+	self->map_name = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
+	self->game_dir = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
+	self->play_time = CharArrayWrapper_get_flt(header_caw);
+	self->tick_count = CharArrayWrapper_get_uint32(header_caw);
+	self->frame_count = CharArrayWrapper_get_uint32(header_caw);
+	self->sigon = CharArrayWrapper_get_uint32(header_caw);
+	if (header_caw->ERRORLEVEL != 0) {
+		CharArrayWrapper_destroy(header_caw);
+		*caw_error = header_caw->ERRORLEVEL;
+		return 2;
+	}
+	CharArrayWrapper_destroy(header_caw);
+
+	return 0;
 }
 
 PyObject *DemoHeader_to_PyDict(DemoHeader *self) {

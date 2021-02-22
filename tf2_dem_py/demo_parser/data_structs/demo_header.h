@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
+
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 
@@ -31,5 +33,10 @@ void DemoHeader_destroy(DemoHeader *self);
 // Requires CONSTANTS to be initialized.
 // Returns NULL on failure.
 PyObject *DemoHeader_to_PyDict(DemoHeader *self);
+
+// Read data into a DemoHeader from a file pointer, advancing it by 1072 bytes.
+// Returns 1 on CAW memory allocation failure, 2 on general CAW error, 0 on success.
+// Will write CAW error into the address pointed to by caw_err if return code is 2.
+uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *caw_err);
 
 #endif

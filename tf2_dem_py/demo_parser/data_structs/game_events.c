@@ -1,5 +1,5 @@
 #include "tf2_dem_py/demo_parser/helpers.h"
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/game_events.h"
+#include "tf2_dem_py/demo_parser/data_structs/game_events.h"
 
 //GameEventEntry *GameEventEntry_new(uint8_t *name, uint8_t type) {
 //	GameEventEntry *self = (GameEventEntry *)malloc(sizeof(GameEventEntry));

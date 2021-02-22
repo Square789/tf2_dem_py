@@ -11,6 +11,8 @@ extern const uint16_t CAW_ERR_INIT_IO_READ;
 extern const uint16_t CAW_ERR_INIT_ALLOC;
 extern const uint16_t CAW_ERR_INIT_ODD_IO_RESULT;
 
+typedef uint8_t CharArrayWrapper_err_t;
+
 typedef struct {
 	// Pointer to the memory block the CharArrayWrapper works on.
 	uint8_t *mem_ptr;
@@ -28,7 +30,7 @@ typedef struct {
 	//           | | \\ Instantiation failure, read error.
 	//           | \\ Instantiation failure, malloc error.
 	//           \\ Instantiation failure, amount of bytes read differs from requested amount.
-	uint8_t ERRORLEVEL;
+	CharArrayWrapper_err_t ERRORLEVEL;
 	// Whether to free the CharArrayWrapper when its destroyed via CharArrayWrapper_destroy.
 	uint8_t free_on_dealloc;
 

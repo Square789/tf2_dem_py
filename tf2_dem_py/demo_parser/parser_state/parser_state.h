@@ -2,8 +2,8 @@
 #define PARSER_STATE__H
 
 #include <stdint.h>
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/game_events.h"
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/demo_header.h"
+#include "tf2_dem_py/demo_parser/data_structs/game_events.h"
+#include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 
 // A ParserState will hold all of the data extracted from a demo and a state
 // during parsing as well.
@@ -43,12 +43,11 @@ void ParserState_destroy(ParserState *self);
 // If it is not NULL, destroys all game even definitions, frees the
 // game_event_definition array and sets its size to 0.
 void ParserState_free_game_event_defs(ParserState *self);
+
 // If it is not NULL, frees all game events, frees their array and sets the associated
 // fields back to NULL / 0.
 void ParserState_free_game_events(ParserState *self);
-// Read Demo header into a parser state from a file pointer, advancing it by 1072 bytes.
-// Returns 1 on failure, 0 on success.
-uint8_t ParserState_read_DemoHeader(ParserState *self, FILE* stream);
+
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent *ge);
 
 extern const uint16_t ParserState_ERR_CAW;

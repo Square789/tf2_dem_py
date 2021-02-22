@@ -3,8 +3,8 @@
 #include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/game_events.h"
-#include "tf2_dem_py/demo_parser/parser_state/data_structs/demo_header.h"
+#include "tf2_dem_py/demo_parser/data_structs/game_events.h"
+#include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 
 ParserState *ParserState_new() {
 	ParserState *self = (ParserState *)malloc(sizeof(ParserState));
@@ -85,43 +85,6 @@ uint8_t ParserState_append_game_event(ParserState *self, GameEvent *ge) {
 	return 0;
 }
 
-uint8_t ParserState_read_DemoHeader(ParserState *self, FILE *stream) {
-	CharArrayWrapper *header_caw = CharArrayWrapper_from_file(stream, 1072);
-
-	if (self->demo_header == NULL) {
-		self->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-		return 1;
-	}
-
-	if (header_caw->ERRORLEVEL != 0) {
-		self->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
-		self->failure |= ParserState_ERR_CAW;
-		return 1;
-	}
-
-	self->demo_header->ident = CharArrayWrapper_get_chars(header_caw, 8);
-	self->demo_header->net_prot = CharArrayWrapper_get_uint32(header_caw);
-	self->demo_header->dem_prot = CharArrayWrapper_get_uint32(header_caw);
-	self->demo_header->host_addr = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
-	self->demo_header->client_id = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
-	self->demo_header->map_name = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
-	self->demo_header->game_dir = CharArrayWrapper_get_chars_up_to_null(header_caw, 260);
-	self->demo_header->play_time = CharArrayWrapper_get_flt(header_caw);
-	self->demo_header->tick_count = CharArrayWrapper_get_uint32(header_caw);
-	self->demo_header->frame_count = CharArrayWrapper_get_uint32(header_caw);
-	self->demo_header->sigon = CharArrayWrapper_get_uint32(header_caw);
-
-	// Some of the demo header fields may be NULL if this if is entered, should be okay if init
-	// was used and destroy will be called.
-	if (header_caw->ERRORLEVEL |= 0) {
-		self->RELAYED_CAW_ERR = header_caw->ERRORLEVEL;
-		self->failure |= ParserState_ERR_CAW;
-		return 1;
-	}
-
-	return 0;
-
-}
 
 const uint16_t ParserState_ERR_CAW = 1 << 0;
 const uint16_t ParserState_ERR_UNKNOWN_PACKET_ID = 1 << 1;

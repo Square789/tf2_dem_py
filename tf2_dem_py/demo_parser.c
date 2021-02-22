@@ -6,6 +6,7 @@
 
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/constants.h"
+#include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 #include "tf2_dem_py/demo_parser/packet/parse_any.h"
 #include "tf2_dem_py/demo_parser/helpers.h"
@@ -379,6 +380,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	FILE *demo_fp;
 	PyObject *res_dict;
 	PyObject *demo_path;
+	CharArrayWrapper_err_t caw_err;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&:parse", KWARGS,
 			PyUnicode_FSConverter, &demo_path
@@ -401,13 +403,25 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	start_time = last_gil_acq = clock();
 
-	ParserState_read_DemoHeader(parser_state, demo_fp);
+	// Start parsing
+
+	switch (DemoHeader_read(parser_state->demo_header, demo_fp, &caw_err)) {
+	case 1:
+		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION; break;
+	case 2:
+		parser_state->failure |= ParserState_ERR_CAW;
+		parser_state->RELAYED_CAW_ERR = caw_err;
+		break;
+	default:
+		break;
+	}
 	if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
 	while (!parser_state->finished) {
 		packet_parse_any(demo_fp, parser_state);
 		if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
 	}
-	// Done
+
+	// Done parsing
 
 	fclose(demo_fp);
 
