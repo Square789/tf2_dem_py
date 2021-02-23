@@ -34,9 +34,9 @@ uint8_t ParserState_init(ParserState *self) {
 	self->game_events_amount = 0;
 	self->game_events_capacity = 0;
 	self->demo_header = DemoHeader_new();
+	if (self->demo_header == NULL) { goto error0; }
 	self->print_msg = NULL;
 	self->server_info = NULL;
-	if (self->demo_header == NULL) { goto error0; }
 
 	return 0;
 

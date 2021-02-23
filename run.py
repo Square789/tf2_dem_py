@@ -22,7 +22,7 @@ dp = tf2_dem_py.demo_parser.DemoParser(
 )
 print("Demo parser constructed and it didn't segfault!")
 res = dp.parse(p)
-print("Parsing successful, returning to python")
+print("Returning to python")
 
 # pprint(res, sort_dicts = False, compact = True)
 

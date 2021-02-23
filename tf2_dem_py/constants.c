@@ -58,34 +58,44 @@ PyObject *PyStringHolder_getPyTuple(PyStringHolder *self) {
 PyStringHolder
 	*CONSTANTS_DICT_NAMES_SayText2 = NULL,
 	*CONSTANTS_DICT_NAMES_GameEvent = NULL,
-	*CONSTANTS_DICT_NAMES_header = NULL;
+	*CONSTANTS_DICT_NAMES_DemoHeader = NULL,
+	*CONSTANTS_DICT_NAMES_ServerInfo = NULL;
 
 int CONSTANTS_initialize() {
 	// Constant setup
-	const char *_arr_SayText2[9] = {"normal (params non-None)", "tick", "sender_entidx",
-		"bChat", "normal?channel:message", "param1", "param2", "param3", "param4"};
+	const char *_arr_SayText2[9] = {
+		"normal", "tick", "sender_entidx", "bChat",
+		"normal?channel:message", "param1", "param2", "param3", "param4"
+	};
 	const char *_arr_GameEvent[3] = {"name", "field_names", "data"};
-	const char *_arr_header[11] = {"ident", "net_prot", "dem_prot", "host_addr",
-		"client_id", "map_name", "game_dir", "play_time", "tick_count",
-		"frame_count", "sigon"};
+	const char *_arr_DemoHeader[11] = {
+		"ident", "net_prot", "dem_prot", "host_addr", "client_id", "map_name",
+		"game_dir", "play_time", "tick_count", "frame_count", "sigon"
+	};
+	const char *_arr_ServerInfo[16] = {
+		"version", "server_count", "stv", "dedicated", "max_crc", "max_classes",
+		"map_hash", "player_count", "max_player_count", "interval_per_tick", "platform",
+		"game", "map_name", "skybox", "server_name", "replay",
+	};
 
 	// Setting StringHolders
 	CONSTANTS_DICT_NAMES_SayText2 = PyStringHolder_new(_arr_SayText2, 9);
 	CONSTANTS_DICT_NAMES_GameEvent = PyStringHolder_new(_arr_GameEvent, 3);
-	CONSTANTS_DICT_NAMES_header = PyStringHolder_new(_arr_header, 11);
+	CONSTANTS_DICT_NAMES_DemoHeader = PyStringHolder_new(_arr_DemoHeader, 11);
+	CONSTANTS_DICT_NAMES_ServerInfo = PyStringHolder_new(_arr_ServerInfo, 16);
 
 	// Checking StringHolders
 	if (
-		CONSTANTS_DICT_NAMES_SayText2 == NULL ||
-		CONSTANTS_DICT_NAMES_GameEvent == NULL ||
-		CONSTANTS_DICT_NAMES_header == NULL
+		CONSTANTS_DICT_NAMES_SayText2 == NULL || CONSTANTS_DICT_NAMES_GameEvent == NULL ||
+		CONSTANTS_DICT_NAMES_DemoHeader == NULL || CONSTANTS_DICT_NAMES_ServerInfo == NULL
 	) { return -1; }
 
 	return 0;
 }
 
 void CONSTANTS_deallocate() {
-	if (CONSTANTS_DICT_NAMES_SayText2  != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_SayText2);  }
-	if (CONSTANTS_DICT_NAMES_GameEvent != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEvent); }
-	if (CONSTANTS_DICT_NAMES_header    != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_header);    }
+	if (CONSTANTS_DICT_NAMES_SayText2   != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_SayText2);  }
+	if (CONSTANTS_DICT_NAMES_GameEvent  != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEvent); }
+	if (CONSTANTS_DICT_NAMES_DemoHeader != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_DemoHeader); }
+	if (CONSTANTS_DICT_NAMES_ServerInfo != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_ServerInfo); }
 }

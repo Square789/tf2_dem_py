@@ -323,6 +323,29 @@ static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *pars
 	}
 	Py_DECREF(tmp);
 
+	// Server info
+	tmp = ServerInfo_to_PyDict(parser_state->server_info);
+	if (tmp == NULL) { goto error1; }
+	if (PyDict_SetItemString(res_dict, "server_info", tmp) < 0) {
+		Py_DECREF(tmp);
+		goto error1;
+	}
+	Py_DECREF(tmp);
+
+	// Print msg
+	if (parser_state->print_msg == NULL) {
+		Py_INCREF(Py_None);
+		tmp = Py_None;
+	} else {
+		tmp = PyUnicode_FromString(parser_state->print_msg);
+		if (tmp == NULL) { goto error1; }
+	}
+	if (PyDict_SetItemString(res_dict, "printmsg", tmp) < 0) {
+		Py_DECREF(tmp);
+		goto error1;
+	}
+	Py_DECREF(tmp);
+
 	// Game events
 	tmp = build_game_event_container(parser_state);
 	if (tmp == NULL) { goto error1; }
@@ -426,7 +449,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	fclose(demo_fp);
 
 	end_time = clock();
-	printf("Parsing successful, took %f secs.\n", ((float)(end_time - start_time) / (float)CLOCKS_PER_SEC));
+	printf("Parsing successful, took %.3f secs... ", ((float)(end_time - start_time) / (float)CLOCKS_PER_SEC));
 
 	Py_BLOCK_THREADS
 
@@ -435,6 +458,8 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 		raise_converter_error();
 		goto memerror2;
 	}
+
+	printf("Result dict created!\n");
 
 	ParserState_destroy(parser_state);
 	Py_DECREF(demo_path);

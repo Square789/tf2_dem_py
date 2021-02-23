@@ -29,6 +29,7 @@ void CONSTANTS_deallocate();
 
 extern PyStringHolder *CONSTANTS_DICT_NAMES_SayText2;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_GameEvent;
-extern PyStringHolder *CONSTANTS_DICT_NAMES_header;
+extern PyStringHolder *CONSTANTS_DICT_NAMES_DemoHeader;
+extern PyStringHolder *CONSTANTS_DICT_NAMES_ServerInfo;
 
 #endif

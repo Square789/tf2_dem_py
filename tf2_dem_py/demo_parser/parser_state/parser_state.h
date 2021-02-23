@@ -2,6 +2,7 @@
 #define PARSER_STATE__H
 
 #include <stdint.h>
+#include "tf2_dem_py/demo_parser/data_structs/server_info.h"
 #include "tf2_dem_py/demo_parser/data_structs/game_events.h"
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 
@@ -33,14 +34,14 @@ typedef struct {
 	// The string of the first found Print message (there should only be one) or NULL
 	uint8_t *print_msg;
 	// The string of the first found ServerInfo message (there should only be one) or NULL
-	uint8_t *server_info;
+	ServerInfo *server_info;
 } ParserState;
 
 ParserState *ParserState_new();
 uint8_t ParserState_init(ParserState *self);
 void ParserState_destroy(ParserState *self);
 
-// If it is not NULL, destroys all game even definitions, frees the
+// If it is not NULL, destroys all game event definitions, frees the
 // game_event_definition array and sets its size to 0.
 void ParserState_free_game_event_defs(ParserState *self);
 

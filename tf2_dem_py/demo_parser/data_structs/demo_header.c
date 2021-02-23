@@ -39,7 +39,7 @@ void DemoHeader_destroy(DemoHeader *self) {
 	free(self);
 }
 
-uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, uint8_t *caw_error) {
+uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *caw_error) {
 	CharArrayWrapper *header_caw = CharArrayWrapper_from_file(stream, 1072);
 	if (header_caw == NULL) {
 		return 1;
@@ -92,7 +92,7 @@ PyObject *DemoHeader_to_PyDict(DemoHeader *self) {
 			failed = 1;
 			continue;
 		}
-		if (PyDict_SetItem(header_dict, CONSTANTS_DICT_NAMES_header->py_strings[i], header[i]) < 0) {
+		if (PyDict_SetItem(header_dict, CONSTANTS_DICT_NAMES_DemoHeader->py_strings[i], header[i]) < 0) {
 			failed = 1;
 		}
 		Py_DECREF(header[i]);

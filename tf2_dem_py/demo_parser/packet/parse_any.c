@@ -11,7 +11,7 @@
 #include "tf2_dem_py/demo_parser/packet/usercmd.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 
-//Read the next byte from stream, determine what packet to read from this id and parse it.
+// Read the next byte from stream, determine what packet to read from this id and parse it.
 // 
 // FILE *stream : Pointer to a FILE struct, next byte must be valid packet id
 // ParserState *parser_state : Pointer to a ParserState instance, will be modified by this function.
@@ -35,7 +35,6 @@ void packet_parse_any(FILE *stream, ParserState *parser_state) {
 	case 6:
 		Datatables_parse(stream, parser_state); break;
 	case 7:
-		printf("STOP\n");
 		parser_state->finished = 1;
 		break;
 	case 8:

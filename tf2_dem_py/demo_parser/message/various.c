@@ -70,25 +70,14 @@ void SigOnState_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 
 
 void Print_parse(CharArrayWrapper *caw, ParserState *parser_state) {
-	// Temporary
-	Print_skip(caw, parser_state);
-	// PyObject *py_str;
+	// Unlikely and weird, but skip it in this case.
+	if (parser_state->print_msg != NULL) { Print_skip(caw, parser_state); }
 
-	// py_str = PyUnicode_FromCAWNulltrm(caw);
-	// if (py_str == NULL) {
-	// 	parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 	if (caw->ERRORLEVEL != 0) {
-	// 		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-	// 		parser_state->failure |= ParserState_ERR_CAW;
-	// 	}
-	// 	return;
-	// }
+	parser_state->print_msg = CharArrayWrapper_get_nulltrm_str(caw);
 
-	// if (PyDict_SetItemString(root_dict, "printmsg", py_str) < 0) {
-	// 	parser_state->failure |= ParserState_ERR_PYDICT;
-	// }
-
-	// Py_DECREF(py_str);
+	if (parser_state->print_msg == NULL) {
+		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+	}
 }
 
 void Print_skip(CharArrayWrapper *caw, ParserState *parser_state) {
@@ -97,60 +86,17 @@ void Print_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 
 
 void ServerInfo_parse(CharArrayWrapper *caw, ParserState *parser_state) {
-	// Temporary
-	ServerInfo_skip(caw, parser_state);
-	// static const char *SINFO_NAMES[16] = {
-	// 	"version", "server_count", "stv", "dedicated",
-	// 	"max_crc", "max_classes", "map_hash", "player_count",
-	// 	"max_player_count", "interval_per_tick", "platform",
-	// 	"game", "map_name", "skybox", "server_name", "replay",
-	// };
-	// PyObject *sinfo_dict = PyDict_New();
-	// if (sinfo_dict == NULL) {
-	// 	parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 	return;
-	// }
+	// This would mean the packet is duplicated. No reason of happening, but just ignore then.
+	if (parser_state->server_info != NULL) { ServerInfo_skip(caw, parser_state); }
 
-	// PyObject *sinfo[16];
-	// PyObject *tmp;
+	parser_state->server_info = ServerInfo_new();
+	if (parser_state->server_info == NULL) {
+		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+		return;
+	}
 
-	// sinfo[0]  = PyLong_FromLong(CharArrayWrapper_get_uint16(caw));
-	// sinfo[1]  = PyLong_FromLong(CharArrayWrapper_get_uint32(caw));
-	// sinfo[2]  = PyBool_FromLong(CharArrayWrapper_get_bit(caw));
-	// sinfo[3]  = PyBool_FromLong(CharArrayWrapper_get_bit(caw));
-	// sinfo[4]  = PyLong_FromLong(CharArrayWrapper_get_uint32(caw));
-	// sinfo[5]  = PyLong_FromLong(CharArrayWrapper_get_uint16(caw));
-	// tmp       = PyBytes_FromCAWLen(caw, 16);
-	// sinfo[6]  = PyUnicode_FromEncodedObject(tmp, "cp437", NULL); Py_XDECREF(tmp);
-	// sinfo[7]  = PyLong_FromLong(CharArrayWrapper_get_uint8(caw));
-	// sinfo[8]  = PyLong_FromLong(CharArrayWrapper_get_uint8(caw));
-	// sinfo[9]  = PyFloat_FromDouble(CharArrayWrapper_get_flt(caw));
-	// sinfo[10] = PyLong_FromLong(CharArrayWrapper_get_uint8(caw));
-	// sinfo[11] = PyUnicode_FromCAWNulltrm(caw);
-	// sinfo[12] = PyUnicode_FromCAWNulltrm(caw);
-	// sinfo[13] = PyUnicode_FromCAWNulltrm(caw);
-	// sinfo[14] = PyUnicode_FromCAWNulltrm(caw);
-	// sinfo[15] = PyBool_FromLong(CharArrayWrapper_get_bit(caw));
-
-	// for (uint8_t i = 0; i < 16; i++) {
-	// 	if (sinfo[i] == NULL) { // Python conversion failure, error raised already
-	// 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-	// 	} else {
-	// 		if (PyDict_SetItemString(sinfo_dict, SINFO_NAMES[i], sinfo[i]) < 0) {
-	// 			parser_state->failure |= ParserState_ERR_PYDICT;
-	// 		} // Move value into dict, then decrease refcount
-	// 		Py_DECREF(sinfo[i]);
-	// 	}
-	// }
-
-	// if (PyDict_SetItemString(root_dict, "server_info", sinfo_dict) < 0) {
-	// 	parser_state->failure |= ParserState_ERR_PYDICT;
-	// }
-
-	// if (caw->ERRORLEVEL != 0) {
-	// 	parser_state->failure |= ParserState_ERR_CAW;
-	// 	parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
-	// }
+	// mallocs in there may fail, but will be caught by outer CAW error check.
+	ServerInfo_read(parser_state->server_info, caw);
 }
 
 void ServerInfo_skip(CharArrayWrapper *caw, ParserState *parser_state) {
