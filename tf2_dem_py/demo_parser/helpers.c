@@ -24,6 +24,22 @@ uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *ar
 	return 0;
 }
 
+PyObject *byte_repr_from_chars(uint8_t *string) {
+	PyObject *tmp0, *tmp1, *tmp2;
+
+	tmp0 = PyBytes_FromString(string);
+	if (tmp0 == NULL) { return NULL; }
+
+	tmp1 = PyObject_Repr(tmp0);
+	Py_DECREF(tmp0);
+	if (tmp1 == NULL) { return NULL; }
+
+	tmp2 = PyUnicode_Substring(tmp1, 2, PyUnicode_GetLength(tmp1) - 1);
+	Py_DECREF(tmp1);
+
+	return tmp2;
+}
+
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
 	char *str = CharArrayWrapper_get_chars(caw, len);

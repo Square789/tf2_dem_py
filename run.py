@@ -6,8 +6,8 @@ import json
 import sys
 from pprint import pprint
 
-from tf2_dem_py.flags import FLAGS
 import tf2_dem_py.demo_parser
+from tf2_dem_py.flags import FLAGS
 
 if len(sys.argv) > 1:
 	p = sys.argv[1]
@@ -18,7 +18,7 @@ else:
 	)
 
 dp = tf2_dem_py.demo_parser.DemoParser(
-	FLAGS.GAME_EVENTS
+	FLAGS.CHAT | FLAGS.COMPACT_CHAT
 )
 print("Demo parser constructed and it didn't segfault!")
 res = dp.parse(p)

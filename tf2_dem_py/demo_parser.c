@@ -14,8 +14,8 @@
 // setup.py will fail without this line
 #define _tf2_dem_py__version__ "0.0.1"
 
-#define demo_parser_PARSER_ERRMSG_SIZE 16
-#define demo_parser_CAW_ERRMSG_SIZE 8
+#define demo_parser_PARSER_ERRMSG_SIZE (sizeof(ParserState_errflag_t) * 8)
+#define demo_parser_CAW_ERRMSG_SIZE (sizeof(CharArrayWrapper_err_t) * 8)
 #define demo_parser_GIL_SLEEP_MS 100
 
 static PyObject *__version__;
@@ -51,7 +51,6 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	PyObject *lmsg_str, *fppos_str;
 	PyObject *final_string = NULL;
 
-	// FIXME: Can be called after fp is closed, which gets you a trip down UB-road
 	if (builder_list == NULL) goto error0;
 	lmsg_str = PyUnicode_FromFormat("%u", (unsigned int)parser_state->current_message);
 	if (lmsg_str == NULL) goto error1;
@@ -215,7 +214,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			goto error0;
 		}
-		for (size_t ge_idx = 0; ge_idx < parser_state->game_events_amount; ge_idx++) {
+		for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
 			event_id = PyLong_FromLong(parser_state->game_events[ge_idx]->event_type);
 			if (event_id == NULL) { goto error1_mem; }
 			key_memb_check = PyDict_Contains(game_event_container, event_id);
@@ -241,7 +240,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 		}
 	} else {
 		// Just create a list.
-		game_event_container = PyList_New(parser_state->game_events_amount);
+		game_event_container = PyList_New(parser_state->game_events_len);
 		if (game_event_container == NULL) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			goto error0;
@@ -251,7 +250,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 	PyObject *game_event_python_repr;
 	PyObject *final_container;
 	PyObject *event_id;
-	for (size_t ge_idx = 0; ge_idx < parser_state->game_events_amount; ge_idx++) {
+	for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
 		if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
 			// Could probably add some bounds checking, but I think something else would've broken
 			// earlier if event_type was not in the game event defs.
@@ -304,6 +303,30 @@ error0:
 	return NULL;
 }
 
+static PyObject *build_chat_container(ParserState *parser_state) {
+	PyObject *res_list = PyList_New(parser_state->chat_messages_len);
+	PyObject *chat_obj;
+	if (res_list == NULL) {
+		return NULL;
+	}
+
+	for (size_t i = 0; i < parser_state->chat_messages_len; i++) {
+		if (parser_state->flags & FLAGS_COMPACT_CHAT) {
+			chat_obj = ChatMessage_to_PyTuple(parser_state->chat_messages[i]);
+		} else {
+			chat_obj = ChatMessage_to_PyDict(parser_state->chat_messages[i]);
+		}
+		if (chat_obj == NULL) {
+			Py_DECREF(res_list);
+			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+			return NULL;
+		}
+		PyList_SET_ITEM(res_list, i, chat_obj);
+	}
+
+	return res_list;
+}
+
 // Build a result dict from a parser state which should contain a valid combination
 // of parsed data and flags.
 // Returns NULL on any sort of failure. Assume MemoryError if no Python exception is set.
@@ -340,6 +363,7 @@ static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *pars
 		tmp = PyUnicode_FromString(parser_state->print_msg);
 		if (tmp == NULL) { goto error1; }
 	}
+
 	if (PyDict_SetItemString(res_dict, "printmsg", tmp) < 0) {
 		Py_DECREF(tmp);
 		goto error1;
@@ -347,13 +371,26 @@ static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *pars
 	Py_DECREF(tmp);
 
 	// Game events
-	tmp = build_game_event_container(parser_state);
-	if (tmp == NULL) { goto error1; }
-	if (PyDict_SetItemString(res_dict, "game_events", tmp) < 0) {
+	if (parser_state->flags & FLAGS_GAME_EVENTS) {
+		tmp = build_game_event_container(parser_state);
+		if (tmp == NULL) { goto error1; }
+		if (PyDict_SetItemString(res_dict, "game_events", tmp) < 0) {
+			Py_DECREF(tmp);
+			goto error1;
+		};
 		Py_DECREF(tmp);
-		goto error1;
-	};
-	Py_DECREF(tmp);
+	}
+
+	// Chat
+	if (parser_state->flags & FLAGS_CHAT) {
+		tmp = build_chat_container(parser_state);
+		if (tmp == NULL) { goto error1; }
+		if (PyDict_SetItemString(res_dict, "chat", tmp) < 0) {
+			Py_DECREF(tmp);
+			goto error1;
+		}
+		Py_DECREF(tmp);
+	}
 
 	return res_dict;
 
@@ -364,7 +401,7 @@ error0:
 
 // === Start of DemoParser methods === //
 
-typedef struct {
+typedef struct DemoParser_s {
 	PyObject_HEAD
 	uint32_t flags;
 } DemoParser;
@@ -478,9 +515,8 @@ parser_error:
 	Py_DECREF(demo_path);
 	return NULL;
 
-memerror2:  ParserState_destroy(parser_state);
-memerror1:
-	Py_DECREF(demo_path);
+memerror2: ParserState_destroy(parser_state);
+memerror1: Py_DECREF(demo_path);
 memerror0:
 	return (PyErr_Occurred() == NULL) ? PyErr_NoMemory() : NULL;
 }
@@ -606,17 +642,17 @@ uint8_t initialize_local_constants() {
 	ParserError = PyErr_NewException("demo_parser.ParserError", NULL, NULL);
 	PyConversionError = PyErr_NewException("demo_parser.PyConversionError", NULL, NULL);
 	PYSTR_EMPTY = PyUnicode_FromStringAndSize("", 0);
-	PARSER_ERRMSG[0] = PyUnicode_FromStringAndSize("CharArrayWrapper error, see below.", 34);
-	PARSER_ERRMSG[1] = PyUnicode_FromStringAndSize("Unknown packet id encountered.", 30);
-	PARSER_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error.", 10);
-	PARSER_ERRMSG[3] = PyUnicode_FromStringAndSize("Unexpected end of file.", 23);
-	PARSER_ERRMSG[4] = PyUnicode_FromStringAndSize("Unknown message id encountered.", 31);
-	PARSER_ERRMSG[5] = PyUnicode_FromStringAndSize("Memory allocation failure.", 26);
-	PARSER_ERRMSG[6] = PyUnicode_FromStringAndSize("Unknown game event encountered.", 31);
-	PARSER_ERRMSG[7] = PyUnicode_FromStringAndSize("Python dict error (Likely memory error).", 40);
-	PARSER_ERRMSG[8] = PyUnicode_FromStringAndSize("Python list error (Likely memory error).", 40);
-	PARSER_ERRMSG[9] = PyUnicode_FromStringAndSize("Game event index higher than size of game event array.", 54);
-	for (uint32_t i = 10; i < 15; i++) {
+	PARSER_ERRMSG[0]  = PyUnicode_FromStringAndSize("CharArrayWrapper error, see below.", 34);
+	PARSER_ERRMSG[1]  = PyUnicode_FromStringAndSize("Unknown packet id encountered.", 30);
+	PARSER_ERRMSG[2]  = PyUnicode_FromStringAndSize("I/O error.", 10);
+	PARSER_ERRMSG[3]  = PyUnicode_FromStringAndSize("Unexpected end of file.", 23);
+	PARSER_ERRMSG[4]  = PyUnicode_FromStringAndSize("Unknown message id encountered.", 31);
+	PARSER_ERRMSG[5]  = PyUnicode_FromStringAndSize("Memory allocation failure.", 26);
+	PARSER_ERRMSG[6]  = PyUnicode_FromStringAndSize("Unknown game event encountered.", 31);
+	PARSER_ERRMSG[7]  = PyUnicode_FromStringAndSize("Python dict error (Likely memory error).", 40);
+	PARSER_ERRMSG[8]  = PyUnicode_FromStringAndSize("Python list error (Likely memory error).", 40);
+	PARSER_ERRMSG[9]  = PyUnicode_FromStringAndSize("Game event index higher than size of game event array.", 54);
+	for (uint32_t i = 10; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
 		Py_XINCREF(PYSTR_EMPTY);
 		PARSER_ERRMSG[i] = PYSTR_EMPTY;
 	}
@@ -626,7 +662,7 @@ uint8_t initialize_local_constants() {
 	CAW_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error when reading from file.", 33);
 	CAW_ERRMSG[3] = PyUnicode_FromStringAndSize("Initialization failed due to memory error.", 42);
 	CAW_ERRMSG[4] = PyUnicode_FromStringAndSize("Initialization failed due to odd file reading result (Premature EOF?)", 69);
-	for (uint32_t i = 5; i < 8; i++) {
+	for (uint32_t i = 5; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
 		Py_XINCREF(PYSTR_EMPTY);
 		CAW_ERRMSG[i] = PYSTR_EMPTY;
 	}

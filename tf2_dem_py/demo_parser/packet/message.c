@@ -1,18 +1,18 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 
-inline uint8_t should_parse(uint8_t m_id, uint16_t flag) {
-	if (m_id == 25) {
-		return (flag & FLAGS_GAME_EVENTS);
-	} else {
-		return 1;
+inline bool should_parse(uint8_t m_id, flag_t flags) {
+	switch (m_id) {
+	case 25:
+		return (flags & FLAGS_GAME_EVENTS) ? true : false;
+	default:
+		return true;
 	}
 }
 
@@ -111,7 +111,7 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 			goto error1;
 		}
 
-		if (should_parse(msg_id, parser_state->flags)) {
+		if (should_parse(msg_id, parser_state->flags) == true) {
 			msg_parser->parse(pkt_caw, parser_state);
 		} else {
 			msg_parser->skip(pkt_caw, parser_state);

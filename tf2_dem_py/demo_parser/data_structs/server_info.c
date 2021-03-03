@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 #include "tf2_dem_py/constants.h"
@@ -20,7 +19,7 @@ void ServerInfo_init(ServerInfo *self) {
 	self->dedicated = 0;
 	self->max_crc = 0;
 	self->max_classes = 0;
-	*self->map_hash = 0;
+	for (size_t i = 0; i < 16; i++) self->map_hash[i] = 0;
 	self->player_count = 0;
 	self->max_player_count = 0;
 	self->interval_per_tick = 0;
@@ -85,6 +84,8 @@ PyObject *ServerInfo_to_PyDict(ServerInfo *self) {
 	if (tmp != NULL) {
 		sinfo[6]  = PyUnicode_FromEncodedObject(tmp, "cp437", NULL);
 		Py_DECREF(tmp);
+	} else {
+		sinfo[6] = NULL;
 	}
 	sinfo[7]  = PyLong_FromLong(self->player_count);
 	sinfo[8]  = PyLong_FromLong(self->max_player_count);

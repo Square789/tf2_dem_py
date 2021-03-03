@@ -46,7 +46,8 @@ extensions = [
 	Extension(
 		"tf2_dem_py.demo_parser",
 		sources = deliver_sources("tf2_dem_py/demo_parser.c"),
-		extra_compile_args = [],
+		# Yeah yeah, it seems to work okay
+		extra_compile_args = ["-Wall", "-Wno-pointer-sign"],
 		extra_link_args = ["-static"],
 	)
 ]
@@ -59,7 +60,7 @@ setup(
 	include_dirs = [ # This is so incredibly hardcoded lmao
 			"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
 				"/mingw64/x86_64-w64-mingw32/include",
-            "C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
+			"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
 				"/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include",
 			".",
 		],

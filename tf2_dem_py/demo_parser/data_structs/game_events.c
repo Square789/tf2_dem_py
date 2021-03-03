@@ -37,16 +37,18 @@ void GameEventDefinition_init(GameEventDefinition *self) {
 	self->entries = NULL;
 }
 
-void GameEventDefinition_destroy(GameEventDefinition *self) {
+void GameEventDefinition_free(GameEventDefinition *self) {
 	if (self->entries != NULL) {
 		for (uint16_t i = 0; i < self->entries_len; i++) {
 			GameEventEntry_free(self->entries + i);
 		}
 	}
 	free(self->name);
-	// free(self); // This is really ugly and hackish since the only instance where GEDs are
-	// created is actually just in a plain array, so they should not be freed.
-	// Rework this, probably
+}
+
+void GameEventDefinition_destroy(GameEventDefinition *self) {
+	GameEventDefinition_free(self);
+	free(self);
 }
 
 uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, uint8_t *name, uint8_t type) {
@@ -98,8 +100,6 @@ void GameEvent_destroy(GameEvent *self) {
 	free(self);
 }
 
-// Convert a GameEvent to a Python dict.
-// Returns NULL on any sort of failure, may or may not raise a python error.
 PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	PyObject *tmp_entry_val;
 	PyObject *entry_dict;

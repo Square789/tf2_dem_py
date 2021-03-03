@@ -51,8 +51,7 @@ CharArrayWrapper *CharArrayWrapper_from_caw(CharArrayWrapper *self, size_t len) 
 	return new_caw;
 }
 
-
-CharArrayWrapper *CharArrayWrapper_from_caw_b(CharArrayWrapper *self, uint64_t bitlen) {
+CharArrayWrapper *CharArrayWrapper_from_caw_b(CharArrayWrapper *self, size_t bitlen) {
 	size_t req_bytelen;
 	CharArrayWrapper *new_caw;
 	bitlen += CharArrayWrapper_get_pos_bit(self);

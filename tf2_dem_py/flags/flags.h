@@ -3,9 +3,11 @@
 
 #include <stdint.h>
 
-extern const uint32_t FLAGS_CHAT;
-extern const uint32_t FLAGS_GAME_EVENTS;
-extern const uint32_t FLAGS_COMPACT_CHAT;
-extern const uint32_t FLAGS_COMPACT_GAME_EVENTS;
+typedef uint32_t flag_t;
+
+extern const flag_t FLAGS_CHAT;
+extern const flag_t FLAGS_GAME_EVENTS;
+extern const flag_t FLAGS_COMPACT_CHAT;
+extern const flag_t FLAGS_COMPACT_GAME_EVENTS;
 
 #endif

@@ -17,8 +17,7 @@ for i, file in enumerate([os.path.join(p, i) for i in os.listdir(p) if i.endswit
 	print(file)
 	dp = DemoParser(
 		(
-			FLAGS.CHAT |
-			FLAGS.GAME_EVENTS
+			FLAGS.CHAT | FLAGS.COMPACT_CHAT
 		)
 	)
 	res = dp.parse(file)

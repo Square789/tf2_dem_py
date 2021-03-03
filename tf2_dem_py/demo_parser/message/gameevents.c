@@ -57,13 +57,20 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 	}
 }
 
+void cawdump(CharArrayWrapper *caw) {
+	printf("=== CAW on %p, data length %u\n", caw->mem_ptr, caw->mem_len);
+	printf("=== @ %uB %ub\n", CharArrayWrapper_get_pos_byte(caw), CharArrayWrapper_get_pos_bit(caw));
+	printf("=== ERR %u | freeondealloc? %u\n", caw->ERRORLEVEL, caw->free_on_dealloc);
+}
+
 void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	if (parser_state->game_event_defs == NULL) {
 		GameEvent_skip(caw, parser_state); // Somehow received gameevent before gameevent defs
+		return;
 	}
-	uint16_t length;
+	uint16_t length = 0;
 	CharArrayWrapper_read_raw(caw, &length, 1, 3);
-	CharArrayWrapper *ge_caw = CharArrayWrapper_from_caw_b(caw, (uint64_t)length);
+	CharArrayWrapper *ge_caw = CharArrayWrapper_from_caw_b(caw, length);
 	uint16_t event_type = 0;
 	GameEventDefinition *event_def;
 

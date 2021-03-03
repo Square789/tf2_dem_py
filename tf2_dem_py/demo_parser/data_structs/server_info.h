@@ -9,7 +9,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 
-typedef struct {
+typedef struct ServerInfo_s {
 	uint16_t version;
 	uint32_t server_count;
 	bool     stv;
@@ -32,7 +32,7 @@ ServerInfo *ServerInfo_new();
 void ServerInfo_init(ServerInfo *self);
 void ServerInfo_destroy(ServerInfo *self);
 
-// Read data from a CharArrayWrapper into a ServerInfo struct.
+// Reads data from a CharArrayWrapper into a ServerInfo struct.
 // On failure, the CharArrayWrapper's ERRORLEVEL will be set.
 void ServerInfo_read(ServerInfo *self, CharArrayWrapper *caw);
 

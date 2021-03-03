@@ -13,7 +13,7 @@ extern const uint16_t CAW_ERR_INIT_ODD_IO_RESULT;
 
 typedef uint8_t CharArrayWrapper_err_t;
 
-typedef struct {
+typedef struct CharArrayWrapper_s {
 	// Pointer to the memory block the CharArrayWrapper works on.
 	uint8_t *mem_ptr;
 	// Length of the CharArrayWrapper's memory block.
@@ -36,19 +36,19 @@ typedef struct {
 
 } CharArrayWrapper;
 
-// Allocate space for a new CharArrayWrapper and initialize its fields.
+// Allocates space for a new CharArrayWrapper and initializes its fields.
 CharArrayWrapper *CharArrayWrapper_new();
 
 // Destroys a CharArrayWrapper by freeing its pointer and - if the free_on_dealloc
 // attribute is set - its mem_ptr as well.
 void CharArrayWrapper_destroy(CharArrayWrapper *self);
 
-// Create a new CharArrayWrapper and return a pointer to it.
+// Creates a new CharArrayWrapper and return a pointer to it.
 // May return a Nullpointer on CharArrayWrapper allocation failure.
 // Instantiated CharArrayWrapper may already be faulty, check ERRORLEVEL to be safe.
 CharArrayWrapper *CharArrayWrapper_from_file(FILE *fp, size_t initbytes);
 
-// Create a CharArrayWrapper from an existing CharArrayWrapper.
+// Creates a CharArrayWrapper from an existing CharArrayWrapper.
 // The new CharArrayWrapper's pos_byte will be 0, however may be offset
 // on a bit level already, if the parent CharArrayWrapper was.
 // As the new CharArrayWrapper works on the existing memory chunk
@@ -57,13 +57,13 @@ CharArrayWrapper *CharArrayWrapper_from_file(FILE *fp, size_t initbytes);
 // Returns Null on allocation failure.
 CharArrayWrapper *CharArrayWrapper_from_caw(CharArrayWrapper *self, size_t len);
 
-// Create a CharArrayWrapper on another one, however taking an amount
+// Creates a CharArrayWrapper on another one, however taking an amount
 // of bits as input and performing some size requirement calculations.
-// As size_t * 8 may exceed the capacity of uint64_t, this function is limited,
+// As size_t * 8 may exceed the capacity of size_t, this function is limited,
 // but should work for smaller data blocks. The same byte-level restrictions
 // as in from_caw apply.
 // Returns Null on allocation failure.
-CharArrayWrapper *CharArrayWrapper_from_caw_b(CharArrayWrapper *self, uint64_t bitlen);
+CharArrayWrapper *CharArrayWrapper_from_caw_b(CharArrayWrapper *self, size_t bitlen);
 
 // Verify enough data is left that can still be read, counting from
 //     current bitbuffer length and position in char array.

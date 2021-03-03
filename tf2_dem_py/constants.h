@@ -4,8 +4,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-typedef struct {
-	const char **strings;
+typedef struct PyStringHolder_s {
 	PyObject **py_strings;
 	Py_ssize_t size;
 } PyStringHolder;
@@ -27,8 +26,8 @@ void CONSTANTS_deallocate();
 
 // === Constant declarations === //
 
-extern PyStringHolder *CONSTANTS_DICT_NAMES_SayText2;
-extern PyStringHolder *CONSTANTS_DICT_NAMES_GameEvent;
+extern PyStringHolder *CONSTANTS_DICT_NAMES_ChatMessage;
+extern PyStringHolder *CONSTANTS_DICT_NAMES_GameEventContainer;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_DemoHeader;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_ServerInfo;
 
