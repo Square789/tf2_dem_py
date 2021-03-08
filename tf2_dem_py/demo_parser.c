@@ -11,12 +11,15 @@
 #include "tf2_dem_py/demo_parser/packet/parse_any.h"
 #include "tf2_dem_py/demo_parser/helpers.h"
 
+#define FLOAT_CLOCKS_PER_SEC ((float)CLOCKS_PER_SEC)
+
 // setup.py will fail without this line
 #define _tf2_dem_py__version__ "0.0.1"
 
 #define demo_parser_PARSER_ERRMSG_SIZE (sizeof(ParserState_errflag_t) * 8)
 #define demo_parser_CAW_ERRMSG_SIZE (sizeof(CharArrayWrapper_err_t) * 8)
 #define demo_parser_GIL_SLEEP_MS 100
+
 
 static PyObject *__version__;
 static PyObject *ParserError;
@@ -435,7 +438,7 @@ static PyObject *DemoParser_new(PyTypeObject *type, PyObject *args, PyObject *kw
 static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kwargs) {
 	static char *KWARGS[] = {"path", NULL};
 
-	clock_t start_time, end_time, last_gil_acq;
+	clock_t start_time, end_time, last_gil_acq, cur_clock;
 	ParserState *parser_state;
 	FILE *demo_fp;
 	PyObject *res_dict;
@@ -446,12 +449,6 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 			PyUnicode_FSConverter, &demo_path
 	)) { goto memerror0; }
 
-	// Open file
-	demo_fp = fopen(PyBytes_AsString(demo_path), "rb");
-	if (demo_fp == NULL) {
-		goto file_error;
-	}
-
 	// - Variable setup - //
 	// - Create and setup ParserState
 	parser_state = ParserState_new();
@@ -460,6 +457,12 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	PyThreadState *_save;
 	Py_UNBLOCK_THREADS
+
+	// Open file
+	demo_fp = fopen(PyBytes_AsString(demo_path), "rb");
+	if (demo_fp == NULL) {
+		goto file_error;
+	}
 
 	start_time = last_gil_acq = clock();
 
@@ -475,10 +478,17 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	default:
 		break;
 	}
-	if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
+	if (parser_state->failure != 0) { goto parser_error; }
 	while (!parser_state->finished) {
 		packet_parse_any(demo_fp, parser_state);
-		if (parser_state->failure != 0) { Py_BLOCK_THREADS goto parser_error; }
+		if (parser_state->failure != 0) { goto parser_error; }
+		cur_clock = clock();
+		if (((float)(cur_clock - last_gil_acq) / (FLOAT_CLOCKS_PER_SEC / 1000.0f)) > demo_parser_GIL_SLEEP_MS) {
+			last_gil_acq = cur_clock;
+			Py_BLOCK_THREADS
+			if (PyErr_CheckSignals() < 0) { goto interrupted_error; }
+			Py_UNBLOCK_THREADS
+		}
 	}
 
 	// Done parsing
@@ -486,7 +496,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	fclose(demo_fp);
 
 	end_time = clock();
-	printf("Parsing successful, took %.3f secs... ", ((float)(end_time - start_time) / (float)CLOCKS_PER_SEC));
+	printf("Parsing successful, took %.3f secs... ", ((float)(end_time - start_time) / FLOAT_CLOCKS_PER_SEC));
 
 	Py_BLOCK_THREADS
 
@@ -503,18 +513,31 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	return res_dict;
 
+// Error opening demo file, parsing has not begun but parser_state exists, GIL not held, no python error set.
 file_error:
+	Py_BLOCK_THREADS
+	ParserState_destroy(parser_state);
 	Py_DECREF(demo_path);
 	PyErr_SetString(PyExc_FileNotFoundError, "Demo does not exist.");
 	return NULL;
 
+// ParserState's error flags non-null, GIL not held, no python error is set.
 parser_error:
+	Py_BLOCK_THREADS // Will only be called into during parsing, where GIL is released.
 	raise_parser_error(demo_fp, parser_state);
 	fclose(demo_fp);
 	ParserState_destroy(parser_state);
 	Py_DECREF(demo_path);
 	return NULL;
 
+// Signal check returned -1, GIL held, python error is set
+interrupted_error:
+	fclose(demo_fp);
+	ParserState_destroy(parser_state);
+	Py_DECREF(demo_path);
+	return NULL;
+
+// Memory error, GIL held, demo file will be closed, Python error may be set
 memerror2: ParserState_destroy(parser_state);
 memerror1: Py_DECREF(demo_path);
 memerror0:

@@ -122,7 +122,8 @@ PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	// Fill game_event dict
 	for (uint16_t i = 0; i < event_def->entries_len; i++) {
 		switch (event_def->entries[i].type) {
-		case 0:
+		case 0: case 7: default: // 0 / anything > 7 should not be here, no idea what to do for 7
+			tmp_entry_val = NULL;
 			break;
 		case 1: // String
 			tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
@@ -136,11 +137,6 @@ PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_uint8(ge_caw)); break;
 		case 6: // Bit
 			tmp_entry_val = PyBool_FromLong(CharArrayWrapper_get_bit(ge_caw)); break;
-		case 7: // "Local" ?????
-			// No clue
-			Py_INCREF(Py_None);
-			tmp_entry_val = Py_None;
-			continue;
 		}
 		if (tmp_entry_val == NULL) {
 			goto error2;
@@ -177,7 +173,8 @@ PyObject *GameEvent_to_compact_PyTuple(GameEvent *self, GameEventDefinition *eve
 	// Fill tuple
 	for (uint16_t i = 0; i < event_def->entries_len; i++) {
 		switch (event_def->entries[i].type) {
-		case 0:
+		case 0: case 7: default: // 0 / anything > 7 should not be here, no idea what to do for 7
+			tmp_entry_val = NULL;
 			break;
 		case 1: // String
 			tmp_entry_val = PyUnicode_FromCAWNulltrm(ge_caw); break;
@@ -191,10 +188,6 @@ PyObject *GameEvent_to_compact_PyTuple(GameEvent *self, GameEventDefinition *eve
 			tmp_entry_val = PyLong_FromLong(CharArrayWrapper_get_uint8(ge_caw)); break;
 		case 6: // Bit
 			tmp_entry_val = PyBool_FromLong(CharArrayWrapper_get_bit(ge_caw)); break;
-		case 7: // "Local" ?????
-			// No clue
-			tmp_entry_val = NULL;
-			continue;
 		}
 		if (tmp_entry_val == NULL) { goto error2; }
 		PyTuple_SET_ITEM(event_tup, i, tmp_entry_val);

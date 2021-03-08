@@ -15,12 +15,6 @@
 // Returns -1 on memory failures, 0 on success.
 uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *array_cap, size_t *array_len);
 
-// Create a python Unicode object which is the representation of a python bytes object created from the input string
-// with the leading `b'` and trailing `'` chopped off. (Done by dumb substring slicing, not any actual searching
-// for these characters.)
-// Returns NULL on any sort of failure.
-PyObject *byte_repr_from_chars(uint8_t *string);
-
 // Convenience function to create a Python bytes object from a
 // CharArrayWrapper, directly freeing the allocated string afterwards.
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len);

@@ -39,7 +39,6 @@ PyObject *ChatMessage_to_PyDict(ChatMessage *self) {
 	PyObject *chat_dict = PyDict_New();
 	PyObject *chat[8];
 	bool failed = false;
-	printf("\n");
 
 	if (chat_dict == NULL) {
 		return NULL;
@@ -48,11 +47,11 @@ PyObject *ChatMessage_to_PyDict(ChatMessage *self) {
 	chat[0] = PyBool_FromLong(self->is_normal);
 	chat[1] = PyLong_FromUnsignedLong(self->sender);
 	chat[2] = PyBool_FromLong(self->is_chat);
-	chat[3] = byte_repr_from_chars(self->data);
-	chat[4] = byte_repr_from_chars(self->param0);
-	chat[5] = byte_repr_from_chars(self->param1);
-	chat[6] = byte_repr_from_chars(self->param2);
-	chat[7] = byte_repr_from_chars(self->param3);
+	chat[3] = PyBytes_FromString(self->data);
+	chat[4] = PyBytes_FromString(self->param0);
+	chat[5] = PyBytes_FromString(self->param1);
+	chat[6] = PyBytes_FromString(self->param2);
+	chat[7] = PyBytes_FromString(self->param3);
 
 	for (size_t i = 0; i < 8; i++) {
 		if (chat[i] == NULL) {
@@ -82,11 +81,11 @@ PyObject *ChatMessage_to_PyTuple(ChatMessage *self) {
 	PyTuple_SET_ITEM(tup, 0, PyBool_FromLong(self->is_normal));
 	PyTuple_SET_ITEM(tup, 1, PyLong_FromUnsignedLong(self->sender));
 	PyTuple_SET_ITEM(tup, 2, PyBool_FromLong(self->is_chat));
-	PyTuple_SET_ITEM(tup, 3, byte_repr_from_chars(self->data));
-	PyTuple_SET_ITEM(tup, 4, byte_repr_from_chars(self->param0));
-	PyTuple_SET_ITEM(tup, 5, byte_repr_from_chars(self->param1));
-	PyTuple_SET_ITEM(tup, 6, byte_repr_from_chars(self->param2));
-	PyTuple_SET_ITEM(tup, 7, byte_repr_from_chars(self->param3));
+	PyTuple_SET_ITEM(tup, 3, PyBytes_FromString(self->data));
+	PyTuple_SET_ITEM(tup, 4, PyBytes_FromString(self->param0));
+	PyTuple_SET_ITEM(tup, 5, PyBytes_FromString(self->param1));
+	PyTuple_SET_ITEM(tup, 6, PyBytes_FromString(self->param2));
+	PyTuple_SET_ITEM(tup, 7, PyBytes_FromString(self->param3));
 
 	for (size_t i = 0; i < 8; i++) {
 		if (PyTuple_GET_ITEM(tup, i) == NULL) {
