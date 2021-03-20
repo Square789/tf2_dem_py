@@ -68,7 +68,7 @@ void ParserState_free_game_event_defs(ParserState *self) {
 void ParserState_free_game_events(ParserState *self) {
 	if (self->game_events != NULL) {
 		for (size_t i = 0; i < self->game_events_len; i++) {
-			GameEvent_destroy(self->game_events[i]);
+			GameEvent_free(self->game_events + i);
 		}
 		free(self->game_events);
 		self->game_events = NULL;
@@ -77,8 +77,8 @@ void ParserState_free_game_events(ParserState *self) {
 	}
 }
 
-uint8_t ParserState_append_game_event(ParserState *self, GameEvent *ge) {
-	if (_generic_arraylist_size_check(sizeof(GameEvent *), &self->game_events, &self->game_events_capacity,
+uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge) {
+	if (_generic_arraylist_size_check(sizeof(GameEvent), &self->game_events, &self->game_events_capacity,
 			&self->game_events_len) != 0) {
 		return 1;
 	}

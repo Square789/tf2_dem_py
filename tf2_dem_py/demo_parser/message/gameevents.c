@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,10 +13,12 @@
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 #include "tf2_dem_py/demo_parser/message/gameevents.h"
 
-uint8_t inline should_read_game_event(uint16_t event_id) {
+inline bool should_read_game_event(uint16_t event_id) {
 	switch (event_id) {
-		case 23: return 1;
-		default: return 0;
+		case 23:
+			return true;
+		default:
+			return false;
 	}
 }
 
@@ -23,7 +26,7 @@ uint8_t inline should_read_game_event(uint16_t event_id) {
  * Will modify the parser state's FAILURE attribute on any error. */
 void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t last_type = 0;
-	uint16_t event_id;
+	uint16_t event_id = 0;
 	uint8_t *entry_name;
 	GameEventDefinition *ged;
 
@@ -55,12 +58,6 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 		}
 		CharArrayWrapper_read_raw(caw, &last_type, 0, 3);
 	}
-}
-
-void cawdump(CharArrayWrapper *caw) {
-	printf("=== CAW on %p, data length %u\n", caw->mem_ptr, caw->mem_len);
-	printf("=== @ %uB %ub\n", CharArrayWrapper_get_pos_byte(caw), CharArrayWrapper_get_pos_bit(caw));
-	printf("=== ERR %u | freeondealloc? %u\n", caw->ERRORLEVEL, caw->free_on_dealloc);
 }
 
 void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
@@ -147,27 +144,18 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		(new_bitpos >= orig_bitpos) ? new_bitpos - orig_bitpos : (8 - (orig_bitpos - new_bitpos))
 	);
 
-	GameEvent *game_event = GameEvent_new();
-	if (game_event == NULL) {
-		free(event_data);
+	GameEvent game_event = {
+		.data = event_data,
+		.data_len = event_data_len,
+		.event_type = event_type,
+	};
+
+	if (ParserState_append_game_event(parser_state, game_event) != 0) {
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		goto error1;
 	}
 
-	game_event->data = event_data;
-	game_event->data_len = event_data_len;
-	game_event->event_type = event_type;
-
-	if (ParserState_append_game_event(parser_state, game_event) != 0) {
-		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-		goto error2;
-	}
-
 do_not_read:
-	CharArrayWrapper_destroy(ge_caw);
-	return;
-
-error2: GameEvent_destroy(game_event);
 error1: CharArrayWrapper_destroy(ge_caw);
 error0:
 	return;

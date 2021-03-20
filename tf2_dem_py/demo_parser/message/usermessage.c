@@ -118,7 +118,7 @@ void UserMessage_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 void UserMessage_skip(CharArrayWrapper *caw, ParserState *parser_state) {
-	uint16_t len;
+	uint16_t len = 0;
 	CharArrayWrapper_skip(caw, 1, 0);
 	CharArrayWrapper_read_raw(caw, &len, 1, 3);
 	CharArrayWrapper_skip(caw, len / 8, len % 8);

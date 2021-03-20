@@ -11,10 +11,10 @@ typedef struct {
 	uint8_t sender;
 	bool is_chat;
 	uint8_t *data;
-	char *param0;
-	char *param1;
-	char *param2;
-	char *param3;
+	uint8_t *param0;
+	uint8_t *param1;
+	uint8_t *param2;
+	uint8_t *param3;
 } ChatMessage;
 
 ChatMessage *ChatMessage_new();

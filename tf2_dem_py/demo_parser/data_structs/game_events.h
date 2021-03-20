@@ -13,6 +13,7 @@ typedef struct GameEventEntry_s {
 
 // Never heap alloced so far, commented those out for clarity.
 // GameEventEntry *GameEventEntry_new(uint8_t *name, uint8_t type);
+void GameEventEntry_free(GameEventEntry *self);
 // void GameEventEntry_destroy(GameEventEntry *self);
 
 // Contains items to form a demo-specific definition of a game event.
@@ -43,9 +44,10 @@ typedef struct GameEvent_s {
 	size_t data_len;
 } GameEvent;
 
-GameEvent *GameEvent_new();
+// GameEvent *GameEvent_new();
 void GameEvent_init(GameEvent *self);
-void GameEvent_destroy(GameEvent *self);
+void GameEvent_free(GameEvent *self);
+// void GameEvent_destroy(GameEvent *self);
 
 // Converts a GameEvent to a Python dict.
 // Returns NULL on any sort of failure, may or may not raise a python error.

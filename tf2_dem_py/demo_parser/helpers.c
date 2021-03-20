@@ -26,7 +26,7 @@ uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *ar
 
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
-	char *str = CharArrayWrapper_get_chars(caw, len);
+	char *str = (char *)CharArrayWrapper_get_chars(caw, len);
 	if (str == NULL) {
 		return NULL;
 	}
@@ -38,7 +38,7 @@ PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 
 PyObject *PyUnicode_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
-	char *str = CharArrayWrapper_get_chars(caw, len); // get_chars
+	char *str = (char *)CharArrayWrapper_get_chars(caw, len);
 	if (str == NULL) {
 		return NULL;
 	}
@@ -50,7 +50,7 @@ PyObject *PyUnicode_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 
 PyObject *PyUnicode_FromCAWUpToNull(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
-	char *str = CharArrayWrapper_get_chars_up_to_null(caw, len); // get_chars_up_to_null
+	char *str = (char *)CharArrayWrapper_get_chars_up_to_null(caw, len);
 	if (str == NULL) {
 		return NULL;
 	}
@@ -62,14 +62,13 @@ PyObject *PyUnicode_FromCAWUpToNull(CharArrayWrapper *caw, size_t len) {
 
 PyObject *PyUnicode_FromCAWNulltrm(CharArrayWrapper *caw) {
 	PyObject *pystr;
-	char *str = CharArrayWrapper_get_nulltrm_str(caw); // get_nulltrm_str
+	char *str = (char *)CharArrayWrapper_get_nulltrm_str(caw);
 	if (str == NULL) {
 		return NULL;
 	}
 
 	pystr = PyUnicode_FromString(str);
 	free(str);
-	//if (pystr == NULL) printf("%s\n", str);
  	return pystr;
 }
 

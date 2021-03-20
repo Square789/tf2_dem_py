@@ -54,8 +54,7 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 		CharArrayWrapper_read_raw(pkt_caw, &msg_id, 0, 6);
 		parser_state->current_message = msg_id;
 		// printf(" -Next message: %u, tick %u, %d bytes in\n", msg_id, parser_state->tick, CharArrayWrapper_get_pos_byte(pkt_caw));
-		switch (msg_id)
-		{
+		switch (msg_id) {
 		case 0:
 			msg_parser = &MsgParser_Empty; break;
 		case 2:
@@ -111,7 +110,7 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 			goto error1;
 		}
 
-		if (should_parse(msg_id, parser_state->flags) == true) {
+		if (should_parse(msg_id, parser_state->flags)) {
 			msg_parser->parse(pkt_caw, parser_state);
 		} else {
 			msg_parser->skip(pkt_caw, parser_state);

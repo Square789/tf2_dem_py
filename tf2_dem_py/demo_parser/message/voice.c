@@ -13,7 +13,7 @@ void ParseSounds_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 void ParseSounds_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t reliable = CharArrayWrapper_get_bit(caw);
 	// uint8_t num;
-	uint16_t length;
+	uint16_t length = 0;
 	if (reliable == 1) {
 		// num = 1;
 		length = (uint16_t)CharArrayWrapper_get_uint8(caw);
@@ -43,8 +43,8 @@ void VoiceData_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 void VoiceData_skip(CharArrayWrapper *caw, ParserState *parser_state) {
-	uint16_t len = 0;
+	uint16_t len;
 	CharArrayWrapper_skip(caw, 2, 0);
-	CharArrayWrapper_read_raw(caw, &len, 2, 0);
+	len = CharArrayWrapper_get_uint16(caw);
 	CharArrayWrapper_skip(caw, len / 8, len % 8);
 }

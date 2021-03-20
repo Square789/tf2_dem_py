@@ -29,8 +29,8 @@ typedef struct ParserState_s {
 	// set to a static length array as soon as a GameEventList message is encountered.
 	GameEventDefinition *game_event_defs;
 	size_t game_event_def_amount;
-	// Game Events occurring in the demo. This is a dynamically reallocated array of game event pointers.
-	GameEvent **game_events;
+	// Game Events occurring in the demo. This is a dynamically reallocated array of game events.
+	GameEvent *game_events;
 	size_t game_events_capacity;
 	size_t game_events_len;
 	// Demo header
@@ -57,7 +57,7 @@ void ParserState_free_game_event_defs(ParserState *self);
 // fields back to NULL / 0.
 void ParserState_free_game_events(ParserState *self);
 
-uint8_t ParserState_append_game_event(ParserState *self, GameEvent *ge);
+uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge);
 
 extern const ParserState_errflag_t ParserState_ERR_CAW;
 extern const ParserState_errflag_t ParserState_ERR_UNKNOWN_PACKET_ID;

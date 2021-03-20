@@ -58,11 +58,11 @@ setup(
 	author = "Square789",
 	packages = ["tf2_dem_py"],
 	include_dirs = [ # This is so incredibly hardcoded lmao
-			"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
-				"/mingw64/x86_64-w64-mingw32/include",
-			"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
-				"/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include",
-			".",
-		],
+		"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
+			"/mingw64/x86_64-w64-mingw32/include",
+		"C:/Program_Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0" \
+			"/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include",
+		".",
+	],
 	ext_modules = extensions,
 )

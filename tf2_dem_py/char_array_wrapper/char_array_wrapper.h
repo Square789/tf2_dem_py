@@ -4,6 +4,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <limits.h>
+
+#if (CHAR_BIT != 8)
+#    error "What alien toaster are you compiling this on?"
+#endif
 
 extern const uint16_t CAW_ERR_BUFFER_TOO_SHORT;
 extern const uint16_t CAW_ERR_MEMORY_ALLOCATION;

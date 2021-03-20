@@ -23,7 +23,6 @@ void packet_parse_any(FILE *stream, ParserState *parser_state) {
 	// printf("Next packet type: %u @%u\n", packet_type, ftell(stream));
 	switch (packet_type) {
 	case 1:
-		Message_parse(stream, parser_state); break;
 	case 2:
 		Message_parse(stream, parser_state); break;
 	case 3:

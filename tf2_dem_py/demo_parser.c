@@ -147,7 +147,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		return NULL;
 	}
 	event_name = PyUnicode_FromString(
-		parser_state->game_event_defs[parser_state->game_events[ge_idx]->event_type].name
+		parser_state->game_event_defs[parser_state->game_events[ge_idx].event_type].name
 	);
 	if (event_name == NULL) {
 		Py_DECREF(event_dict);
@@ -161,7 +161,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 	}
 	Py_DECREF(event_name);
 	event_fields_tuple = GameEventDefinition_get_field_names(
-		parser_state->game_event_defs + parser_state->game_events[ge_idx]->event_type
+		parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 	);
 
 	if (event_fields_tuple == NULL) {
@@ -218,7 +218,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 			goto error0;
 		}
 		for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
-			event_id = PyLong_FromLong(parser_state->game_events[ge_idx]->event_type);
+			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
 			if (event_id == NULL) { goto error1_mem; }
 			key_memb_check = PyDict_Contains(game_event_container, event_id);
 			if (key_memb_check == 0) {
@@ -258,12 +258,12 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 			// Could probably add some bounds checking, but I think something else would've broken
 			// earlier if event_type was not in the game event defs.
 			game_event_python_repr = GameEvent_to_compact_PyTuple(
-				parser_state->game_events[ge_idx],
-				parser_state->game_event_defs + parser_state->game_events[ge_idx]->event_type
+				parser_state->game_events + ge_idx,
+				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 			);
 			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
 			// Dig through the compact structure
-			event_id = PyLong_FromLong(parser_state->game_events[ge_idx]->event_type);
+			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
 			if (event_id == NULL) {
 				Py_DECREF(game_event_python_repr);
 				goto error1_mem;
@@ -290,8 +290,8 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 		} else {
 			final_container = game_event_container;
 			game_event_python_repr = GameEvent_to_PyDict(
-				parser_state->game_events[ge_idx],
-				parser_state->game_event_defs + parser_state->game_events[ge_idx]->event_type
+				parser_state->game_events + ge_idx,
+				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 			);
 			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
 			// Don't decref game_event_python_repr

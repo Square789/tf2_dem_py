@@ -155,7 +155,7 @@ void Entity_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 
 void Entity_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	CharArrayWrapper_skip(caw, 2, 4);
-	uint16_t length;
+	uint16_t length = 0;
 	CharArrayWrapper_read_raw(caw, &length, 1, 3);
 	CharArrayWrapper_skip(caw, length / 8, length % 8);
 }

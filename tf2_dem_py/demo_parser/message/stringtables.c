@@ -29,15 +29,11 @@ void StringTableUpdate_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 void StringTableUpdate_skip(CharArrayWrapper *caw, ParserState *parser_state) {
-	// target_table = stream.read_int(5)
-	// changed = stream.read_int(16) if stream.read_boolean() else 1
-	// length = stream.read_int(20)
-	// data = stream.read_raw(length)
 	CharArrayWrapper_skip(caw, 0, 5);
 	if (CharArrayWrapper_get_bit(caw) == 1) {
 		CharArrayWrapper_skip(caw, 2, 0);
 	}
-	uint32_t length;
+	uint32_t length = 0;
 	CharArrayWrapper_read_raw(caw, &length, 2, 4);
 	CharArrayWrapper_skip(caw, length / 8, length % 8);
 }

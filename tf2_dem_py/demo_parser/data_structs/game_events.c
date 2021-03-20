@@ -80,14 +80,14 @@ PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self) {
 	return tup;
 }
 
-GameEvent *GameEvent_new() {
-	GameEvent *self = (GameEvent *)malloc(sizeof(GameEvent));
-	if (self == NULL) {
-		return NULL;
-	}
-	GameEvent_init(self);
-	return self;
-}
+// GameEvent *GameEvent_new() {
+// 	GameEvent *self = (GameEvent *)malloc(sizeof(GameEvent));
+// 	if (self == NULL) {
+// 		return NULL;
+// 	}
+// 	GameEvent_init(self);
+// 	return self;
+// }
 
 void GameEvent_init(GameEvent *self) {
 	self->data = NULL;
@@ -95,10 +95,14 @@ void GameEvent_init(GameEvent *self) {
 	self->event_type = 0;
 }
 
-void GameEvent_destroy(GameEvent *self) {
+void GameEvent_free(GameEvent *self) {
 	free(self->data);
-	free(self);
 }
+
+// void GameEvent_destroy(GameEvent *self) {
+// 	GameEvent_free(self);
+// 	free(self);
+// }
 
 PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	PyObject *tmp_entry_val;
