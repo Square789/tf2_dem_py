@@ -6,8 +6,10 @@
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
+#ifndef NO_PYTHON
+#  define PY_SSIZE_T_CLEAN
+#  include "Python.h"
+#endif
 
 typedef struct DemoHeader_s {
 	uint8_t *ident;
@@ -27,15 +29,17 @@ DemoHeader *DemoHeader_new();
 void DemoHeader_init(DemoHeader *self);
 void DemoHeader_destroy(DemoHeader *self);
 
+// Reads data into a DemoHeader from a file pointer, advancing it by 1072 bytes.
+// Returns 1 on CAW memory allocation failure, 2 on general CAW error, 0 on success.
+// Will write CAW error into the address pointed to by caw_err if return code is 2.
+uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *caw_err);
+
+#ifndef NO_PYTHON
 // Creates a Python dict from a Demo Header and return it.
 // Only call this function if the DemoHeader contains valid data and no NULL pointers!
 // Requires CONSTANTS to be initialized.
 // Returns NULL on failure.
 PyObject *DemoHeader_to_PyDict(DemoHeader *self);
-
-// Reads data into a DemoHeader from a file pointer, advancing it by 1072 bytes.
-// Returns 1 on CAW memory allocation failure, 2 on general CAW error, 0 on success.
-// Will write CAW error into the address pointed to by caw_err if return code is 2.
-uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *caw_err);
+#endif
 
 #endif

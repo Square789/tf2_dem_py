@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #include "tf2_dem_py/constants.h"
 #include "tf2_dem_py/demo_parser/data_structs/server_info.h"
@@ -19,7 +22,7 @@ void ServerInfo_init(ServerInfo *self) {
 	self->dedicated = 0;
 	self->max_crc = 0;
 	self->max_classes = 0;
-	for (size_t i = 0; i < 16; i++) self->map_hash[i] = 0;
+	memset(self->map_hash, 0, 16);
 	self->player_count = 0;
 	self->max_player_count = 0;
 	self->interval_per_tick = 0;
@@ -31,11 +34,15 @@ void ServerInfo_init(ServerInfo *self) {
 	self->replay = 0;
 }
 
-void ServerInfo_destroy(ServerInfo *self) {
+void ServerInfo_free(ServerInfo *self) {
 	if (self->game        != NULL) { free(self->game); }
 	if (self->map_name    != NULL) { free(self->map_name); }
 	if (self->skybox      != NULL) { free(self->skybox); }
 	if (self->server_name != NULL) { free(self->server_name); }
+}
+
+void ServerInfo_destroy(ServerInfo *self) {
+	ServerInfo_free(self);
 	free(self);
 }
 
@@ -58,6 +65,7 @@ void ServerInfo_read(ServerInfo *self, CharArrayWrapper *caw) {
 	self->replay =            CharArrayWrapper_get_bit(caw);
 }
 
+#ifndef NO_PYTHON
 PyObject *ServerInfo_to_PyDict(ServerInfo *self) {
 	PyObject *sinfo_dict;
 	PyObject *sinfo[16];
@@ -116,3 +124,4 @@ PyObject *ServerInfo_to_PyDict(ServerInfo *self) {
 	return sinfo_dict;
 
 }
+#endif

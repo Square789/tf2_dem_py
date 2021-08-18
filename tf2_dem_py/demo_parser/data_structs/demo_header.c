@@ -1,4 +1,6 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 
@@ -66,6 +68,7 @@ uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *
 	return 0;
 }
 
+#ifndef NO_PYTHON
 PyObject *DemoHeader_to_PyDict(DemoHeader *self) {
 	PyObject *header_dict = PyDict_New();
 	uint8_t failed = 0;
@@ -105,3 +108,4 @@ PyObject *DemoHeader_to_PyDict(DemoHeader *self) {
 
 	return header_dict;
 }
+#endif

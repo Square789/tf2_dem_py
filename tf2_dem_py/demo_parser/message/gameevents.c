@@ -13,17 +13,17 @@
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 #include "tf2_dem_py/demo_parser/message/gameevents.h"
 
-inline bool should_read_game_event(uint16_t event_id) {
+bool should_read_game_event(uint16_t event_id) {
 	switch (event_id) {
-		case 23:
+		case 23: case 28:
 			return true;
 		default:
 			return false;
 	}
 }
 
-/* Read a game event definition into the parser state's game event definitions.
- * Will modify the parser state's FAILURE attribute on any error. */
+// Reads a game event definition into the parser state's game event definitions.
+// Will modify the parser state's FAILURE attribute on any error.
 void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t last_type = 0;
 	uint16_t event_id = 0;

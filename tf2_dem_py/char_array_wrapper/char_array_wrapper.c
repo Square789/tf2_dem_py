@@ -31,7 +31,6 @@ CharArrayWrapper *CharArrayWrapper_from_file(FILE *fp, size_t initbytes) {
 	if (ferror(fp)) {
 		new_caw->ERRORLEVEL |= CAW_ERR_INIT_IO_READ;
 	}
-	// printf("[caw init]: read %d bytes: <%s>\n", read_res, new_caw->mem_ptr);
 	if (read_res != initbytes) {
 		new_caw->ERRORLEVEL |= CAW_ERR_INIT_ODD_IO_RESULT;
 	}
@@ -94,13 +93,13 @@ void CharArrayWrapper_destroy(CharArrayWrapper *self) {
 }
 
 uint8_t CharArrayWrapper__ver_buf_health(CharArrayWrapper *self, size_t req_bytes, uint8_t req_bits) {
-		uint8_t tmp;
-		if (req_bits > 7)
+		if (req_bits > 7) {
 			return 2;
+		}
 		// If bitbuf overflows, add 1 to the compared remaining length in bytes
-		if (req_bits > self->bitbuf_len) { tmp = 1; } else { tmp = 0; }
-		if ((self->mem_len - self->bytepos) < (req_bytes + tmp))
+		if ((self->mem_len - self->bytepos) < (req_bytes + (req_bits > self->bitbuf_len))) {
 			return 1;
+		}
 		return 0;
 	}
 

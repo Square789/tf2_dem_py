@@ -1,24 +1,35 @@
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/demo_parser/data_structs/game_events.h"
 
-//GameEventEntry *GameEventEntry_new(uint8_t *name, uint8_t type) {
-//	GameEventEntry *self = (GameEventEntry *)malloc(sizeof(GameEventEntry));
-//		return NULL;
-//	}
-//	self->name = name;
-//	self->type = type;
-//	return self;
-//}
+// === GameEventEntry
+
+GameEventEntry *GameEventEntry_new() {
+	GameEventEntry *self = (GameEventEntry *)malloc(sizeof(GameEventEntry));
+	if (self == NULL) {
+		return NULL;
+	}
+	GameEventEntry_init(self);
+	return self;
+}
+
+void GameEventEntry_init(GameEventEntry *self) {
+	self->name = NULL;
+	self->type = 0xFF;
+}
 
 void GameEventEntry_free(GameEventEntry *self) {
 	free(self->name);
 }
 
-//void GameEventEntry_destroy(GameEventEntry *self) {
-// 	GameEventEntry_free(self);
-// 	free(self);
-//}
+void GameEventEntry_destroy(GameEventEntry *self) {
+	GameEventEntry_free(self);
+	free(self);
+}
 
+// === GameEventDefinition
 
 GameEventDefinition *GameEventDefinition_new() {
 	GameEventDefinition *self = (GameEventDefinition *)malloc(sizeof(GameEventDefinition));
@@ -43,11 +54,41 @@ void GameEventDefinition_free(GameEventDefinition *self) {
 			GameEventEntry_free(self->entries + i);
 		}
 	}
+	free(self->entries);
+	self->entries = NULL;
+	self->entries_capacity = 0;
+	self->entries_len = 0;
 	free(self->name);
 }
 
 void GameEventDefinition_destroy(GameEventDefinition *self) {
 	GameEventDefinition_free(self);
+	free(self);
+}
+
+// === GameEvent
+
+GameEvent *GameEvent_new() {
+	GameEvent *self = (GameEvent *)malloc(sizeof(GameEvent));
+	if (self == NULL) {
+		return NULL;
+	}
+	GameEvent_init(self);
+	return self;
+}
+
+void GameEvent_init(GameEvent *self) {
+	self->data = NULL;
+	self->data_len = 0;
+	self->event_type = 0;
+}
+
+void GameEvent_free(GameEvent *self) {
+	free(self->data);
+}
+
+void GameEvent_destroy(GameEvent *self) {
+	GameEvent_free(self);
 	free(self);
 }
 
@@ -62,6 +103,7 @@ uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, u
 	return 0;
 }
 
+#ifndef NO_PYTHON
 PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self) {
 	PyObject *tup = PyTuple_New(self->entries_len);
 	PyObject *tmpstr;
@@ -79,30 +121,6 @@ PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self) {
 	}
 	return tup;
 }
-
-// GameEvent *GameEvent_new() {
-// 	GameEvent *self = (GameEvent *)malloc(sizeof(GameEvent));
-// 	if (self == NULL) {
-// 		return NULL;
-// 	}
-// 	GameEvent_init(self);
-// 	return self;
-// }
-
-void GameEvent_init(GameEvent *self) {
-	self->data = NULL;
-	self->data_len = 0;
-	self->event_type = 0;
-}
-
-void GameEvent_free(GameEvent *self) {
-	free(self->data);
-}
-
-// void GameEvent_destroy(GameEvent *self) {
-// 	GameEvent_free(self);
-// 	free(self);
-// }
 
 PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	PyObject *tmp_entry_val;
@@ -205,3 +223,4 @@ error1: CharArrayWrapper_destroy(ge_caw);
 error0:
 	return NULL;
 }
+#endif

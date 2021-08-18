@@ -1,0 +1,53 @@
+ifeq ($(OS),Windows_NT)
+	EXE_SUFFIX=.exe
+else
+	EXE_SUFFIX=
+endif
+
+CC=gcc
+MKDIR=mkdir -p
+RM_F=rm -rf
+
+CFLAGS=-DNO_PYTHON -I. -Wall -Wno-pointer-sign
+
+OBJ_DIR=build_c
+
+all: demo_parser$(EXE_SUFFIX)
+
+demo_parser$(EXE_SUFFIX): \
+		$(OBJ_DIR)/tf2_dem_py/c_demo_parser.o \
+		$(OBJ_DIR)/tf2_dem_py/char_array_wrapper/char_array_wrapper.o \
+		$(OBJ_DIR)/tf2_dem_py/constants.o \
+		$(OBJ_DIR)/tf2_dem_py/flags/flags.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/helpers.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/parser_state/parser_state.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/chat_message.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/demo_header.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/game_events.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/server_info.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/__init__.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/classinfo.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/gameevents.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/packetentities.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/stringtables.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/usermessage.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/various.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/voice.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/consolecmd.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/datatables.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/message.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/parse_any.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/stringtables.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/synctick.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/usercmd.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(OBJ_DIR)/%.o: %.c
+	if [ ! -e $(@D) ]; \
+		then $(MKDIR) $(@D); \
+	fi
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: all clean
+clean:
+	$(RM_F) ./$(OBJ_DIR);

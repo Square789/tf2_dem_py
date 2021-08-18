@@ -1,10 +1,13 @@
+#include <stdlib.h>
+
 #include "tf2_dem_py/demo_parser/helpers.h"
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/constants.h"
 
-uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *array_cap, size_t *array_len) {
+uint8_t _generic_arraylist_size_check(size_t type_size, void *array_, size_t *array_cap, size_t *array_len) {
 	void *tmp_ptr;
+	void **array = array_;
 	if (*array == NULL) {
 		*array = malloc(type_size * 2);
 		if (*array == NULL) {
@@ -24,6 +27,7 @@ uint8_t _generic_arraylist_size_check(size_t type_size, void **array, size_t *ar
 	return 0;
 }
 
+#ifndef NO_PYTHON
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {
 	PyObject *pystr;
 	char *str = (char *)CharArrayWrapper_get_chars(caw, len);
@@ -119,3 +123,4 @@ PyObject *CreateDict_Strings(PyObject **keys, PyObject **values, size_t length) 
 	if (failed) return NULL;
 	return dict;
 }
+#endif

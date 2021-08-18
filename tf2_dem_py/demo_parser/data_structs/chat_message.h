@@ -3,8 +3,10 @@
 
 #include <stdbool.h>
 
-#define PY_SSIZE_T_CLEAN
-#include "Python.h"
+#ifndef NO_PYTHON
+#  define PY_SSIZE_T_CLEAN
+#  include "Python.h"
+#endif
 
 typedef struct {
 	bool is_normal;
@@ -21,7 +23,9 @@ ChatMessage *ChatMessage_new();
 void ChatMessage_init(ChatMessage *self);
 void ChatMessage_destroy(ChatMessage *self);
 
+#ifndef NO_PYTHON
 PyObject *ChatMessage_to_PyDict(ChatMessage *self);
 PyObject *ChatMessage_to_PyTuple(ChatMessage *self);
+#endif
 
 #endif

@@ -7,7 +7,7 @@
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 
-inline bool should_parse(uint8_t m_id, flag_t flags) {
+bool should_parse(uint8_t m_id, flag_t flags) {
 	switch (m_id) {
 	case 25:
 		return (flags & FLAGS_GAME_EVENTS) ? true : false;

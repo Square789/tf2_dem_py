@@ -16,18 +16,18 @@
 // setup.py will fail without this line
 #define _tf2_dem_py__version__ "0.0.1"
 
-#define demo_parser_PARSER_ERRMSG_SIZE (sizeof(ParserState_errflag_t) * 8)
-#define demo_parser_CAW_ERRMSG_SIZE (sizeof(CharArrayWrapper_err_t) * 8)
-#define demo_parser_GIL_SLEEP_MS 100
+#define PARSER_ERRMSG_SIZE (sizeof(ParserState_errflag_t) * 8)
+#define CAW_ERRMSG_SIZE (sizeof(CharArrayWrapper_err_t) * 8)
+#define GIL_SLEEP_MS 100
 
 
 static PyObject *__version__;
 static PyObject *ParserError;
 static PyObject *PyConversionError;
 // Python strings corresponding to the ParserState error bits.
-static PyObject *PARSER_ERRMSG[demo_parser_PARSER_ERRMSG_SIZE];
+static PyObject *PARSER_ERRMSG[PARSER_ERRMSG_SIZE];
 // Python strings corresponding to the CharArrayWrapper error bits.
-static PyObject *CAW_ERRMSG[demo_parser_CAW_ERRMSG_SIZE];
+static PyObject *CAW_ERRMSG[CAW_ERRMSG_SIZE];
 // Python string: "\n"
 static PyObject *PYSTR_NEWLINE;
 // Python string: ""
@@ -47,8 +47,8 @@ static PyObject *PYSTR_FIELDS;
 static PyObject *PYSTR_CONV_ERR;
 
 // Builds a python error string from the failure attribute
-// of a ParserState, remember to DECREF that.
-// Returns NULL on any sort of error, at that point just crash the program whatever
+// of a ParserState, which will need to be DECREFed by the caller.
+// Returns NULL on any sort of error, at which point the computer is probably on fire anyways.
 static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	PyObject *builder_list = PyList_New(0);
 	PyObject *lmsg_str, *fppos_str;
@@ -68,7 +68,7 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 
 	// Add standard parser errors
-	for (int i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+	for (int i = 0; i < PARSER_ERRMSG_SIZE; i++) {
 		if ((1 << i) & parser_state->failure) {
 			if (PyList_Append(builder_list, PARSER_ERRMSG[i]) < 0) goto error3;
 			if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
@@ -79,7 +79,7 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	// Add additional CAW error info
 	if (parser_state->failure & 1) { // CAW Error
 		if (PyList_Append(builder_list, PYSTR_ERROR_SEP_CAW) < 0) goto error3;
-		for (int i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+		for (int i = 0; i < CAW_ERRMSG_SIZE; i++) {
 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
 				if (PyList_Append(builder_list, CAW_ERRMSG[i]) < 0) goto error3;
 				if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
@@ -219,7 +219,9 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 		}
 		for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
 			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
-			if (event_id == NULL) { goto error1_mem; }
+			if (event_id == NULL) {
+				goto error1_mem;
+			}
 			key_memb_check = PyDict_Contains(game_event_container, event_id);
 			if (key_memb_check == 0) {
 				event_dict = build_compact_skeleton(parser_state, ge_idx);
@@ -261,7 +263,13 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				parser_state->game_events + ge_idx,
 				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 			);
-			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
+			if (game_event_python_repr == NULL) {
+				if (PyErr_Occurred()) {
+					goto error1;
+				} else {
+					goto error1_mem;
+				}
+			}
 			// Dig through the compact structure
 			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
 			if (event_id == NULL) {
@@ -293,7 +301,13 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				parser_state->game_events + ge_idx,
 				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 			);
-			if (game_event_python_repr == NULL) { if (PyErr_Occurred()) goto error1; else goto error1_mem; }
+			if (game_event_python_repr == NULL) {
+				if (PyErr_Occurred()) {
+					goto error1;
+				} else {
+					goto error1_mem;
+				}
+			}
 			// Don't decref game_event_python_repr
 			PyList_SET_ITEM(final_container, ge_idx, game_event_python_repr);
 		}
@@ -447,12 +461,16 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&:parse", KWARGS,
 			PyUnicode_FSConverter, &demo_path
-	)) { goto memerror0; }
+	)) {
+		goto memerror0;
+	}
 
 	// - Variable setup - //
 	// - Create and setup ParserState
 	parser_state = ParserState_new();
-	if (parser_state == NULL) { goto memerror1; }
+	if (parser_state == NULL) {
+		goto memerror1;
+	}
 	parser_state->flags = self->flags;
 
 	PyThreadState *_save;
@@ -478,15 +496,21 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	default:
 		break;
 	}
-	if (parser_state->failure != 0) { goto parser_error; }
+	if (parser_state->failure != 0) {
+		goto parser_error;
+	}
 	while (!parser_state->finished) {
 		packet_parse_any(demo_fp, parser_state);
-		if (parser_state->failure != 0) { goto parser_error; }
+		if (parser_state->failure != 0) {
+			goto parser_error;
+		}
 		cur_clock = clock();
-		if (((float)(cur_clock - last_gil_acq) / (FLOAT_CLOCKS_PER_SEC / 1000.0f)) > demo_parser_GIL_SLEEP_MS) {
+		if (((float)(cur_clock - last_gil_acq) / (FLOAT_CLOCKS_PER_SEC / 1000.0f)) > GIL_SLEEP_MS) {
 			last_gil_acq = cur_clock;
 			Py_BLOCK_THREADS
-			if (PyErr_CheckSignals() < 0) { goto interrupted_error; }
+			if (PyErr_CheckSignals() < 0) {
+				goto interrupted_error;
+			}
 			Py_UNBLOCK_THREADS
 		}
 	}
@@ -611,10 +635,10 @@ static PyTypeObject DemoParser_Type = {
 
 // DECREFs all constants, local and global ones.
 void m_demo_parser_free() {
-	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+	for (uint16_t i = 0; i < PARSER_ERRMSG_SIZE; i++) {
 		Py_DECREF(PARSER_ERRMSG[i]);
 	}
-	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+	for (uint16_t i = 0; i < CAW_ERRMSG_SIZE; i++) {
 		Py_DECREF(CAW_ERRMSG[i]);
 	}
 	Py_DECREF(__version__);
@@ -637,10 +661,10 @@ void m_demo_parser_free() {
 // Uses Py_XDECREF for removal of only local constants, in case some
 // of them may have not been initialized after a failure.
 void m_demo_parser_free_safe() {
-	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+	for (uint16_t i = 0; i < PARSER_ERRMSG_SIZE; i++) {
 		Py_XDECREF(PARSER_ERRMSG[i]);
 	}
-	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+	for (uint16_t i = 0; i < CAW_ERRMSG_SIZE; i++) {
 		Py_XDECREF(CAW_ERRMSG[i]);
 	}
 	Py_XDECREF(__version__);
@@ -675,7 +699,7 @@ uint8_t initialize_local_constants() {
 	PARSER_ERRMSG[7]  = PyUnicode_FromStringAndSize("Python dict error (Likely memory error).", 40);
 	PARSER_ERRMSG[8]  = PyUnicode_FromStringAndSize("Python list error (Likely memory error).", 40);
 	PARSER_ERRMSG[9]  = PyUnicode_FromStringAndSize("Game event index higher than size of game event array.", 54);
-	for (uint32_t i = 10; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
+	for (uint32_t i = 10; i < PARSER_ERRMSG_SIZE; i++) {
 		Py_XINCREF(PYSTR_EMPTY);
 		PARSER_ERRMSG[i] = PYSTR_EMPTY;
 	}
@@ -685,7 +709,7 @@ uint8_t initialize_local_constants() {
 	CAW_ERRMSG[2] = PyUnicode_FromStringAndSize("I/O error when reading from file.", 33);
 	CAW_ERRMSG[3] = PyUnicode_FromStringAndSize("Initialization failed due to memory error.", 42);
 	CAW_ERRMSG[4] = PyUnicode_FromStringAndSize("Initialization failed due to odd file reading result (Premature EOF?)", 69);
-	for (uint32_t i = 5; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
+	for (uint32_t i = 5; i < CAW_ERRMSG_SIZE; i++) {
 		Py_XINCREF(PYSTR_EMPTY);
 		CAW_ERRMSG[i] = PYSTR_EMPTY;
 	}
@@ -701,17 +725,23 @@ uint8_t initialize_local_constants() {
 	PYSTR_CONV_ERR = PyUnicode_FromStringAndSize("Failed to convert extracted data to Python objects.", 51);
 
 	// Check if something failed
-	for (uint16_t i = 0; i < demo_parser_PARSER_ERRMSG_SIZE; i++) {
-		if (PARSER_ERRMSG[i] == NULL) { return 1; }
+	for (uint16_t i = 0; i < PARSER_ERRMSG_SIZE; i++) {
+		if (PARSER_ERRMSG[i] == NULL) {
+			return 1;
+		}
 	}
-	for (uint16_t i = 0; i < demo_parser_CAW_ERRMSG_SIZE; i++) {
-		if (CAW_ERRMSG[i] == NULL) { return 1; }
+	for (uint16_t i = 0; i < CAW_ERRMSG_SIZE; i++) {
+		if (CAW_ERRMSG[i] == NULL) {
+			return 1;
+		}
 	}
 	if (__version__ == NULL || ParserError == NULL || PyConversionError == NULL || PYSTR_EMPTY == NULL ||
 		PYSTR_NEWLINE == NULL || PYSTR_ERROR_LINESEP == NULL || PYSTR_ERROR_SEP_CAW == NULL ||
 		PYSTR_ERROR_INIT0 == NULL || PYSTR_ERROR_INIT1 == NULL || PYSTR_ERROR_INIT2 == NULL || PYSTR_DATA == NULL ||
 		PYSTR_NAME == NULL || PYSTR_FIELDS == NULL || PYSTR_CONV_ERR == NULL
-	) { return 1; }
+	) {
+		return 1;
+	}
 
 	return 0;
 }

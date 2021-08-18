@@ -1,6 +1,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "tf2_dem_py/constants.h"
 #include "tf2_dem_py/demo_parser/helpers.h"
@@ -27,14 +28,15 @@ void ChatMessage_init(ChatMessage *self) {
 }
 
 void ChatMessage_destroy(ChatMessage *self) {
-	if (self->data    != NULL) { free(self->data);    }
-	if (self->param0  != NULL) { free(self->param0);  }
-	if (self->param1  != NULL) { free(self->param1);  }
-	if (self->param2  != NULL) { free(self->param2);  }
-	if (self->param3  != NULL) { free(self->param3);  }
+	if (self->data    != NULL) { free(self->data);   }
+	if (self->param0  != NULL) { free(self->param0); }
+	if (self->param1  != NULL) { free(self->param1); }
+	if (self->param2  != NULL) { free(self->param2); }
+	if (self->param3  != NULL) { free(self->param3); }
 	free(self);
 }
 
+#ifndef NO_PYTHON
 PyObject *ChatMessage_to_PyDict(ChatMessage *self) {
 	PyObject *chat_dict = PyDict_New();
 	PyObject *chat[8];
@@ -96,3 +98,4 @@ PyObject *ChatMessage_to_PyTuple(ChatMessage *self) {
 
 	return tup;
 }
+#endif

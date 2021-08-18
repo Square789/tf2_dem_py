@@ -1,6 +1,7 @@
 #ifndef TF2_DEM_PY_CONSTANTS__H
 #define TF2_DEM_PY_CONSTANTS__H
 
+#ifndef NO_PYTHON
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
@@ -30,5 +31,6 @@ extern PyStringHolder *CONSTANTS_DICT_NAMES_ChatMessage;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_GameEventContainer;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_DemoHeader;
 extern PyStringHolder *CONSTANTS_DICT_NAMES_ServerInfo;
+#endif
 
 #endif

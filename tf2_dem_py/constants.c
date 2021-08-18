@@ -1,8 +1,11 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#ifndef NO_PYTHON
+#  define PY_SSIZE_T_CLEAN
+#  include <Python.h>
+#endif
 
 #include "tf2_dem_py/constants.h"
 
+#ifndef NO_PYTHON
 PyStringHolder *PyStringHolder_new(const char **strings, Py_ssize_t size) {
 	uint8_t failed = 0;
 
@@ -97,3 +100,4 @@ void CONSTANTS_deallocate() {
 	if (CONSTANTS_DICT_NAMES_DemoHeader != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_DemoHeader); }
 	if (CONSTANTS_DICT_NAMES_ServerInfo != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_ServerInfo); }
 }
+#endif

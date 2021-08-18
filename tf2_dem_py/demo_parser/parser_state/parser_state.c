@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
@@ -34,7 +35,9 @@ uint8_t ParserState_init(ParserState *self) {
 	self->game_events_capacity = 0;
 	self->game_events_len = 0;
 	self->demo_header = DemoHeader_new();
-	if (self->demo_header == NULL) { goto error0; }
+	if (self->demo_header == NULL) {
+		goto error0;
+	}
 	self->print_msg = NULL;
 	self->server_info = NULL;
 	self->chat_messages = NULL;
@@ -51,6 +54,18 @@ void ParserState_destroy(ParserState *self) {
 	ParserState_free_game_event_defs(self);
 	ParserState_free_game_events(self);
 	DemoHeader_destroy(self->demo_header);
+	if (self->server_info != NULL) {
+		ServerInfo_destroy(self->server_info);
+	}
+	if (self->print_msg != NULL) {
+		free(self->print_msg);
+	}
+	if (self->chat_messages != NULL) {
+		for (size_t i = 0; i < self->chat_messages_len; i++) {
+			ChatMessage_destroy(self->chat_messages[i]);
+		}
+		free(self->chat_messages);
+	}
 	free(self);
 }
 

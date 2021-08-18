@@ -90,7 +90,9 @@ void UserMessage_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	// There is massive room for improving this
 	switch (user_message_type) {
 	case 4:
-		if (!(parser_state->flags & FLAGS_CHAT)) { break; }
+		if (!(parser_state->flags & FLAGS_CHAT)) {
+			break;
+		}
 		switch (handle_SayText2(user_message_caw, parser_state, &caw_err)) {
 		case 1:
 			if (caw_err & CAW_ERR_MEMORY_ALLOCATION) {
@@ -102,10 +104,12 @@ void UserMessage_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		case 2:
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			break;
-		default: break;
+		default:
+			break;
 		}
 		break;
-	default: break;
+	default:
+		break;
 	}
 	if (user_message_caw->ERRORLEVEL != 0) {
 		parser_state->failure |= ParserState_ERR_CAW;
