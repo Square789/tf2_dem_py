@@ -1,12 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "tf2_dem_py/demo_parser/packet/parse_any.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 int main(int nargs, char **args) {
-	CharArrayWrapper_err_t caw_err;
-
 	if (nargs != 2) {
 		printf("You must specify the demo's filename as only argument!\n");
 		return EXIT_FAILURE;
@@ -24,22 +21,13 @@ int main(int nargs, char **args) {
 		goto parser_creation_error;
 	}
 
-	switch (DemoHeader_read(parser_state->demo_header, fp, &caw_err)) {
-	case 1:
-		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
-		break;
-	case 2:
-		parser_state->failure |= ParserState_ERR_CAW;
-		parser_state->RELAYED_CAW_ERR = caw_err;
-		break;
-	default:
-		break;
-	}
+	ParserState_read_demo_header(parser_state, fp);
 	if (parser_state->failure != 0) {
 		goto parser_error;
 	}
+
 	while (!parser_state->finished) {
-		packet_parse_any(fp, parser_state);
+		ParserState_parse_packet(parser_state, fp);
 		if (parser_state->failure != 0) {
 			goto parser_error;
 		}

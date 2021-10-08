@@ -21,10 +21,10 @@ SRC_CAW = "tf2_dem_py/char_array_wrapper/char_array_wrapper.c"
 SRC_CONSTANTS = "tf2_dem_py/constants.c"
 SRC_FLAGS = "tf2_dem_py/flags/flags.c"
 SRC_HELPERS = "tf2_dem_py/demo_parser/helpers.c"
-SRC_PARSER_STATE = "tf2_dem_py/demo_parser/parser_state/parser_state.c"
+SRC_PACKET = "tf2_dem_py/demo_parser/packet.c"
+SRC_PARSER_STATE = "tf2_dem_py/demo_parser/parser_state.c"
 SRCS_DATA_STRUCTS = glob.glob("tf2_dem_py/demo_parser/data_structs/*.c")
 SRCS_MSG = glob.glob("tf2_dem_py/demo_parser/message/*.c")
-SRCS_PACKETS = glob.glob("tf2_dem_py/demo_parser/packet/*.c")
 SRCS_USERMSG = glob.glob("tf2_dem_py/demo_parser/usermessage/*.c")
 
 def deliver_sources(strpath):
@@ -35,10 +35,10 @@ def deliver_sources(strpath):
 		srcs.append(SRC_CONSTANTS)
 		srcs.append(SRC_FLAGS)
 		srcs.append(SRC_HELPERS)
+		srcs.append(SRC_PACKET)
 		srcs.append(SRC_PARSER_STATE)
 		srcs.extend(SRCS_DATA_STRUCTS)
 		srcs.extend(SRCS_MSG)
-		srcs.extend(SRCS_PACKETS)
 		srcs.extend(SRCS_USERMSG)
 	return srcs
 

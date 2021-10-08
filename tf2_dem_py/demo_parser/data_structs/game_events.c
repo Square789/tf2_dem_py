@@ -53,11 +53,11 @@ void GameEventDefinition_free(GameEventDefinition *self) {
 		for (uint16_t i = 0; i < self->entries_len; i++) {
 			GameEventEntry_free(self->entries + i);
 		}
+		free(self->entries);
+		self->entries = NULL;
+		self->entries_capacity = 0;
+		self->entries_len = 0;
 	}
-	free(self->entries);
-	self->entries = NULL;
-	self->entries_capacity = 0;
-	self->entries_len = 0;
 	free(self->name);
 }
 

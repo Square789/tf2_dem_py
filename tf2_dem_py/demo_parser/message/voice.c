@@ -2,7 +2,7 @@
 #include <math.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 #include "tf2_dem_py/demo_parser/message/voice.h"
 

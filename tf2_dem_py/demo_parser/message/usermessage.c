@@ -5,7 +5,7 @@
 #include "tf2_dem_py/constants.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/flags/flags.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 #include "tf2_dem_py/demo_parser/message/usermessage.h"
 
@@ -32,10 +32,6 @@ uint8_t handle_SayText2(CharArrayWrapper *um_caw, ParserState *parser_state, Cha
 
 		extracted_chat_message->is_normal = false;
 		extracted_chat_message->data = CharArrayWrapper_get_nulltrm_str(um_caw);
-		extracted_chat_message->param0 = "";
-		extracted_chat_message->param1 = "";
-		extracted_chat_message->param2 = "";
-		extracted_chat_message->param3 = "";
 	} else {
 		// Rewind since then the initial byte is actually part of the message
 		CharArrayWrapper_set_pos(

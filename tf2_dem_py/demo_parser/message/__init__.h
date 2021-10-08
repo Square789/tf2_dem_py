@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 typedef struct MsgParser_s {
 	void (*parse)(CharArrayWrapper *caw, ParserState *parser_state);

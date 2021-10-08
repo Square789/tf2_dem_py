@@ -7,6 +7,7 @@
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 #include "tf2_dem_py/demo_parser/data_structs/game_events.h"
 #include "tf2_dem_py/demo_parser/data_structs/server_info.h"
+#include "tf2_dem_py/demo_parser/packet.h"
 
 typedef uint16_t ParserState_errflag_t;
 
@@ -58,6 +59,15 @@ void ParserState_free_game_event_defs(ParserState *self);
 void ParserState_free_game_events(ParserState *self);
 
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge);
+
+// Reads a fixed-length 1072 byte demo header from the stream into the ParserState's
+// demo_header field.
+// Sets the parser state's failure field on errors.
+void ParserState_read_demo_header(ParserState *self, FILE *stream);
+
+// Reads the next byte from stream, determine what packet to read from this id and parse it.
+// Sets the parser state's failure field on errors.
+void ParserState_parse_packet(ParserState *self, FILE *stream);
 
 extern const ParserState_errflag_t ParserState_ERR_CAW;
 extern const ParserState_errflag_t ParserState_ERR_UNKNOWN_PACKET_ID;

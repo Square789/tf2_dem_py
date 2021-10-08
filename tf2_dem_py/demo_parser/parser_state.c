@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "tf2_dem_py/demo_parser/helpers.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 #include "tf2_dem_py/demo_parser/data_structs/game_events.h"
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
@@ -101,6 +101,52 @@ uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge) {
 	// printf("Inserted game event %u @ %p\n", self->game_events_len, self->game_events + self->game_events_len);
 	self->game_events_len += 1;
 	return 0;
+}
+
+void ParserState_read_demo_header(ParserState *self, FILE *stream) {
+	CharArrayWrapper_err_t caw_err;
+	switch (DemoHeader_read(self->demo_header, stream, &caw_err)) {
+	case 1:
+		self->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+		break;
+	case 2:
+		self->failure |= ParserState_ERR_CAW;
+		self->RELAYED_CAW_ERR = caw_err;
+		break;
+	default:
+		break;
+	}
+}
+
+void ParserState_parse_packet(ParserState *self, FILE *stream) {
+
+	uint8_t packet_type;
+	if (fread(&packet_type, sizeof(packet_type), 1, stream) != 1) {
+		self->failure |= ParserState_ERR_IO;
+		return;
+	}
+
+	// printf("Next packet type: %u @%u\n", packet_type, ftell(stream));
+	switch (packet_type) {
+	case 1:
+	case 2:
+		Message_parse(stream, self); break;
+	case 3:
+		Synctick_parse(stream, self); break;
+	case 4:
+		Consolecmd_parse(stream, self); break;
+	case 5:
+		Usercmd_parse(stream, self); break;
+	case 6:
+		Datatables_parse(stream, self); break;
+	case 7:
+		self->finished = 1;
+		break;
+	case 8:
+		Stringtables_parse(stream, self); break;
+	default:
+		self->failure |= ParserState_ERR_UNKNOWN_PACKET_ID;
+	}
 }
 
 

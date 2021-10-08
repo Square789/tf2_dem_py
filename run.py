@@ -25,7 +25,7 @@ if __name__ == "__main__":
 	)
 	print("Demo parser constructed and it didn't segfault!")
 	res = dp.parse(p)
-	print("Returning to python")
+	print("Returned to python")
 
 	# pprint(res, sort_dicts = False, compact = True)
 

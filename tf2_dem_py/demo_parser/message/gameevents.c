@@ -8,7 +8,7 @@
 #include "tf2_dem_py/constants.h"
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/flags/flags.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 #include "tf2_dem_py/demo_parser/message/gameevents.h"

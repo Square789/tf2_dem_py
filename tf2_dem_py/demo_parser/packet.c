@@ -1,13 +1,61 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <stdbool.h>
 
-#include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/flags/flags.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 #include "tf2_dem_py/demo_parser/message/__init__.h"
 
-bool should_parse(uint8_t m_id, flag_t flags) {
+
+#define ALIAS_SKIP(name) void name(FILE *stream, ParserState *parser_state) { _packet_skip(stream, parser_state); }
+
+void _packet_skip(FILE *stream, ParserState *parser_state) {
+	uint32_t tick;
+	uint32_t pkt_len;
+
+	// Read tick of packet data
+	fread(&tick, sizeof(tick), 1, stream);
+
+	// Read length of packet data
+	fread(&pkt_len, sizeof(pkt_len), 1, stream);
+
+	if (ferror(stream) != 0) {
+		parser_state->failure |= ParserState_ERR_IO;
+		return;
+	}
+	if (feof(stream) != 0) {
+		parser_state->failure |= ParserState_ERR_UNEXPECTED_EOF;
+		return;
+	}
+
+	// Skip the thing lol
+	fseek(stream, pkt_len, SEEK_CUR);
+}
+
+ALIAS_SKIP(Consolecmd_parse)
+ALIAS_SKIP(Datatables_parse)
+ALIAS_SKIP(Stringtables_parse)
+
+void Usercmd_parse(FILE *stream, ParserState *parser_state) {
+	uint32_t tick;
+	uint32_t pkt_len;
+
+	fread(&tick, sizeof(tick), 1, stream);
+	fseek(stream, 4, SEEK_CUR); // Usercmd requires this, skips "sequence_out"
+
+	fread(&pkt_len, sizeof(pkt_len), 1, stream);
+
+	if (ferror(stream) != 0) {
+		parser_state->failure |= ParserState_ERR_IO;
+		return;
+	}
+	if (feof(stream) != 0) {
+		parser_state->failure |= ParserState_ERR_UNEXPECTED_EOF;
+		return;
+	}
+
+	fseek(stream, pkt_len, SEEK_CUR);
+}
+
+bool Message_should_parse(uint8_t m_id, flag_t flags) {
 	switch (m_id) {
 	case 25:
 		return (flags & FLAGS_GAME_EVENTS) ? true : false;
@@ -110,7 +158,7 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 			goto error1;
 		}
 
-		if (should_parse(msg_id, parser_state->flags)) {
+		if (Message_should_parse(msg_id, parser_state->flags)) {
 			msg_parser->parse(pkt_caw, parser_state);
 		} else {
 			msg_parser->skip(pkt_caw, parser_state);
@@ -130,4 +178,11 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 error1: CharArrayWrapper_destroy(pkt_caw);
 error0:
 	return;
+}
+
+void Synctick_parse(FILE *stream, ParserState *p_state) {
+	uint32_t tick;
+
+	// That is all
+	fread(&tick, sizeof(tick), 1, stream);
 }

@@ -7,7 +7,7 @@
 #endif
 
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
-#include "tf2_dem_py/demo_parser/parser_state/parser_state.h"
+#include "tf2_dem_py/demo_parser/parser_state.h"
 
 // Will check an arbitrary-type arraylist and create it if it is NULL or expand it if its capacity equals its length.
 // type_size  : sizeof(<type>) in the call, where <type> is the type the arraylist contains.
