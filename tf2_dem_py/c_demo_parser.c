@@ -47,5 +47,7 @@ parser_error:
 parser_creation_error:
 	fclose(fp);
 file_error:
+
+	printf("Failure\n");
 	return EXIT_FAILURE;
 }

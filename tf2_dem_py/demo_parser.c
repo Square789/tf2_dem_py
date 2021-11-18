@@ -159,10 +159,10 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		return NULL;
 	}
 	Py_DECREF(event_name);
+
 	event_fields_tuple = GameEventDefinition_get_field_names(
 		parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
 	);
-
 	if (event_fields_tuple == NULL) {
 		Py_DECREF(event_dict);
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
@@ -537,7 +537,7 @@ file_error:
 
 // ParserState's error flags non-null, GIL not held, no python error is set.
 parser_error:
-	Py_BLOCK_THREADS // Will only be called into during parsing, where GIL is released.
+	Py_BLOCK_THREADS // Will only be jumped into when parsing and when GIL is released.
 	raise_parser_error(demo_fp, parser_state);
 	fclose(demo_fp);
 	ParserState_destroy(parser_state);

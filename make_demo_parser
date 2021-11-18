@@ -20,7 +20,8 @@ demo_parser$(EXE_SUFFIX): \
 		$(OBJ_DIR)/tf2_dem_py/constants.o \
 		$(OBJ_DIR)/tf2_dem_py/flags/flags.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/helpers.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/parser_state/parser_state.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet.o \
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/parser_state.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/chat_message.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/demo_header.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/data_structs/game_events.o \
@@ -32,14 +33,7 @@ demo_parser$(EXE_SUFFIX): \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/stringtables.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/usermessage.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/various.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/voice.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/consolecmd.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/datatables.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/message.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/parse_any.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/stringtables.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/synctick.o \
-		$(OBJ_DIR)/tf2_dem_py/demo_parser/packet/usercmd.o
+		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/voice.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(OBJ_DIR)/%.o: %.c

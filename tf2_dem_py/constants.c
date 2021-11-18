@@ -95,8 +95,8 @@ int CONSTANTS_initialize() {
 }
 
 void CONSTANTS_deallocate() {
-	if (CONSTANTS_DICT_NAMES_ChatMessage != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_ChatMessage);  }
-	if (CONSTANTS_DICT_NAMES_GameEventContainer  != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEventContainer); }
+	if (CONSTANTS_DICT_NAMES_ChatMessage != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_ChatMessage); }
+	if (CONSTANTS_DICT_NAMES_GameEventContainer != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_GameEventContainer); }
 	if (CONSTANTS_DICT_NAMES_DemoHeader != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_DemoHeader); }
 	if (CONSTANTS_DICT_NAMES_ServerInfo != NULL) { PyStringHolder_destroy(CONSTANTS_DICT_NAMES_ServerInfo); }
 }
