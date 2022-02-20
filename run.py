@@ -20,13 +20,12 @@ if __name__ == "__main__":
 			"autodemo2019-08-18_14-36-22.dem"
 		)
 
-	for _ in range(100):
-		dp = tf2_dem_py.demo_parser.DemoParser(
-			FLAGS.CHAT | FLAGS.COMPACT_CHAT | FLAGS.GAME_EVENTS | FLAGS.COMPACT_GAME_EVENTS
-		)
-		# print("Demo parser constructed and it didn't segfault!")
-		res = dp.parse(p)
-		# print("Returned to python")
+	dp = tf2_dem_py.demo_parser.DemoParser(
+		FLAGS.CHAT | FLAGS.COMPACT_CHAT | FLAGS.GAME_EVENTS | FLAGS.COMPACT_GAME_EVENTS
+	)
+	print("Demo parser constructed and it didn't segfault!")
+	res = dp.parse(p)
+	print("Returned to python")
 
 	# pprint(res, sort_dicts = False, compact = True)
 
