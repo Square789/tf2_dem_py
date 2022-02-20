@@ -6,25 +6,29 @@
 #include "tf2_dem_py/constants.h"
 
 uint8_t _generic_arraylist_size_check(size_t type_size, void *array_, size_t *array_cap, size_t *array_len) {
+	uint8_t resized = 0;
+
 	void *tmp_ptr;
 	void **array = array_;
 	if (*array == NULL) {
 		*array = malloc(type_size * 2);
 		if (*array == NULL) {
-			return 1;
+			return 2;
 		}
+		resized = 1;
 		*array_cap = 2;
 		*array_len = 0;
 	}
 	if (*array_cap == *array_len) {
 		tmp_ptr = realloc(*array, type_size * (*array_cap) * 2);
 		if (tmp_ptr == NULL) {
-			return 1;
+			return 2;
 		}
+		resized = 1;
 		*array = tmp_ptr;
 		*array_cap = (*array_cap) * 2;
 	}
-	return 0;
+	return resized;
 }
 
 #ifndef NO_PYTHON

@@ -55,7 +55,7 @@ uint8_t handle_SayText2(CharArrayWrapper *um_caw, ParserState *parser_state, Cha
 	}
 
 	if (_generic_arraylist_size_check(sizeof(ChatMessage *), &parser_state->chat_messages,
-			&parser_state->chat_messages_capacity, &parser_state->chat_messages_len) != 0) {
+			&parser_state->chat_messages_capacity, &parser_state->chat_messages_len) >= 2) {
 		ChatMessage_destroy(extracted_chat_message);
 		return 2;
 	}

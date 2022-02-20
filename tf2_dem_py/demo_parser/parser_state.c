@@ -94,7 +94,7 @@ void ParserState_free_game_events(ParserState *self) {
 
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge) {
 	if (_generic_arraylist_size_check(sizeof(GameEvent), &self->game_events, &self->game_events_capacity,
-			&self->game_events_len) != 0) {
+			&self->game_events_len) >= 2) {
 		return 1;
 	}
 	self->game_events[self->game_events_len] = ge;

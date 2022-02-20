@@ -14,7 +14,7 @@
 // *array    : Pointer to the array start.
 // *array_cap: Pointer to where the arraylist's capacity is stored, will be changed if a malloc or realloc occurrs.
 // *array_len: Pointer to where the arraylist's length is stored, will be changed if a malloc occurs.
-// Returns 1 on memory failures, 0 on success.
+// Returns 2 on failure, 1 when an allocation or reallocation occurred and 0 otherwise.
 uint8_t _generic_arraylist_size_check(size_t type_size, void *array, size_t *array_cap, size_t *array_len);
 
 #ifndef NO_PYTHON

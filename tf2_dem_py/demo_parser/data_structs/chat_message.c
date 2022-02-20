@@ -28,11 +28,11 @@ void ChatMessage_init(ChatMessage *self) {
 }
 
 void ChatMessage_destroy(ChatMessage *self) {
-	if (self->data    != NULL) { free(self->data);   }
-	if (self->param0  != NULL) { free(self->param0); }
-	if (self->param1  != NULL) { free(self->param1); }
-	if (self->param2  != NULL) { free(self->param2); }
-	if (self->param3  != NULL) { free(self->param3); }
+	free(self->data);
+	free(self->param0);
+	free(self->param1);
+	free(self->param2);
+	free(self->param3);
 	free(self);
 }
 

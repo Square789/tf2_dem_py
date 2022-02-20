@@ -35,10 +35,10 @@ void ServerInfo_init(ServerInfo *self) {
 }
 
 void ServerInfo_free(ServerInfo *self) {
-	if (self->game        != NULL) { free(self->game); }
-	if (self->map_name    != NULL) { free(self->map_name); }
-	if (self->skybox      != NULL) { free(self->skybox); }
-	if (self->server_name != NULL) { free(self->server_name); }
+	free(self->game);
+	free(self->map_name);
+	free(self->skybox);
+	free(self->server_name);
 }
 
 void ServerInfo_destroy(ServerInfo *self) {

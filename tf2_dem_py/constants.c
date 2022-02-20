@@ -89,7 +89,7 @@ int CONSTANTS_initialize() {
 	if (
 		CONSTANTS_DICT_NAMES_ChatMessage == NULL || CONSTANTS_DICT_NAMES_GameEventContainer == NULL ||
 		CONSTANTS_DICT_NAMES_DemoHeader == NULL || CONSTANTS_DICT_NAMES_ServerInfo == NULL
-	) { return -1; }
+	) { return 1; }
 
 	return 0;
 }

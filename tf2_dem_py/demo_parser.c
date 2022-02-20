@@ -4,6 +4,15 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 
+#if (PY_MAJOR_VERSION != 3) || (PY_MINOR_VERSION < 8)
+#  if defined(_MSC_VER)
+#    pragma NOTE("Possibly incompatible python version. Should be at least 3.8")
+#  elif defined(__GNUC__)
+#    warning "Possibly incompatible python version. Should be at least 3.8"
+#  endif
+#endif
+
+
 #include "tf2_dem_py/flags/flags.h"
 #include "tf2_dem_py/constants.h"
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
@@ -67,7 +76,7 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 
 	// Add standard parser errors
-	for (int i = 0; i < PARSER_ERRMSG_SIZE; i++) {
+	for (size_t i = 0; i < PARSER_ERRMSG_SIZE; i++) {
 		if ((1 << i) & parser_state->failure) {
 			if (PyList_Append(builder_list, PARSER_ERRMSG[i]) < 0) goto error3;
 			if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
@@ -78,7 +87,7 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	// Add additional CAW error info
 	if (parser_state->failure & 1) { // CAW Error
 		if (PyList_Append(builder_list, PYSTR_ERROR_SEP_CAW) < 0) goto error3;
-		for (int i = 0; i < CAW_ERRMSG_SIZE; i++) {
+		for (size_t i = 0; i < CAW_ERRMSG_SIZE; i++) {
 			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
 				if (PyList_Append(builder_list, CAW_ERRMSG[i]) < 0) goto error3;
 				if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
@@ -145,9 +154,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
-	event_name = PyUnicode_FromString(
-		parser_state->game_event_defs[parser_state->game_events[ge_idx].event_type].name
-	);
+	event_name = GameEventDefinition_get_python_name(parser_state->game_event_defs + ge_idx);
 	if (event_name == NULL) {
 		Py_DECREF(event_dict);
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
@@ -346,7 +353,7 @@ static PyObject *build_chat_container(ParserState *parser_state) {
 // Build a result dict from a parser state which should contain a valid combination
 // of parsed data and flags.
 // Returns NULL on any sort of failure. Assume MemoryError if no Python exception is set.
-static PyObject *build_result_dict_from_parser_state_and_flags(ParserState *parser_state, uint32_t flags) {
+static PyObject *build_result_dict_from_parser_state(ParserState *parser_state) {
 	PyObject *res_dict = PyDict_New();
 	PyObject *tmp;
 	if (res_dict == NULL) {
@@ -514,7 +521,7 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 
 	Py_BLOCK_THREADS
 
-	res_dict = build_result_dict_from_parser_state_and_flags(parser_state, self->flags);
+	res_dict = build_result_dict_from_parser_state(parser_state);
 	if (res_dict == NULL) {
 		raise_converter_error();
 		goto memerror2;
@@ -579,8 +586,8 @@ static PyTypeObject DemoParser_Type = {
 	// (destructor)DemoParser_dealloc,
 	NULL,                                    // tp_dealloc
 	0,                                       // tp_vectorcall_offset
-	NULL,                                    // tp_setattr
 	NULL,                                    // tp_getattr
+	NULL,                                    // tp_setattr
 	NULL,                                    // tp_as_async
 	NULL,                                    // tp_repr
 	NULL,                                    // tp_as_number
@@ -621,6 +628,10 @@ static PyTypeObject DemoParser_Type = {
 	NULL,                                    // tp_del
 	0,                                       // tp_version_tag
 	NULL,                                    // tp_finalize
+	NULL,                                    // tp_vectorcall
+#if (PY_MAJOR_VERSION == 3) && (PY_MINOR_VERSION == 8)
+	NULL,                                    // tp_print (Thanks PSF love u xoxo)
+#endif
 };
 
 // DECREFs all constants, local and global ones.
@@ -763,12 +774,12 @@ PyMODINIT_FUNC PyInit_demo_parser() {
 	}
 
 	// Init global constants
-	if (CONSTANTS_initialize() < 0) {
+	if (CONSTANTS_initialize() > 0) {
 		goto error1;
 	}
 
 	// Init local constants
-	if (initialize_local_constants() < 0) {
+	if (initialize_local_constants() > 0) {
 		goto error2;
 	}
 

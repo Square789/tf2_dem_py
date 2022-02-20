@@ -12,6 +12,7 @@ const uint16_t CAW_ERR_INIT_IO_READ       = (1 << 2);
 const uint16_t CAW_ERR_INIT_ALLOC         = (1 << 3);
 const uint16_t CAW_ERR_INIT_ODD_IO_RESULT = (1 << 4);
 
+
 CharArrayWrapper *CharArrayWrapper_from_file(FILE *fp, size_t initbytes) {
 	size_t read_res;
 	CharArrayWrapper *new_caw = CharArrayWrapper_new();
@@ -197,7 +198,9 @@ uint8_t CharArrayWrapper_get_pos_bit(CharArrayWrapper *self) {
 }
 
 void CharArrayWrapper_set_pos(CharArrayWrapper *self, size_t byte, uint8_t bit) {
-	if (bit > 7) { return; }
+	if (bit > 7) {
+		return;
+	}
 	if (byte > self->mem_len) {
 		self->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;

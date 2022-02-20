@@ -9,13 +9,16 @@ int main(int nargs, char **args) {
 		return EXIT_FAILURE;
 	}
 
-	FILE *fp = fopen(args[1], "rb");
+	ParserState *parser_state;
+	FILE *fp;
+
+	fp = fopen(args[1], "rb");
 	if (fp == NULL) {
 		printf("Failed opening file!\n");
 		goto file_error;
 	}
 
-	ParserState *parser_state = ParserState_new();
+	parser_state = ParserState_new();
 	if (parser_state == NULL) {
 		printf("Failed creating parser state.\n");
 		goto parser_creation_error;
@@ -39,6 +42,18 @@ int main(int nargs, char **args) {
 
 	ParserState_destroy(parser_state);
 	fclose(fp);
+
+#if defined(_WIN32)
+	system("pause");
+#elif defined(__linux__)
+	// __unix__ may also work but:
+	//	No one besides me is going to ever use this program or even read this comment
+	//	I will never use unix
+	// yoink: https://stackoverflow.com/questions/92802/what-is-the-linux-equivalent-to-dos-pause
+	system("read -n1 -r -p \"Press any key to continue...\"")
+#else
+	// do nothing idk
+#endif
 
 	return EXIT_SUCCESS;
 
