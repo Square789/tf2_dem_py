@@ -31,18 +31,14 @@ uint8_t ParserState_init(ParserState *self) {
 	self->tick = 0;
 	self->game_event_defs = NULL;
 	self->game_event_def_amount = 0;
-	self->game_events = NULL;
-	self->game_events_capacity = 0;
-	self->game_events_len = 0;
+	ArrayList_init(&self->game_events, sizeof(GameEvent));
 	self->demo_header = DemoHeader_new();
 	if (self->demo_header == NULL) {
 		goto error0;
 	}
 	self->print_msg = NULL;
 	self->server_info = NULL;
-	self->chat_messages = NULL;
-	self->chat_messages_capacity = 0;
-	self->chat_messages_len = 0;
+	ArrayList_init(&self->chat_messages, sizeof(ChatMessage *));
 
 	return 0;
 
@@ -52,20 +48,29 @@ error0:
 
 void ParserState_destroy(ParserState *self) {
 	ParserState_free_game_event_defs(self);
-	ParserState_free_game_events(self);
+
+	if (self->game_events.ptr != NULL) {
+		for (size_t i = 0; i < self->game_events.len; i++) {
+			GameEvent_free(((GameEvent *)self->game_events.ptr) + i);
+		}
+		ArrayList_destroy(&self->game_events);
+	}
+
 	DemoHeader_destroy(self->demo_header);
+
 	if (self->server_info != NULL) {
 		ServerInfo_destroy(self->server_info);
 	}
-	if (self->print_msg != NULL) {
-		free(self->print_msg);
-	}
-	if (self->chat_messages != NULL) {
-		for (size_t i = 0; i < self->chat_messages_len; i++) {
-			ChatMessage_destroy(self->chat_messages[i]);
+
+	free(self->print_msg);
+
+	if (self->chat_messages.ptr != NULL) {
+		for (size_t i = 0; i < self->chat_messages.len; i++) {
+			ChatMessage_destroy(((ChatMessage **)self->chat_messages.ptr)[i]);
 		}
-		free(self->chat_messages);
+		ArrayList_destroy(&self->chat_messages);
 	}
+
 	free(self);
 }
 
@@ -76,30 +81,27 @@ void ParserState_free_game_event_defs(ParserState *self) {
 		}
 		free(self->game_event_defs);
 		self->game_event_defs = NULL;
-		self->game_event_def_amount = 0;
 	}
-}
-
-void ParserState_free_game_events(ParserState *self) {
-	if (self->game_events != NULL) {
-		for (size_t i = 0; i < self->game_events_len; i++) {
-			GameEvent_free(self->game_events + i);
-		}
-		free(self->game_events);
-		self->game_events = NULL;
-		self->game_events_len = 0;
-		self->game_events_capacity = 0;
-	}
+	self->game_event_def_amount = 0;
 }
 
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge) {
-	if (_generic_arraylist_size_check(sizeof(GameEvent), &self->game_events, &self->game_events_capacity,
-			&self->game_events_len) >= 2) {
+	if (ArrayList_check_size(&self->game_events) >= 2) {
+		self->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 		return 1;
 	}
-	self->game_events[self->game_events_len] = ge;
-	// printf("Inserted game event %u @ %p\n", self->game_events_len, self->game_events + self->game_events_len);
-	self->game_events_len += 1;
+
+	((GameEvent *)ArrayList_get_storage_pointer(&self->game_events))[0] = ge;
+	return 0;
+}
+
+uint8_t ParserState_append_chat_message(ParserState *self, ChatMessage *cm) {
+	if (ArrayList_check_size(&self->chat_messages) >= 2) {
+		self->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+		return 1;
+	}
+
+	((ChatMessage **)ArrayList_get_storage_pointer(&self->chat_messages))[0] = cm;
 	return 0;
 }
 

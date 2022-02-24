@@ -138,3 +138,6 @@ Thumbs.db
 
 # No executables
 *.exe
+
+# The output of `run_copy.py`
+/_res

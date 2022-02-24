@@ -14,7 +14,7 @@
 // Returns:
 // 0 on success
 // 1 on CharArrayWrapper failure (may also be related to memory problems)
-// 2 on memory allocation / array size check failure
+// 2 on memory allocation / ChatMessage insertion failure
 uint8_t handle_SayText2(CharArrayWrapper *um_caw, ParserState *parser_state, CharArrayWrapper_err_t *caw_err) {
 	ChatMessage *extracted_chat_message;
 
@@ -54,14 +54,10 @@ uint8_t handle_SayText2(CharArrayWrapper *um_caw, ParserState *parser_state, Cha
 		return 1;
 	}
 
-	if (_generic_arraylist_size_check(sizeof(ChatMessage *), &parser_state->chat_messages,
-			&parser_state->chat_messages_capacity, &parser_state->chat_messages_len) >= 2) {
+	if (ParserState_append_chat_message(parser_state, extracted_chat_message) > 0) {
 		ChatMessage_destroy(extracted_chat_message);
 		return 2;
 	}
-
-	parser_state->chat_messages[parser_state->chat_messages_len] = extracted_chat_message;
-	parser_state->chat_messages_len += 1;
 
 	return 0;
 }
@@ -108,10 +104,10 @@ void UserMessage_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		break;
 	}
 	if (user_message_caw->ERRORLEVEL != 0) {
-		parser_state->failure |= ParserState_ERR_CAW;
-		parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
 		// This may be ambigous in really odd cases where there is a message
 		// length discrepancy and the inner caw sets the out of bounds flag.
+		parser_state->failure |= ParserState_ERR_CAW;
+		parser_state->RELAYED_CAW_ERR = user_message_caw->ERRORLEVEL;
 	}
 
 	CharArrayWrapper_destroy(user_message_caw);

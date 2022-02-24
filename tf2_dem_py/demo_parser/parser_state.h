@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "tf2_dem_py/flags/flags.h"
+#include "tf2_dem_py/demo_parser/helpers.h"
 #include "tf2_dem_py/demo_parser/data_structs/chat_message.h"
 #include "tf2_dem_py/demo_parser/data_structs/demo_header.h"
 #include "tf2_dem_py/demo_parser/data_structs/game_events.h"
@@ -31,9 +32,7 @@ typedef struct ParserState_s {
 	GameEventDefinition *game_event_defs;
 	size_t game_event_def_amount;
 	// Game Events occurring in the demo. This is a dynamically reallocated array of game events.
-	GameEvent *game_events;
-	size_t game_events_capacity;
-	size_t game_events_len;
+	ArrayList game_events;
 	// Demo header
 	DemoHeader *demo_header;
 	// The string of the first found Print message (there should only be one) or NULL.
@@ -41,9 +40,7 @@ typedef struct ParserState_s {
 	// ServerInfo struct linked to the ServerInfo message (there should only be one) or NULL.
 	ServerInfo *server_info;
 	// Messages sent by users.
-	ChatMessage **chat_messages;
-	size_t chat_messages_capacity;
-	size_t chat_messages_len;
+	ArrayList chat_messages;
 } ParserState;
 
 ParserState *ParserState_new();
@@ -54,11 +51,15 @@ void ParserState_destroy(ParserState *self);
 // game_event_definition array and sets its size to 0.
 void ParserState_free_game_event_defs(ParserState *self);
 
-// If it is not NULL, frees all game events, frees their array and sets the associated
-// fields back to NULL / 0.
-void ParserState_free_game_events(ParserState *self);
-
+// Appends the given GameEvent to the parser state's game_events ArrayList.
+// Sets its MEMORY_ALLOCATION failure bit if appending should fail.
+// Returns 0 on success, 1 on failure.
 uint8_t ParserState_append_game_event(ParserState *self, GameEvent ge);
+
+// Appends the given ChatMessage pointer to the parser state's chat_messages ArrayList.
+// Sets its MEMORY_ALLOCATION failure bit if appending should fail.
+// Returns 0 on success, 1 on failure.
+uint8_t ParserState_append_chat_message(ParserState *self, ChatMessage *cm);
 
 // Reads a fixed-length 1072 byte demo header from the stream into the ParserState's
 // demo_header field.

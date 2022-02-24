@@ -111,7 +111,8 @@ static void raise_with_set_cause(PyObject *exc, PyObject *err_str) {
 	PyErr_Fetch(&old_exc_type, &old_exc_value, &old_exc_traceback);
 	PyErr_NormalizeException(&old_exc_type, &old_exc_value, &old_exc_traceback);
 
-	Py_XDECREF(old_exc_type); Py_XDECREF(old_exc_traceback);
+	Py_XDECREF(old_exc_type);
+	Py_XDECREF(old_exc_traceback);
 
 	PyErr_SetObject(exc, err_str);
 	if (old_exc_value != NULL) { // If a python exception was set beforehand
@@ -168,7 +169,8 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 	Py_DECREF(event_name);
 
 	event_fields_tuple = GameEventDefinition_get_field_names(
-		parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
+		parser_state->game_event_defs +
+		((GameEvent *)parser_state->game_events.ptr)[ge_idx].event_type
 	);
 	if (event_fields_tuple == NULL) {
 		Py_DECREF(event_dict);
@@ -223,8 +225,10 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			goto error0;
 		}
-		for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
-			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
+		for (size_t ge_idx = 0; ge_idx < parser_state->game_events.len; ge_idx++) {
+			event_id = PyLong_FromLong(
+				((GameEvent *)parser_state->game_events.ptr)[ge_idx].event_type
+			);
 			if (event_id == NULL) {
 				goto error1_mem;
 			}
@@ -251,7 +255,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 		}
 	} else {
 		// Just create a list.
-		game_event_container = PyList_New(parser_state->game_events_len);
+		game_event_container = PyList_New(parser_state->game_events.len);
 		if (game_event_container == NULL) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			goto error0;
@@ -261,13 +265,13 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 	PyObject *game_event_python_repr;
 	PyObject *final_container;
 	PyObject *event_id;
-	for (size_t ge_idx = 0; ge_idx < parser_state->game_events_len; ge_idx++) {
+	for (size_t ge_idx = 0; ge_idx < parser_state->game_events.len; ge_idx++) {
+		GameEvent *ge_ptr = ((GameEvent *)parser_state->game_events.ptr) + ge_idx;
 		if (parser_state->flags & FLAGS_COMPACT_GAME_EVENTS) {
 			// Could probably add some bounds checking, but I think something else would've broken
 			// earlier if event_type was not in the game event defs.
 			game_event_python_repr = GameEvent_to_compact_PyTuple(
-				parser_state->game_events + ge_idx,
-				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
+				ge_ptr, parser_state->game_event_defs + ge_ptr->event_type
 			);
 			if (game_event_python_repr == NULL) {
 				if (PyErr_Occurred()) {
@@ -277,7 +281,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 				}
 			}
 			// Dig through the compact structure
-			event_id = PyLong_FromLong(parser_state->game_events[ge_idx].event_type);
+			event_id = PyLong_FromLong(ge_ptr->event_type);
 			if (event_id == NULL) {
 				Py_DECREF(game_event_python_repr);
 				goto error1_mem;
@@ -304,8 +308,7 @@ static PyObject *build_game_event_container(ParserState *parser_state) {
 		} else {
 			final_container = game_event_container;
 			game_event_python_repr = GameEvent_to_PyDict(
-				parser_state->game_events + ge_idx,
-				parser_state->game_event_defs + parser_state->game_events[ge_idx].event_type
+				ge_ptr, parser_state->game_event_defs + ge_ptr->event_type
 			);
 			if (game_event_python_repr == NULL) {
 				if (PyErr_Occurred()) {
@@ -327,17 +330,17 @@ error0:
 }
 
 static PyObject *build_chat_container(ParserState *parser_state) {
-	PyObject *res_list = PyList_New(parser_state->chat_messages_len);
+	PyObject *res_list = PyList_New(parser_state->chat_messages.len);
 	PyObject *chat_obj;
 	if (res_list == NULL) {
 		return NULL;
 	}
 
-	for (size_t i = 0; i < parser_state->chat_messages_len; i++) {
+	for (size_t i = 0; i < parser_state->chat_messages.len; i++) {
 		if (parser_state->flags & FLAGS_COMPACT_CHAT) {
-			chat_obj = ChatMessage_to_PyTuple(parser_state->chat_messages[i]);
+			chat_obj = ChatMessage_to_PyTuple(((ChatMessage **)parser_state->chat_messages.ptr)[i]);
 		} else {
-			chat_obj = ChatMessage_to_PyDict(parser_state->chat_messages[i]);
+			chat_obj = ChatMessage_to_PyDict(((ChatMessage **)parser_state->chat_messages.ptr)[i]);
 		}
 		if (chat_obj == NULL) {
 			Py_DECREF(res_list);
@@ -464,9 +467,12 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	PyObject *res_dict;
 	PyObject *demo_path;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O&:parse", KWARGS,
+	if (
+		!PyArg_ParseTupleAndKeywords(
+			args, kwargs, "O&:parse", KWARGS,
 			PyUnicode_FSConverter, &demo_path
-	)) {
+		)
+	) {
 		goto memerror0;
 	}
 
@@ -490,7 +496,6 @@ static PyObject *DemoParser_parse(DemoParser *self, PyObject *args, PyObject *kw
 	start_time = last_gil_acq = clock();
 
 	// Start parsing
-
 	ParserState_read_demo_header(parser_state, demo_fp);
 	if (parser_state->failure != 0) {
 		goto parser_error;

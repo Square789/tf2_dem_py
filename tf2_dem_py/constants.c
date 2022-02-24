@@ -10,7 +10,9 @@ PyStringHolder *PyStringHolder_new(const char **strings, Py_ssize_t size) {
 	uint8_t failed = 0;
 
 	PyStringHolder *self = (PyStringHolder *)malloc(sizeof(PyStringHolder));
-	if (self == NULL) { goto fail0; }
+	if (self == NULL) {
+		goto fail0;
+	}
 
 	self->size = size;
 	self->py_strings = NULL;
@@ -24,7 +26,9 @@ PyStringHolder *PyStringHolder_new(const char **strings, Py_ssize_t size) {
 			self->py_strings[i] = Py_None;
 		}
 	}
-	if (failed) { goto fail1; }
+	if (failed) {
+		goto fail1;
+	}
 	return self;
 
 fail1: free(self);

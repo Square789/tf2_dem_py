@@ -47,12 +47,15 @@ void read_game_event_definition(CharArrayWrapper *caw, ParserState *parser_state
 
 	CharArrayWrapper_read_raw(caw, &last_type, 0, 3);
 	while (last_type != 0) {
+		GameEventEntry gee; GameEventEntry_init(&gee);
 		entry_name = CharArrayWrapper_get_nulltrm_str(caw);
 		if (entry_name == NULL) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			return;
 		}
-		if (GameEventDefinition_append_game_event_entry(ged, entry_name, last_type) != 0) {
+		gee.name = entry_name;
+		gee.type = last_type;
+		if (GameEventDefinition_append_game_event_entry(ged, gee) != 0) {
 			parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
 			return;
 		}
@@ -65,6 +68,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		GameEvent_skip(caw, parser_state); // Somehow received gameevent before gameevent defs
 		return;
 	}
+
 	uint16_t length = 0;
 	CharArrayWrapper_read_raw(caw, &length, 1, 3);
 	CharArrayWrapper *ge_caw = CharArrayWrapper_from_caw_b(caw, length);
@@ -100,8 +104,8 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	orig_bitpos = CharArrayWrapper_get_pos_bit(ge_caw);
 
 	// Find out length of GameEvent data
-	for (uint16_t i = 0; i < event_def->entries_len; i++) {
-		switch (event_def->entries[i].type) {
+	for (uint16_t i = 0; i < event_def->entries.len; i++) {
+		switch (((GameEventEntry *)event_def->entries.ptr)[i].type) {
 		case 0:
 			break;
 		case 1: // String
@@ -177,9 +181,8 @@ void GameEventList_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
 		goto error0;
 	}
-	if (parser_state->game_event_defs != NULL) { // This has like no reason or chance of happening but hey
-		ParserState_free_game_event_defs(parser_state);
-	}
+	// There is no real reason for definitions to exist at this point, but whatever
+	ParserState_free_game_event_defs(parser_state);
 
 	parser_state->game_event_defs = malloc(sizeof(GameEventDefinition) * amount);
 	if (parser_state->game_event_defs == NULL) {

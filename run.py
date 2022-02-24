@@ -21,7 +21,7 @@ if __name__ == "__main__":
 		)
 
 	dp = tf2_dem_py.demo_parser.DemoParser(
-		FLAGS.CHAT | FLAGS.COMPACT_CHAT | FLAGS.GAME_EVENTS | FLAGS.COMPACT_GAME_EVENTS
+		FLAGS.CHAT
 	)
 	print("Demo parser constructed and it didn't segfault!")
 	res = dp.parse(p)

@@ -97,8 +97,9 @@ PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 	}
 
 	// Fill game_event dict
-	for (uint16_t i = 0; i < event_def->entries_len; i++) {
-		switch (event_def->entries[i].type) {
+	for (uint16_t i = 0; i < event_def->entries.len; i++) {
+		GameEventEntry *entry_ptr = ((GameEventEntry *)event_def->entries.ptr) + i;
+		switch (entry_ptr->type) {
 		case 0: case 7: default: // 0 / anything > 7 should not be here, no idea what to do for 7
 			tmp_entry_val = NULL;
 			break;
@@ -119,7 +120,7 @@ PyObject *GameEvent_to_PyDict(GameEvent *self, GameEventDefinition *event_def) {
 			goto error2;
 		}
 
-		entry_name = GameEventEntry_get_python_name(event_def->entries + i);
+		entry_name = GameEventEntry_get_python_name(entry_ptr);
 		if (entry_name == NULL) {
 			Py_DECREF(tmp_entry_val);
 			goto error2;
@@ -153,14 +154,15 @@ PyObject *GameEvent_to_compact_PyTuple(GameEvent *self, GameEventDefinition *eve
 	ge_caw->mem_ptr = self->data;
 	ge_caw->mem_len = self->data_len;
 	ge_caw->free_on_dealloc = 0;
-	event_tup = PyTuple_New(event_def->entries_len);
+	event_tup = PyTuple_New(event_def->entries.len);
 	if (event_tup == NULL) {
 		goto error1;
 	}
 
 	// Fill tuple
-	for (uint16_t i = 0; i < event_def->entries_len; i++) {
-		switch (event_def->entries[i].type) {
+	for (uint16_t i = 0; i < event_def->entries.len; i++) {
+		GameEventEntry *entry_ptr = ((GameEventEntry *)event_def->entries.ptr) + i;
+		switch (entry_ptr->type) {
 		case 0: case 7: default: // 0 / anything > 7 should not be here, no idea what to do for 7
 			tmp_entry_val = NULL;
 			break;
@@ -206,23 +208,18 @@ GameEventDefinition *GameEventDefinition_new() {
 void GameEventDefinition_init(GameEventDefinition *self) {
 	self->event_type = 1 << 15;
 	self->name = NULL;
-	self->entries = NULL;
-	self->entries_capacity = 0;
-	self->entries_len = 0;
+	ArrayList_init(&self->entries, sizeof(GameEventEntry));
 #ifndef NO_PYTHON
 	self->py_name = NULL;
 #endif
 }
 
 void GameEventDefinition_free(GameEventDefinition *self) {
-	if (self->entries != NULL) {
-		for (uint16_t i = 0; i < self->entries_len; i++) {
-			GameEventEntry_free(self->entries + i);
+	if (self->entries.ptr != NULL) {
+		for (uint16_t i = 0; i < self->entries.len; i++) {
+			GameEventEntry_free(((GameEventEntry *)self->entries.ptr) + i);
 		}
-		free(self->entries);
-		self->entries = NULL;
-		self->entries_capacity = 0;
-		self->entries_len = 0;
+		ArrayList_destroy(&self->entries);
 	}
 	free(self->name);
 #ifndef NO_PYTHON
@@ -235,39 +232,34 @@ void GameEventDefinition_destroy(GameEventDefinition *self) {
 	free(self);
 }
 
-uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, uint8_t *name, uint8_t type) {
-	size_t previous_capacity = self->entries_capacity;
-	uint8_t check_res = _generic_arraylist_size_check(
-		sizeof(GameEventEntry), &self->entries, &self->entries_capacity, &self->entries_len
-	);
+uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, GameEventEntry entry) {
+	uint8_t check_res = ArrayList_check_size(&self->entries);
 	if (check_res >= 2) {
 		return 1;
 	}
 	if (check_res == 1) {
-		for (size_t i = self->entries_len; i < self->entries_capacity; i++) {
-			GameEventEntry_init(self->entries + i);
+		for (size_t i = self->entries.len; i < self->entries.cap; i++) {
+			GameEventEntry_init(((GameEventEntry *)self->entries.ptr) + i);
 		}
 	}
-	self->entries[self->entries_len].name = name;
-	self->entries[self->entries_len].type = type;
-	self->entries_len += 1;
+	((GameEventEntry *)ArrayList_get_storage_pointer(&self->entries))[0] = entry;
 	return 0;
 }
 
 #ifndef NO_PYTHON
 PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self) {
-	PyObject *tup = PyTuple_New(self->entries_len);
+	PyObject *tup = PyTuple_New(self->entries.len);
 	PyObject *name;
 	if (tup == NULL) {
 		return NULL;
 	}
-	for (size_t i = 0; i < self->entries_len; i++) {
-		name = GameEventEntry_get_python_name(self->entries + i);
+	for (size_t i = 0; i < self->entries.len; i++) {
+		name = GameEventEntry_get_python_name(((GameEventEntry *)self->entries.ptr) + i);
 		if (name == NULL) {
 			Py_DECREF(tup);
 			return NULL;
 		}
-		PyTuple_SET_ITEM(tup, i, self->entries[i].py_name);
+		PyTuple_SET_ITEM(tup, i, name);
 	}
 	return tup;
 }

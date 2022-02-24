@@ -8,7 +8,7 @@ CC=gcc
 MKDIR=mkdir -p
 RM_F=rm -rf
 
-CFLAGS=-DNO_PYTHON -I. -Wall -Wextra -Wno-pointer-sign
+CFLAGS=-DNO_PYTHON -I. -Wall -Wextra -Wno-pointer-sign -Wno-unused-parameter
 
 OBJ_DIR=build_c
 

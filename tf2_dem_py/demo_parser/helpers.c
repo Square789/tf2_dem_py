@@ -5,31 +5,53 @@
 #include "tf2_dem_py/char_array_wrapper/char_array_wrapper.h"
 #include "tf2_dem_py/constants.h"
 
-uint8_t _generic_arraylist_size_check(size_t type_size, void *array_, size_t *array_cap, size_t *array_len) {
+
+uint8_t ArrayList_check_size(ArrayList *self) {
 	uint8_t resized = 0;
 
 	void *tmp_ptr;
-	void **array = array_;
-	if (*array == NULL) {
-		*array = malloc(type_size * 2);
-		if (*array == NULL) {
+	if (self->ptr == NULL) {
+		self->ptr = malloc(self->element_size * 2);
+		if (self->ptr == NULL) {
 			return 2;
 		}
 		resized = 1;
-		*array_cap = 2;
-		*array_len = 0;
+		self->cap = 2;
+		self->len = 0;
 	}
-	if (*array_cap == *array_len) {
-		tmp_ptr = realloc(*array, type_size * (*array_cap) * 2);
+	if (self->cap == self->len) {
+		tmp_ptr = realloc(self->ptr, self->element_size * self->cap * 2);
 		if (tmp_ptr == NULL) {
 			return 2;
 		}
 		resized = 1;
-		*array = tmp_ptr;
-		*array_cap = (*array_cap) * 2;
+		self->ptr = tmp_ptr;
+		self->cap *= 2;
 	}
+
 	return resized;
 }
+
+void *ArrayList_get_storage_pointer(ArrayList *self) {
+	void *ret = ((uint8_t *)self->ptr + (self->element_size * self->len));
+	self->len += 1;
+	return ret;
+}
+
+void ArrayList_init(ArrayList *self, size_t element_size) {
+	self->ptr = NULL;
+	*(size_t *)&self->element_size = element_size; // haha const cast-away go brrrrrr
+	self->len = 0;
+	self->cap = 0;
+}
+
+void ArrayList_destroy(ArrayList *self) {
+	free(self->ptr);
+	self->ptr = NULL;
+	self->len = 0;
+	self->cap = 0;
+}
+
 
 #ifndef NO_PYTHON
 PyObject *PyBytes_FromCAWLen(CharArrayWrapper *caw, size_t len) {

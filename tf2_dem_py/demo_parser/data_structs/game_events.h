@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "tf2_dem_py/demo_parser/helpers.h"
+
 #ifndef NO_PYTHON
 #  define PY_SSIZE_T_CLEAN
 #  include "Python.h"
@@ -21,9 +23,7 @@ typedef struct GameEventEntry_s {
 typedef struct GameEventDefinition_s {
 	uint16_t event_type;
 	uint8_t *name;
-	size_t entries_capacity;
-	size_t entries_len;
-	GameEventEntry *entries;
+	ArrayList entries;
 #ifndef NO_PYTHON
 	PyObject *py_name;
 #endif
@@ -52,7 +52,7 @@ void GameEventDefinition_free(GameEventDefinition *self);
 void GameEventDefinition_destroy(GameEventDefinition *self);
 // Appends a new GameEventEntry to the array of entries; create a new one if it's NULL.
 // Will return 0 on success, 1 on any sort of allocation failure.
-uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, uint8_t *name, uint8_t type);
+uint8_t GameEventDefinition_append_game_event_entry(GameEventDefinition *self, GameEventEntry entry);
 #ifndef NO_PYTHON
 // Returns a python tuple of python strings of the game event's field names.
 PyObject *GameEventDefinition_get_field_names(GameEventDefinition *self);
