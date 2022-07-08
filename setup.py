@@ -48,7 +48,7 @@ extensions = [
 		sources = deliver_sources("tf2_dem_py/demo_parser.c"),
 		# Yeah yeah, it seems to work okay
 		extra_compile_args = ["-Wall", "-Wextra", "-Wno-pointer-sign", "-Wno-unused-parameter"],
-		extra_link_args = ["-static"],
+		#extra_link_args = ["-static"],
 	)
 ]
 

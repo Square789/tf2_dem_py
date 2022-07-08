@@ -9,7 +9,7 @@ int main(int nargs, char **args) {
 		return EXIT_FAILURE;
 	}
 
-	ParserState *parser_state;
+	ParserState *parser_state = NULL;
 	FILE *fp;
 
 	fp = fopen(args[1], "rb");
@@ -37,7 +37,7 @@ int main(int nargs, char **args) {
 	}
 
 	if (parser_state->print_msg != NULL) {
-		printf("%s ok\n", parser_state->print_msg);
+		printf("Extracted print message:\n%s\n", parser_state->print_msg);
 	}
 
 	ParserState_destroy(parser_state);
@@ -50,7 +50,8 @@ int main(int nargs, char **args) {
 	//	No one besides me is going to ever use this program or even read this comment
 	//	I will never use unix
 	// yoink: https://stackoverflow.com/questions/92802/what-is-the-linux-equivalent-to-dos-pause
-	system("read -n1 -r -p \"Press any key to continue...\"")
+	system("/usr/bin/bash -c -- 'read -n 1 -r -s -p \"Press any key to continue...\"'");
+	printf("\n");
 #else
 	// do nothing idk
 #endif
@@ -63,6 +64,8 @@ parser_creation_error:
 	fclose(fp);
 file_error:
 
-	printf("Failure\n");
+	if (parser_state != NULL) {
+		printf("Failure: %d\n", parser_state->failure);
+	}
 	return EXIT_FAILURE;
 }

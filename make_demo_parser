@@ -1,7 +1,9 @@
 ifeq ($(OS),Windows_NT)
 	EXE_SUFFIX=.exe
+	EXE_LINK_FLAGS_POST=
 else
 	EXE_SUFFIX=
+	EXE_LINK_FLAGS_POST=-lm
 endif
 
 CC=gcc
@@ -34,7 +36,7 @@ demo_parser$(EXE_SUFFIX): \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/usermessage.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/various.o \
 		$(OBJ_DIR)/tf2_dem_py/demo_parser/message/voice.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(EXE_LINK_FLAGS_POST)
 
 $(OBJ_DIR)/%.o: %.c
 	if [ ! -e $(@D) ]; \
