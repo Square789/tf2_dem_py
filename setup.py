@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
+
 import glob
-import os
 import re
 from pathlib import Path
 from setuptools import setup, Extension

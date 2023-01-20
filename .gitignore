@@ -138,6 +138,10 @@ Thumbs.db
 
 # No executables
 *.exe
+/demo_parser
 
 # The output of `run_copy.py`
 /_res
+
+# Testing ground
+/playground

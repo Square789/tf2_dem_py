@@ -1,10 +1,10 @@
-
+#!/usr/bin/env python3
 # Shoddy directory-wise run script
 
 import os
 import json
 import sys
-from pprint import pprint
+from pathlib import Path
 
 from bytes_encoder import BytesEncoder
 
@@ -12,9 +12,12 @@ from tf2_dem_py.flags import FLAGS
 from tf2_dem_py.demo_parser import DemoParser, ParserError
 
 p = sys.argv[1]
+cwd = Path.cwd()
 
 for i, file in enumerate(os.path.join(p, i) for i in os.listdir(p) if i.endswith(".dem")):
-	print(file)
+	name = os.path.splitext(os.path.basename(file))[0]
+	print(f"{name} ...", end="", flush=True)
+
 	dp = DemoParser(FLAGS.CHAT | FLAGS.COMPACT_CHAT)
 	try:
 		res = dp.parse(file)
@@ -23,13 +26,11 @@ for i, file in enumerate(os.path.join(p, i) for i in os.listdir(p) if i.endswith
 		print(exc)
 		print("!!!\n")
 		continue
-	#
-	#  pprint(res, sort_dicts = False, compact = True)
 
-	with open(f"_res/lastdemo{i}.json", "w") as h:
+	with (cwd / "_res" / f"{name}.json").open("w") as h:
 		json.dump(res, h, cls = BytesEncoder)
 
-	with open(f"_res/lastdemo{i}.txt", "w", encoding="utf-8") as h:
+	with (cwd / "_res" / f"{name}.txt").open("w", encoding="utf-8") as h:
 		for m in res["chat"]:
 			if not m[0]: # Non-normal message
 				continue

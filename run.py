@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 # Shoddy run script
 
 import os
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 	res = dp.parse(p)
 	print("Returned to python")
 
-	# pprint(res, sort_dicts = False, compact = True)
+	# pprint(res, sort_dicts=False, compact=True)
 
 	with open("lastdemo.json", "w") as h:
 		json.dump(res, h, indent = "\t", cls = BytesEncoder)
