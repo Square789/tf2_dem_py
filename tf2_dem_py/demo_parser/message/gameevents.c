@@ -156,6 +156,7 @@ void GameEvent_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 
 	if (ParserState_append_game_event(parser_state, game_event) != 0) {
 		parser_state->failure |= ParserState_ERR_MEMORY_ALLOCATION;
+		free(event_data);
 		goto error1;
 	}
 
