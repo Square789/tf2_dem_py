@@ -75,7 +75,12 @@ void SigOnState_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 
 void Print_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	// Unlikely and weird, but skip it in this case.
-	if (parser_state->print_msg != NULL) { Print_skip(caw, parser_state); }
+	// TODO: or don't. It seems as if multiple print messages are not too unusual,
+	// maybe throw them into an arraylist.
+	if (parser_state->print_msg != NULL) {
+		Print_skip(caw, parser_state);
+		return;
+	}
 
 	parser_state->print_msg = CharArrayWrapper_get_nulltrm_str(caw);
 
