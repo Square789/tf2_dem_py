@@ -92,9 +92,9 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 
 	CharArrayWrapper *pkt_caw = CharArrayWrapper_from_file(stream, pkt_len);
 
-	if (pkt_caw->ERRORLEVEL != 0) {
+	if (pkt_caw->error != 0) {
 		parser_state->failure |= ParserState_ERR_CAW;
-		parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
+		parser_state->relayed_caw_error = pkt_caw->error;
 		goto error1;
 	}
 
@@ -164,9 +164,9 @@ void Message_parse(FILE *stream, ParserState *parser_state) {
 			msg_parser->skip(pkt_caw, parser_state);
 		}
 
-		if (pkt_caw->ERRORLEVEL != 0) {
+		if (pkt_caw->error != 0) {
 			parser_state->failure |= ParserState_ERR_CAW;
-			parser_state->RELAYED_CAW_ERR = pkt_caw->ERRORLEVEL;
+			parser_state->relayed_caw_error = pkt_caw->error;
 			goto error1;
 		}
 

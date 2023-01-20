@@ -24,7 +24,7 @@ typedef struct ParserState_s {
 	// Error bits
 	ParserState_errflag_t failure;
 	// Error bits of an underlying CharArrayWrapper, if error was caused by it.
-	uint8_t RELAYED_CAW_ERR;
+	uint8_t relayed_caw_error;
 	// Current tick in the demo
 	uint32_t tick;
 	// GameEvent definitions. These may be NULL earlier in the parsing process, will be

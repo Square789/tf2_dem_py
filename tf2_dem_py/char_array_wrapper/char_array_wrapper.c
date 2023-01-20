@@ -24,16 +24,16 @@ CharArrayWrapper *CharArrayWrapper_from_file(FILE *fp, size_t initbytes) {
 
 	new_caw->mem_ptr = (uint8_t *)malloc(initbytes);
 	if (new_caw->mem_ptr == NULL) {
-		new_caw->ERRORLEVEL |= CAW_ERR_INIT_ALLOC;
+		new_caw->error |= CAW_ERR_INIT_ALLOC;
 		return new_caw;
 	}
 
 	read_res = fread(new_caw->mem_ptr, sizeof(uint8_t), initbytes, fp);
 	if (ferror(fp)) {
-		new_caw->ERRORLEVEL |= CAW_ERR_INIT_IO_READ;
+		new_caw->error |= CAW_ERR_INIT_IO_READ;
 	}
 	if (read_res != initbytes) {
-		new_caw->ERRORLEVEL |= CAW_ERR_INIT_ODD_IO_RESULT;
+		new_caw->error |= CAW_ERR_INIT_ODD_IO_RESULT;
 	}
 	return new_caw;
 }
@@ -79,7 +79,7 @@ CharArrayWrapper *CharArrayWrapper_new() {
 	ptr->bitbuf = 0;
 	ptr->bitbuf_len = 0;
 	ptr->bytepos = 0;
-	ptr->ERRORLEVEL = 0;
+	ptr->error = 0;
 	ptr->free_on_dealloc = 1;
 
 	return ptr;
@@ -111,7 +111,7 @@ void CharArrayWrapper_read_raw(CharArrayWrapper *self, void *target_ptr_, size_t
 	uint8_t *target_ptr = (uint8_t *)target_ptr_;
 
 	if (CharArrayWrapper__ver_buf_health(self, req_bytes, req_bits) != 0) {
-		self->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
+		self->error |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 	if (self->bitbuf_len == 0) { // No bit offset; Should work faster
@@ -156,7 +156,7 @@ void CharArrayWrapper_read_raw(CharArrayWrapper *self, void *target_ptr_, size_t
 
 void CharArrayWrapper_skip(CharArrayWrapper *self, size_t bytes, uint8_t bits) {
 	if (CharArrayWrapper__ver_buf_health(self, bytes, bits) != 0) {
-		self->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
+		self->error |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 
@@ -202,7 +202,7 @@ void CharArrayWrapper_set_pos(CharArrayWrapper *self, size_t byte, uint8_t bit) 
 		return;
 	}
 	if (byte > self->mem_len) {
-		self->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
+		self->error |= CAW_ERR_BUFFER_TOO_SHORT;
 		return;
 	}
 	self->bytepos = byte;
@@ -237,7 +237,7 @@ size_t CharArrayWrapper_dist_until_null(CharArrayWrapper *self) {
 			carry = ((self->mem_ptr[self->bytepos + i]) >> (8 - self->bitbuf_len));
 		}
 	}
-	self->ERRORLEVEL |= CAW_ERR_BUFFER_TOO_SHORT;
+	self->error |= CAW_ERR_BUFFER_TOO_SHORT;
 dist_until_null_break:
 	return c_ln;
 }
@@ -253,7 +253,7 @@ size_t CharArrayWrapper_remaining_bytes(CharArrayWrapper *self) {
 uint8_t *CharArrayWrapper_get_chars(CharArrayWrapper *self, size_t req_len) {
 	uint8_t *res_ptr = (uint8_t *)malloc(req_len + 1);
 	if (res_ptr == NULL) {
-		self->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+		self->error |= CAW_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
 	CharArrayWrapper_read_raw(self, res_ptr, req_len, 0);
@@ -264,12 +264,12 @@ uint8_t *CharArrayWrapper_get_chars(CharArrayWrapper *self, size_t req_len) {
 uint8_t *CharArrayWrapper_get_nulltrm_str(CharArrayWrapper *self) {
 	uint8_t *res_ptr;
 	size_t ntstr_ln = CharArrayWrapper_dist_until_null(self);
-	if (self->ERRORLEVEL & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
+	if (self->error & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
 		return NULL;
 	}
 	res_ptr = (uint8_t *)malloc(ntstr_ln);
 	if (res_ptr == NULL) {
-		self->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+		self->error |= CAW_ERR_MEMORY_ALLOCATION;
 		return NULL;
 	}
 	CharArrayWrapper_read_raw(self, res_ptr, ntstr_ln, 0);
@@ -279,13 +279,13 @@ uint8_t *CharArrayWrapper_get_nulltrm_str(CharArrayWrapper *self) {
 uint8_t *CharArrayWrapper_get_chars_up_to_null(CharArrayWrapper *self, size_t len) {
 	uint8_t *res_ptr;
 	size_t ntstr_ln = CharArrayWrapper_dist_until_null(self);
-	if (self->ERRORLEVEL & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
+	if (self->error & CAW_ERR_BUFFER_TOO_SHORT) { // set by method above
 		return NULL;
 	}
 	if (ntstr_ln < len) { // Pick the shorter one
 		res_ptr = (uint8_t *)malloc(ntstr_ln);
 		if (res_ptr == NULL) {
-			self->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+			self->error |= CAW_ERR_MEMORY_ALLOCATION;
 			return NULL;
 		}
 		CharArrayWrapper_read_raw(self, res_ptr, ntstr_ln, 0);
@@ -293,7 +293,7 @@ uint8_t *CharArrayWrapper_get_chars_up_to_null(CharArrayWrapper *self, size_t le
 	} else {
 		res_ptr = (uint8_t *)malloc(len + 1);
 		if (res_ptr == NULL) {
-			self->ERRORLEVEL |= CAW_ERR_MEMORY_ALLOCATION;
+			self->error |= CAW_ERR_MEMORY_ALLOCATION;
 			return NULL;
 		}
 		CharArrayWrapper_read_raw(self, res_ptr, len, 0);

@@ -27,7 +27,7 @@ uint8_t ParserState_init(ParserState *self) {
 	self->flags = 0;
 	self->finished = 0;
 	self->failure = 0;
-	self->RELAYED_CAW_ERR = 0;
+	self->relayed_caw_error = 0;
 	self->tick = 0;
 	self->game_event_defs = NULL;
 	self->game_event_def_amount = 0;
@@ -113,7 +113,7 @@ void ParserState_read_demo_header(ParserState *self, FILE *stream) {
 		break;
 	case 2:
 		self->failure |= ParserState_ERR_CAW;
-		self->RELAYED_CAW_ERR = caw_err;
+		self->relayed_caw_error = caw_err;
 		break;
 	default:
 		break;

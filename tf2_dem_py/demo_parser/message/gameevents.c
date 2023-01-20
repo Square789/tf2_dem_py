@@ -178,8 +178,8 @@ void GameEventList_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint32_t length = 0;
 	CharArrayWrapper_read_raw(caw, &amount, 1, 1);
 	CharArrayWrapper_read_raw(caw, &length, 2, 4);
-	if (caw->ERRORLEVEL != 0) {
-		parser_state->RELAYED_CAW_ERR = caw->ERRORLEVEL;
+	if (caw->error != 0) {
+		parser_state->relayed_caw_error = caw->error;
 		goto error0;
 	}
 	// There is no real reason for definitions to exist at this point, but whatever

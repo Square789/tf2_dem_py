@@ -39,6 +39,9 @@ void StringCommand_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 }
 
 void StringCommand_skip(CharArrayWrapper *caw, ParserState *parser_state) {
+	// char *tmp = CharArrayWrapper_get_nulltrm_str(caw);
+	// if (tmp != NULL) { printf("StringCommand: %s\n", tmp); }
+	// free(tmp);
 	CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
 }
 
@@ -49,11 +52,12 @@ void SetConVar_parse(CharArrayWrapper *caw, ParserState *parser_state) {
 
 void SetConVar_skip(CharArrayWrapper *caw, ParserState *parser_state) {
 	uint8_t amt = CharArrayWrapper_get_uint8(caw);
-	//char *tmp1, *tmp2;
 	for (uint16_t i = 0; i < amt; i++) {
-		// tmp1 = caw->get_nulltrm_str();
-		// tmp2 = caw->get_nulltrm_str();
-		// printf("%s ||| %s\n", tmp1, tmp2);
+		// char *tmp1 = CharArrayWrapper_get_nulltrm_str(caw);
+		// char *tmp2 = CharArrayWrapper_get_nulltrm_str(caw);
+		// if (tmp1 != NULL && tmp2 != NULL) { printf("SetConVar: %s ||| %s\n", tmp1, tmp2); }
+		// free(tmp1);
+		// free(tmp2);
 		CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
 		CharArrayWrapper_skip(caw, CharArrayWrapper_dist_until_null(caw), 0);
 	}

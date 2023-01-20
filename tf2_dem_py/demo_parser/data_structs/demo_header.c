@@ -58,9 +58,9 @@ uint8_t DemoHeader_read(DemoHeader *self, FILE *stream, CharArrayWrapper_err_t *
 	self->tick_count = CharArrayWrapper_get_uint32(header_caw);
 	self->frame_count = CharArrayWrapper_get_uint32(header_caw);
 	self->sigon = CharArrayWrapper_get_uint32(header_caw);
-	if (header_caw->ERRORLEVEL != 0) {
+	if (header_caw->error != 0) {
 		CharArrayWrapper_destroy(header_caw);
-		*caw_error = header_caw->ERRORLEVEL;
+		*caw_error = header_caw->error;
 		return 2;
 	}
 	CharArrayWrapper_destroy(header_caw);

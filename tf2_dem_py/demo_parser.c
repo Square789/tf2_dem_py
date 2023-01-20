@@ -88,7 +88,7 @@ static PyObject *build_error_message(FILE *fp, ParserState *parser_state) {
 	if (parser_state->failure & 1) { // CAW Error
 		if (PyList_Append(builder_list, PYSTR_ERROR_SEP_CAW) < 0) goto error3;
 		for (size_t i = 0; i < CAW_ERRMSG_SIZE; i++) {
-			if ((1 << i) & parser_state->RELAYED_CAW_ERR) {
+			if ((1 << i) & parser_state->relayed_caw_error) {
 				if (PyList_Append(builder_list, CAW_ERRMSG[i]) < 0) goto error3;
 				if (PyList_Append(builder_list, PYSTR_ERROR_LINESEP) < 0) goto error3;
 			}

@@ -35,7 +35,7 @@ typedef struct CharArrayWrapper_s {
 	//           | | \\ Instantiation failure, read error.
 	//           | \\ Instantiation failure, malloc error.
 	//           \\ Instantiation failure, amount of bytes read differs from requested amount.
-	CharArrayWrapper_err_t ERRORLEVEL;
+	CharArrayWrapper_err_t error;
 	// Whether to free the CharArrayWrapper when its destroyed via CharArrayWrapper_destroy.
 	uint8_t free_on_dealloc;
 
