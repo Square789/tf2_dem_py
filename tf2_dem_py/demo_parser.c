@@ -200,7 +200,7 @@ static PyObject *build_compact_skeleton(ParserState *parser_state, size_t ge_idx
 }
 
 // Builds the object that should be attached to the final result dict's "game_events" key, if present.
-// Returns NULL and modifies ParserState's failure attribute  on any sort of failure.
+// Returns NULL and modifies ParserState's failure attribute on any sort of failure.
 static PyObject *build_game_event_container(ParserState *parser_state) {
 	PyObject *game_event_container;
 
@@ -564,8 +564,10 @@ interrupted_error:
 	return NULL;
 
 // Memory error, GIL held, demo file will be closed, Python error may be set
-memerror2: ParserState_destroy(parser_state);
-memerror1: Py_DECREF(demo_path);
+memerror2:
+	ParserState_destroy(parser_state);
+memerror1:
+	Py_DECREF(demo_path);
 memerror0:
 	return (PyErr_Occurred() == NULL) ? PyErr_NoMemory() : NULL;
 }
@@ -575,7 +577,7 @@ memerror0:
 static PyMethodDef DemoParser_MethodDefs[] = {
 	{
 		"parse",
-		(PyCFunction)(PyCFunctionWithKeywords)DemoParser_parse,
+		(PyCFunctionWithKeywords)DemoParser_parse,
 		METH_VARARGS | METH_KEYWORDS,
 		NULL,
 	},
@@ -590,7 +592,7 @@ static PyTypeObject DemoParser_Type = {
 	0,                                       // tp_itemsize
 	// (destructor)DemoParser_dealloc,
 	NULL,                                    // tp_dealloc
-	0,                                       // tp_vectorcall_offset
+	0,                                       // tp_vectorcall_offset (ex. tp_print)
 	NULL,                                    // tp_getattr
 	NULL,                                    // tp_setattr
 	NULL,                                    // tp_as_async
@@ -634,9 +636,6 @@ static PyTypeObject DemoParser_Type = {
 	0,                                       // tp_version_tag
 	NULL,                                    // tp_finalize
 	NULL,                                    // tp_vectorcall
-#if (PY_MAJOR_VERSION == 3) && (PY_MINOR_VERSION == 8)
-	NULL,                                    // tp_print (Thanks PSF love u xoxo)
-#endif
 };
 
 // DECREFs all constants, local and global ones.
