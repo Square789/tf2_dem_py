@@ -3,6 +3,7 @@
 
 #include "tf2_dem_py/demo_parser/parser_state.h"
 
+
 int main(int nargs, char **args) {
 	if (nargs != 2) {
 		printf("You must specify the demo's filename as only argument!\n");
@@ -59,13 +60,12 @@ int main(int nargs, char **args) {
 	return EXIT_SUCCESS;
 
 parser_error:
+	printf("Failure: %d\n", parser_state->failure);
 	ParserState_destroy(parser_state);
+
 parser_creation_error:
 	fclose(fp);
-file_error:
 
-	if (parser_state != NULL) {
-		printf("Failure: %d\n", parser_state->failure);
-	}
+file_error:
 	return EXIT_FAILURE;
 }
